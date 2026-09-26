@@ -19,15 +19,21 @@ const HOSPITAL = {
 
 describe('account validation', () => {
   it('accepts a complete hospital', () => {
-    expect(validateAccount('hospital', HOSPITAL)).toEqual({});
+    expect(validateAccount('hospital', { ...HOSPITAL, departments: 'Emergency, OPD', beds: '120' })).toEqual({});
   });
 
   it('requires every mandatory hospital field', () => {
     const errors = validateAccount('hospital', {});
-    for (const key of ['name', 'registrationNumber', 'hospitalType', 'address', 'city', 'state', 'pincode', 'contactName', 'contactDesignation', 'contactPhone', 'officialEmail']) {
+    for (const key of ['name', 'registrationNumber', 'hospitalType', 'address', 'city', 'state', 'pincode', 'contactName', 'contactDesignation', 'contactPhone', 'officialEmail', 'departments', 'beds']) {
       expect(errors[key], key).toBeTruthy();
     }
-    expect(errors['beds']).toBeUndefined(); // optional
+  });
+
+  it('makes every question compulsory for every account type', () => {
+    for (const type of ['individual', 'hospital', 'organisation'] as const) {
+      const errors = validateAccount(type, {});
+      for (const field of visibleFields(type, {})) expect(errors[field.key], `${type}.${field.key}`).toBeTruthy();
+    }
   });
 
   it('checks formats: PIN, phone, email, select options, website', () => {
