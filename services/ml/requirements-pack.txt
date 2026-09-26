@@ -1,5 +1,0 @@
-# For build_isl_pack.py only (turns INCLUDE videos into an app sign pack). Run in Colab.
-#   pip install -r requirements-pack.txt
-numpy>=1.26
-mediapipe==0.10.20
-opencv-python-headless>=4.9

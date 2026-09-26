@@ -1,127 +1,549 @@
-# SignSphere
+# SighSphere
 
-An Indian Sign Language (ISL) learning and communication platform. Camera-based sign
-recognition and gloss-driven text-to-sign, running **entirely on-device** in the browser.
+# SIGNSPHERE
+## Project Vision
 
-> **Scope honesty.** This is bounded-vocabulary *isolated* sign recognition and a
-> clip-based text→sign renderer. It is **not** continuous sign-language translation and
-> **not** a replacement for a qualified ISL interpreter. Not for medical, legal, or
-> emergency-dispatch interpretation. See [PLAN.md](PLAN.md) §0 and §10.
+SignSphere is an AI-powered accessibility platform that enables seamless communication between hearing individuals and deaf or hard-of-hearing individuals.
 
-The product/design brief for the 14-screen experience is in [docs/design-brief.md](docs/design-brief.md).
+The platform should support real-time communication through:
 
-**Read [PLAN.md](PLAN.md) before writing code.** It contains the scope decisions, the
-20-week roadmap, the data strategy, and the ethics rules this repo is built around.
+* Text → Sign Language
+* Sign Language → Text
+* Voice → Sign Language
+* Sign Language → Voice
+
+The design should feel like a premium startup product suitable for hackathons, university showcases, investors, NGOs, accessibility organizations, and real-world deployment.
+
+Use a clean, modern, minimalistic UI with excellent accessibility standards.
 
 ---
 
-## Quick start
+# Design Style
 
-```bash
-npm install
-npm run dev          # http://localhost:5173
-```
+### Visual Theme
 
-Camera access requires a secure context. `localhost` counts, so `npm run dev` works.
-Any other host needs HTTPS.
+* Modern
+* Futuristic
+* Human-centered
+* Inclusive
+* Accessible
+* Trustworthy
 
-```bash
-npm test             # gloss engine, features, history, lessons, auth, and a render test of every screen
-npm run typecheck    # all workspaces
-npm run check        # typecheck + test
-npm run build        # production PWA build
-```
+### Design Language
 
-Feature parity between the browser and the training code is enforced by a test, not by
-convention. Run both halves after touching either features file:
+* Soft rounded corners (20–24px)
+* Glassmorphism effects
+* Subtle gradients
+* Clean cards
+* Spacious layouts
+* Smooth transitions
 
-```bash
-npm test --workspace @signsphere/web        # regenerates services/ml/fixtures/parity.json
-cd services/ml && python check_parity.py    # asserts features.py matches features.ts
-```
+### Color Palette
 
-Currently passes with a maximum difference of exactly 0. `pip install numpy` is all you need
-for this; no torch, no MediaPipe.
+Primary:
 
-## First 15 minutes — get a working demo
+* #4F46E5 (Indigo)
 
-1. `npm run dev`, open the app, go to **Sign → Text**. Grant camera access. You should
-   see hand and pose landmarks tracked live.
-2. Go to **Record**. Record 5 takes each of 3 different signs.
-3. Go back to **Sign → Text**. It now recognizes those 3 signs, using the on-device
-   template classifier (cosine similarity to per-class centroids).
+Secondary:
 
-That is a genuine working vertical slice with no server, no training run, and no model
-file. It is a *baseline*, not the final model — see "Model path" below.
+* #06B6D4 (Cyan)
 
-## Layout
+Accent:
 
-```
-PLAN.md                    the plan: scope, roadmap, data strategy, ethics, business
-docs/
-  architecture.md          how the pieces fit, and why web-first
-  data-collection-protocol.md   consent + recording protocol (read before recording ANYONE)
-  data-inventory.md        template — fill in Week 1
-  decisions.md             running decision log
-packages/gloss/            English → ISL gloss engine (pure TS, no deps, unit-tested)
-apps/web/                  React + Vite PWA — all camera, inference, and UI
-services/ml/               Colab training scripts + the TS/Python parity check
-models/                    trained artifacts; metrics.json files are committed as evidence
-.github/workflows/ci.yml   typecheck, test, build, and cross-language parity on every push
-```
+* #14B8A6 (Teal)
 
-### The app: 14 screens
+Background:
 
-| Area | Routes | Notes |
-| --- | --- | --- |
-| Entry | `/welcome`, `/onboarding`, `/auth` | Splash, 3 onboarding slides, sign-in. **Sign-in is a labelled placeholder** (`src/lib/auth.ts`): no server, no passwords, guest mode has every feature. |
-| Home | `/home` | Greeting, search, hero, 2×2 translation hub, quick access, recent activity, progress, honest limitations. |
-| Translate | `/translate/text-to-sign`, `voice-to-sign`, `sign-to-text`, `sign-to-voice`, `conversation` | Save / share / copy; history recorded locally. Live Conversation joins speech → gloss → signer clips with camera → recognition → speech in one transcript. |
-| Learn | `/learn`, `/learn/:lessonId?sign=N` | Beginner / Intermediate / Advanced levels, daily challenge, completion records (not accredited certificates). |
-| Community | `/community` | **Demo data only** (`src/data/demo/`), labelled on screen; posting disabled. |
-| Emergency | `/emergency` | Reachable without sign-in or onboarding; works offline; sign input only for emergency signs this device has been taught, and every result is confirmed by the user. |
-| Accessibility | `/accessibility` | Live captions, speech-to-text, text-to-speech, reading assistant; theme, contrast, text size, motion, haptics. |
-| Record | `/record` | The recorder (captures until 32 frames are tracked), built-in ISL sign packs, offline-readiness check, JSONL export. |
-| Profile | `/profile`, `/profile/history`, `/profile/settings`, `/profile/help` | Stats, achievements (computed from real local data), saved history with search/filter/delete, settings, help. |
+* #F8FAFC
 
-Old URLs (`/text-to-sign`, `/settings`, `/profile/teach`, …) redirect to their new locations.
+Text:
 
-**Design system:** `src/styles/tokens.css` (colours, type, radii, spacing, motion — light, dark and high-contrast), shared UI components in `src/components/ui/`, SignSphere-specific ones in `src/components/domain/`. No CSS framework, no component library. Icons are Lucide geometry vendored as data (ISC); fonts are self-hosted Inter and Poppins (OFL).
+* #0F172A
 
-**Built-in ISL signs:** `services/ml/build_isl_pack.py` turns INCLUDE (CC BY 4.0) videos into a sign pack users install from **Record signs**, so emergency signs such as DOCTOR, POLICE and HOSPITAL are recognised without recording. See `services/ml/README.md`.
+Success:
 
-**Offline:** `apps/web/sw.template.js` is turned into `/sw.js` at build time with the full file list, so every screen opens offline after the first visit. MediaPipe models are cached the first time a camera screen is used. Verify with `npm run build && npm run preview`, load once, stop the server, reload.
+* #22C55E
 
-### Where things live in the app
+Warning:
 
-| Path | What it owns |
-| --- | --- |
-| `src/lib/landmarks.ts` | The only file that imports MediaPipe. Swappable. |
-| `src/lib/features.ts` | The ML contract. Mirrored in `services/ml/features.py`. |
-| `src/lib/classifier.ts` | Template baseline + the ONNX slot for the trained model. |
-| `src/lib/storage.ts` | IndexedDB samples, localStorage settings/progress/contacts. |
-| `src/lib/speech.ts` | Web Speech STT/TTS, with feature detection. |
-| `packages/gloss/src/rules.ts` | ISL ordering rules — written for a linguist to edit. |
-| `packages/gloss/lexicon/isl-core.json` | Vocabulary — written for non-programmers to edit. |
+* #F59E0B
 
+Error:
 
-## Model path
+* #EF4444
 
-| Stage | What runs | When |
-| --- | --- | --- |
-| **Now** | On-device template classifier over your recorded samples. Zero setup. | Week 3 |
-| Next | Rung-0 logistic regression trained in Colab on INCLUDE-50 | Week 4 |
-| Ship | Rung-1 1D-CNN, exported to ONNX, loaded via `VITE_MODEL_URL` | Week 8+ |
+---
 
-`apps/web/src/lib/features.ts` and `services/ml/features.py` must stay in sync — they are
-the same normalization, and a mismatch between them is the single most common cause of
-"great in Colab, useless in the browser." There is a parity test for this; run it.
+# Typography
 
-## Non-negotiables
+Headings:
 
-- **Do not record any participant** before reading [docs/data-collection-protocol.md](docs/data-collection-protocol.md).
-- **Never commit** participant video or landmark data. `.gitignore` blocks it; don't override.
-- **Split by signer, never randomly**, when evaluating. Random splits inflate accuracy by
-  30–40 points and will invalidate your results.
-- Every gloss rule and every lexicon entry needs fluent-signer review before it ships.
-- Emergency features stay free and work offline, forever.
+* Poppins Bold
+
+Body:
+
+* Inter Regular
+
+Buttons:
+
+* Inter SemiBold
+
+---
+
+# Mobile App Specifications
+
+Platform:
+
+* Android
+* iOS
+
+Frame Size:
+
+* 390 × 844
+
+Navigation:
+
+* Bottom Navigation Bar
+
+Tabs:
+
+1. Home
+2. Learn
+3. Community
+4. Profile
+
+---
+
+# SCREEN 1 – SPLASH SCREEN
+
+Logo centered.
+
+Logo concept:
+A sphere formed using interconnected sign-language hand symbols.
+
+App Name:
+SignSphere
+
+Tagline:
+"Communication Without Barriers"
+
+Buttons:
+
+* Get Started
+* Continue as Guest
+
+Modern gradient background.
+
+---
+
+# SCREEN 2 – ONBOARDING
+
+Create 3 onboarding slides.
+
+### Slide 1
+
+Title:
+Real-Time Communication
+
+Description:
+Translate between voice, text, and sign language instantly.
+
+Illustration:
+People communicating through AI.
+
+### Slide 2
+
+Title:
+Learn Sign Language
+
+Description:
+Practice and improve using AI-powered lessons.
+
+Illustration:
+Interactive learning.
+
+### Slide 3
+
+Title:
+Build Inclusive Connections
+
+Description:
+Communicate confidently with everyone.
+
+Illustration:
+Diverse users connected together.
+
+Button:
+Start Journey
+
+---
+
+# SCREEN 3 – LOGIN / SIGNUP
+
+Options:
+
+* Continue with Google
+* Continue with Email
+* Continue as Guest
+
+Modern card design.
+
+Accessibility-friendly forms.
+
+---
+
+# SCREEN 4 – HOME DASHBOARD
+
+This is the most important screen.
+
+Top Header:
+
+Greeting:
+"Welcome Back"
+
+User avatar
+
+Notification icon
+
+Search bar
+
+---
+
+## Hero Banner
+
+Large featured card.
+
+Text:
+
+Communicate Without Limits
+
+Subtext:
+
+Use AI-powered translation to bridge communication gaps instantly.
+
+CTA Button:
+Start Conversation
+
+---
+
+## Main Translation Hub
+
+Display four large feature cards in a 2x2 grid.
+
+### Card 1
+
+Text → Sign
+
+Icon:
+Keyboard + Hand Gesture
+
+Description:
+Convert written text into animated sign language.
+
+Button:
+Translate
+
+---
+
+### Card 2
+
+Sign → Text
+
+Icon:
+Camera + Text
+
+Description:
+Recognize sign language and convert it into text.
+
+Button:
+Open Camera
+
+---
+
+### Card 3
+
+Voice → Sign
+
+Icon:
+Microphone + Hand Gesture
+
+Description:
+Convert spoken language into sign language.
+
+Button:
+Start Listening
+
+---
+
+### Card 4
+
+Sign → Voice
+
+Icon:
+Hand Gesture + Speaker
+
+Description:
+Convert sign language into spoken audio.
+
+Button:
+Start Camera
+
+---
+
+## Quick Access Section
+
+Cards:
+
+* Learn Sign Language
+* Emergency Assistance
+* Accessibility Tools
+* Community Discussions
+
+---
+
+## Recent Activity
+
+Show recent translations.
+
+Example:
+
+* Hello → Sign
+* Sign → Thank You
+* Voice → Sign Session
+
+---
+
+# SCREEN 5 – TEXT TO SIGN
+
+Text input field.
+
+Language selector.
+
+AI Sign Avatar displayed prominently.
+
+Features:
+
+* Play Animation
+* Pause
+* Speed Control
+* Save Translation
+* Share
+
+Modern avatar interface.
+
+---
+
+# SCREEN 6 – SIGN TO TEXT
+
+Camera interface.
+
+Live sign detection overlay.
+
+Real-time translation panel.
+
+Features:
+
+* Capture Gesture
+* Continuous Recognition
+* Save Output
+* Copy Text
+
+Display confidence score.
+
+---
+
+# SCREEN 7 – VOICE TO SIGN
+
+Microphone interface.
+
+Waveform animation.
+
+Live speech transcription.
+
+Animated AI sign avatar performing the recognized speech.
+
+Controls:
+
+* Start
+* Pause
+* Replay
+
+---
+
+# SCREEN 8 – SIGN TO VOICE
+
+Camera input.
+
+Sign recognition engine.
+
+Generated text display.
+
+Audio player output.
+
+Controls:
+
+* Speak
+* Replay
+* Save
+
+---
+
+# SCREEN 9 – LIVE CONVERSATION MODE
+
+Create a premium split-screen conversation experience.
+
+Left Side:
+
+Hearing User
+
+Input:
+Voice
+
+Output:
+Sign Avatar
+
+Right Side:
+
+Deaf User
+
+Input:
+Sign Language
+
+Output:
+Voice and Text
+
+Features:
+
+* Live subtitles
+* Real-time translation
+* Conversation history
+* Language switching
+* Save session
+
+This screen should feel like the flagship feature.
+
+---
+
+# SCREEN 10 – LEARNING HUB
+
+Sections:
+
+### Beginner
+
+* Alphabet
+* Numbers
+* Greetings
+
+### Intermediate
+
+* Daily Conversations
+* Emotions
+* Workplace Signs
+
+### Advanced
+
+* Professional Communication
+* Academic Vocabulary
+* Technical Terms
+
+Features:
+
+* Daily Challenges
+* AI Feedback
+* Progress Tracking
+* Certificates
+
+---
+
+# SCREEN 11 – COMMUNITY
+
+Features:
+
+* Discussion Forums
+* Events
+* Accessibility Workshops
+* Success Stories
+* Mentorship Programs
+
+Modern social feed design.
+
+---
+
+# SCREEN 12 – EMERGENCY ASSISTANCE
+
+Large emergency cards.
+
+Options:
+
+* Ambulance
+* Police
+* Hospital
+* Emergency Contact
+
+Emergency Translation:
+
+User signs a message.
+
+System instantly:
+
+* Converts to text
+* Converts to speech
+* Shares location
+
+Use high-visibility emergency design.
+
+---
+
+# SCREEN 13 – ACCESSIBILITY TOOLS
+
+Tools:
+
+* Speech-to-Text
+* Text-to-Speech
+* Live Captioning
+* Reading Assistant
+
+Settings:
+
+* Dark Mode
+* High Contrast Mode
+* Font Size Control
+* Haptic Feedback
+
+---
+
+# SCREEN 14 – PROFILE
+
+Profile picture.
+
+User statistics.
+
+Sections:
+
+* Saved Conversations
+* Learning Progress
+* Achievements
+* Settings
+* Help & Support
+
+---
+
+# Prototype Requirements
+
+Create a fully clickable prototype.
+
+Include:
+
+* Interactive navigation
+* Smooth transitions
+* Hover states (web preview)
+* Loading states
+* Empty states
+* Success states
+* Error states
+
+Use realistic sample data.
+
+Include accessibility-first design principles.
+
+The final prototype should look like a production-ready startup application that could be presented at a hackathon, university project expo, accessibility conference, or investor demo.
