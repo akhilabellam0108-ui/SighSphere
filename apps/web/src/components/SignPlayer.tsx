@@ -9,8 +9,9 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import type { RenderToken } from '@signsphere/gloss';
+import { asset } from '../lib/base.js';
 
-const CLIP_BASE = import.meta.env['VITE_CLIP_BASE_URL'] ?? '/clips';
+const CLIP_BASE = import.meta.env['VITE_CLIP_BASE_URL'] ?? asset('clips');
 
 export interface SignPlayerProps {
   plan: RenderToken[];

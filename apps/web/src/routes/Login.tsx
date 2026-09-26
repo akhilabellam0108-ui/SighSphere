@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ACCOUNT_TYPES, validators, type AccountType } from '../lib/accountTypes.js';
 import { friendlyError } from '../lib/backend.js';
 import { PREFERRED_TYPE_KEY, useSession } from '../state/session.js';
+import { asset } from '../lib/base.js';
 
 type Mode = 'signin' | 'signup' | 'reset';
 
@@ -77,7 +78,7 @@ export default function Login() {
     <div className="entry">
       <main id="main" tabIndex={-1} className="login">
         <Link className="brand" to="/welcome">
-          <img src="/icon.svg" alt="" width={30} height={30} />
+          <img src={asset('icon.svg')} alt="" width={30} height={30} />
           SignSphere
         </Link>
 

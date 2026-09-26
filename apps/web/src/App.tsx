@@ -3,6 +3,7 @@ import { Link, NavLink, Navigate, Outlet, Route, Routes, useLocation, useNavigat
 import { ACCOUNT_TYPES, typeLabel } from './lib/accountTypes.js';
 import { ensureBundledPack } from './lib/packInstaller.js';
 import { useSession } from './state/session.js';
+import { asset } from './lib/base.js';
 
 // Screens load on demand so the first screen appears quickly on slow connections.
 const AccountForm = lazy(() => import('./routes/AccountForm.js'));
@@ -143,7 +144,7 @@ function Shell() {
     <div className="app">
       <header className="topbar">
         <Link className="brand" to="/">
-          <img src="/icon.svg" alt="" width={30} height={30} />
+          <img src={asset('icon.svg')} alt="" width={30} height={30} />
           SignSphere
         </Link>
         <AccountMenu />

@@ -8,10 +8,11 @@
  */
 
 import { FEATURE_VERSION, FRAME_DIM, WINDOW_DIM, WINDOW_FRAMES } from './features.js';
+import { asset } from './base.js';
 
 export const PACK_FORMAT = 'signsphere-sign-pack';
 export const PACK_FORMAT_VERSION = 2;
-export const BUNDLED_PACK_URL = '/datasets/isl-include.json';
+export const BUNDLED_PACK_URL = asset('datasets/isl-include.json');
 
 export interface PackSample {
   label: string;

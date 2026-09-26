@@ -1,0 +1,54 @@
+name: Deploy to GitHub Pages
+
+# Publishes the app at https://<owner>.github.io/SighSphere/ on every push to main.
+# One-time setup: repo Settings → Pages → Source: "GitHub Actions".
+# Optional: add VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY (anon key only, never
+# service_role) under Settings → Secrets and variables → Actions → Variables.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build for GitHub Pages
+        env:
+          BASE_PATH: /${{ github.event.repository.name }}/
+          VITE_PUBLIC_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+          VITE_SUPPORT_EMAIL: ${{ vars.VITE_SUPPORT_EMAIL }}
+        run: npm run build
+      # GitHub Pages has no SPA routing: serve the app for any deep link.
+      - run: cp apps/web/dist/index.html apps/web/dist/404.html && touch apps/web/dist/.nojekyll
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

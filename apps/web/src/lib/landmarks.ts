@@ -7,6 +7,7 @@
 
 import { FilesetResolver, HandLandmarker, PoseLandmarker } from '@mediapipe/tasks-vision';
 import type { Point3, RawFrame } from './features.js';
+import { asset } from './base.js';
 
 /**
  * WASM + model assets.
@@ -20,9 +21,9 @@ const CDN_HAND =
   'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
 const CDN_POSE =
   'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
-const LOCAL_WASM = '/mediapipe/wasm';
-const LOCAL_HAND = '/mediapipe/models/hand_landmarker.task';
-const LOCAL_POSE = '/mediapipe/models/pose_landmarker_lite.task';
+const LOCAL_WASM = asset('mediapipe/wasm');
+const LOCAL_HAND = asset('mediapipe/models/hand_landmarker.task');
+const LOCAL_POSE = asset('mediapipe/models/pose_landmarker_lite.task');
 
 interface Assets {
   wasm: string;

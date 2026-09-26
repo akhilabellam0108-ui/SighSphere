@@ -5,13 +5,14 @@ import App from './App.js';
 import { SessionProvider } from './state/session.js';
 import { SettingsProvider } from './state/settings.js';
 import './styles.css';
+import { BASE, asset } from './lib/base.js';
 
 const container = document.getElementById('root');
 if (!container) throw new Error('#root not found in index.html');
 
 createRoot(container).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename={BASE.replace(/\/$/, '') || '/'}>
       <SettingsProvider>
         <SessionProvider>
           <App />
@@ -24,7 +25,7 @@ createRoot(container).render(
 // Offline support (production only — the dev server serves unbundled modules).
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {
+    navigator.serviceWorker.register(asset('sw.js'), { scope: BASE }).catch(() => {
       /* offline support is a bonus; the app works without it */
     });
   });

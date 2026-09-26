@@ -2,14 +2,14 @@
   "name": "SignSphere — Indian Sign Language",
   "short_name": "SignSphere",
   "description": "Learn and communicate in Indian Sign Language. All camera processing happens on your device.",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#3d6b66",
   "theme_color": "#3d6b66",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/icon.svg",
+      "src": "icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"

@@ -2,26 +2,31 @@
  * keep working with poor or no network after the first visit.
  * - Pages: network first, falling back to the cached app shell.
  * - Built assets, MediaPipe files, sign packs: cache first (they are versioned or large).
- * Supabase and other cross-origin requests are never cached. */
-const VERSION = 'v1';
+ * Supabase and other cross-origin requests are never cached.
+ * Paths are relative to the scope, so this works at / and at /SighSphere/ alike. */
+const VERSION = 'v2';
 const SHELL = `signsphere-shell-${VERSION}`;
 const ASSETS = `signsphere-assets-${VERSION}`;
-const cacheFirst = (path) => path.startsWith('/assets/') || path.startsWith('/mediapipe/') || path.startsWith('/datasets/');
+const SCOPE = new URL(self.registration.scope).pathname; // e.g. "/" or "/SighSphere/"
+const at = (path) => SCOPE + path;
+const cacheFirst = (pathname) => ['assets/', 'mediapipe/', 'datasets/'].some((dir) => pathname.startsWith(at(dir)));
+const htmlLike = (res) => (res.headers.get('content-type') || '').includes('text/html');
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     (async () => {
       const shell = await caches.open(SHELL);
-      await shell.addAll(['/', '/manifest.webmanifest', '/icon.svg']);
+      await shell.addAll([at(''), at('manifest.webmanifest'), at('icon.svg')]);
       // Best effort: store every screen, the models and the sign pack for offline use.
       try {
-        const list = await (await fetch('/precache.json', { cache: 'no-store' })).json();
+        const list = await (await fetch(at('precache.json'), { cache: 'no-store' })).json();
         const assets = await caches.open(ASSETS);
-        for (const path of list) {
+        for (const rel of list) {
+          const path = at(rel);
           if (!cacheFirst(path) || (await assets.match(path, { ignoreVary: true }))) continue;
           try {
             const res = await fetch(path);
-            if (res.ok && !(res.headers.get('content-type') || '').includes('text/html')) await assets.put(path, res);
+            if (res.ok && !htmlLike(res)) await assets.put(path, res);
           } catch {
             /* keep going; it will be cached when first used */
           }
@@ -42,21 +47,23 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
-  if (url.origin !== self.location.origin) return;
+  if (url.origin !== self.location.origin || !url.pathname.startsWith(SCOPE)) return;
 
   if (req.mode === 'navigate') {
     event.respondWith(
       fetch(req)
         .then((res) => {
-          if (res.ok) caches.open(SHELL).then((c) => c.put('/', res.clone()));
+          // GitHub Pages answers deep links with 404.html (the app) and status 404: still the app.
+          if (res.ok || (res.status === 404 && htmlLike(res))) {
+            if (res.ok) caches.open(SHELL).then((c) => c.put(at(''), res.clone()));
+          }
           return res;
         })
-        .catch(() => caches.match('/', { cacheName: SHELL, ignoreVary: true })),
+        .catch(() => caches.match(at(''), { cacheName: SHELL, ignoreVary: true })),
     );
     return;
   }
@@ -67,12 +74,12 @@ self.addEventListener('fetch', (event) => {
         const hit = await cache.match(req, { ignoreVary: true });
         if (hit) return hit;
         const res = await fetch(req);
-        const type = res.headers.get('content-type') || '';
         // Never cache the SPA fallback page served for a missing file.
-        if (res.ok && !type.includes('text/html')) cache.put(req, res.clone());
+        if (res.ok && !htmlLike(res)) cache.put(req, res.clone());
         return res;
       }),
     );
+    return;
   }
 
   // Anything else from this site: network, falling back to whatever we have cached.

@@ -19,17 +19,19 @@ function precacheList(): Plugin {
         for (const name of readdirSync(dir)) {
           const full = join(dir, name);
           if (statSync(full).isDirectory()) walk(full);
-          else files.push('/' + relative(outDir, full).split('\\').join('/'));
+          else files.push(relative(outDir, full).split('\\').join('/'));
         }
       };
       walk(outDir);
-      const skip = new Set(['/sw.js', '/index.html', '/precache.json']);
+      const skip = new Set(['sw.js', 'index.html', '404.html', 'precache.json']);
       writeFileSync(join(outDir, 'precache.json'), JSON.stringify(files.filter((f) => !skip.has(f) && !f.endsWith('.map')).sort()));
     },
   };
 }
 
 export default defineConfig({
+  // Set BASE_PATH=/SighSphere/ when building for GitHub Pages; '/' everywhere else.
+  base: process.env['BASE_PATH'] ?? '/',
   plugins: [react(), precacheList()],
   // .env lives at the repo root (see .env.example).
   envDir: '../..',

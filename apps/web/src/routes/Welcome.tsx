@@ -1,5 +1,9 @@
 import { Link } from 'react-router-dom';
 import { useSession } from '../state/session.js';
+import { asset } from '../lib/base.js';
+import { lazy, Suspense } from 'react';
+
+const ShareApp = lazy(() => import('../components/ShareApp.js'));
 
 /** First screen: what SignSphere is, then on to login. */
 export default function Welcome() {
@@ -7,7 +11,7 @@ export default function Welcome() {
   return (
     <div className="entry">
       <main id="main" tabIndex={-1} className="welcome">
-        <img src="/icon.svg" alt="" width={96} height={96} className="welcome-logo" />
+        <img src={asset('icon.svg')} alt="" width={96} height={96} className="welcome-logo" />
         <h1>SignSphere</h1>
         <p className="welcome-tagline">Communication without barriers, in Indian Sign Language.</p>
 
@@ -46,6 +50,12 @@ export default function Welcome() {
         <p className="small muted">
           In an emergency? <Link to="/emergency">Open emergency cards</Link> — no login needed.
         </p>
+        <details className="welcome-share">
+          <summary>Open on another device (QR code)</summary>
+          <Suspense fallback={null}>
+            <ShareApp />
+          </Suspense>
+        </details>
         {backend.mode === 'device' && (
           <p className="notice warn small" style={{ textAlign: 'left' }}>
             <strong>Running in this-device mode</strong>

@@ -13,6 +13,7 @@ import { FEATURE_VERSION, FRAME_DIM, WINDOW_FRAMES } from '../lib/features.js';
 import { deleteAllLocalData } from '../lib/storage.js';
 import { isSpeechRecognitionSupported, isSpeechSynthesisSupported, speak } from '../lib/speech.js';
 import { useSettings } from '../state/settings.js';
+import ShareApp from '../components/ShareApp.js';
 
 const LANGS = [
   { code: 'en-IN', label: 'English (India)' },
@@ -230,6 +231,11 @@ export default function SettingsPage() {
             {message}
           </p>
         )}
+      </section>
+
+      <section className="card stack" aria-labelledby="share-heading" style={{ marginTop: '1rem' }}>
+        <h2 id="share-heading">Open on another device</h2>
+        <ShareApp />
       </section>
 
       <section className="card stack" aria-labelledby="dataset-heading" style={{ marginTop: '1rem' }}>

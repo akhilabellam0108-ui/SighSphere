@@ -11,6 +11,7 @@
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { AccountType } from './accountTypes.js';
+import { appUrl } from './base.js';
 
 export interface User {
   id: string;
@@ -140,7 +141,7 @@ export function cloudBackend(client: SupabaseClient): Backend {
       return () => data.subscription.unsubscribe();
     },
     async signUp(email, password) {
-      const { data, error } = await client.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}/login` } });
+      const { data, error } = await client.auth.signUp({ email, password, options: { emailRedirectTo: appUrl('login') } });
       if (error) throw new Error(friendlyError(error));
       return !data.session;
     },
@@ -152,7 +153,7 @@ export function cloudBackend(client: SupabaseClient): Backend {
       await client.auth.signOut();
     },
     async resetPassword(email) {
-      const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/login?reset=1` });
+      const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo: appUrl('login?reset=1') });
       if (error) throw new Error(friendlyError(error));
     },
     async deleteUser() {
