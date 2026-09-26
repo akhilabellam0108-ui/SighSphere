@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="SignSphere">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4f46e5"/>
+      <stop offset="0.55" stop-color="#4338ca"/>
+      <stop offset="1" stop-color="#0e7490"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#g)"/>
+  <circle cx="256" cy="256" r="164" fill="none" stroke="#ffffff" stroke-opacity="0.28" stroke-width="12"/>
+  <ellipse cx="256" cy="256" rx="164" ry="62" fill="none" stroke="#67e8f9" stroke-opacity="0.75" stroke-width="12" transform="rotate(-24 256 256)"/>
+  <g fill="none" stroke="#ffffff" stroke-width="26" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M188 330V206a22 22 0 0 1 44 0v104"/>
+    <path d="M232 226v-40a22 22 0 0 1 44 0v124"/>
+    <path d="M276 236v-30a22 22 0 0 1 44 0v104c0 44-30 74-74 74s-78-30-78-74v-30"/>
+  </g>
+  <circle cx="404" cy="190" r="16" fill="#67e8f9"/>
+  <circle cx="110" cy="324" r="12" fill="#5eead4"/>
+</svg>

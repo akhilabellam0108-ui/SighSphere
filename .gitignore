@@ -1,0 +1,36 @@
+node_modules/
+dist/
+.vite/
+*.local
+
+# secrets
+.env
+.env.*
+!.env.example
+
+# recorded data — NEVER commit participant video or landmarks
+data/recordings/
+data/corpus/
+data/*.mp4
+data/*.webm
+data/**/*.jsonl
+!data/*.seed.json
+
+# trained artifacts
+models/*.onnx
+models/*.pt
+models/*.tflite
+!models/README.md
+
+# python
+__pycache__/
+.venv/
+venv/
+*.pyc
+
+# os / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json

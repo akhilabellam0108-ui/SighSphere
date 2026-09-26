@@ -1,0 +1,34 @@
+{
+  "name": "SignSphere — Indian Sign Language",
+  "short_name": "SignSphere",
+  "description": "Learn and communicate in Indian Sign Language. Camera processing happens on your device, and it works offline.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b1020",
+  "theme_color": "#4f46e5",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "id": "/",
+  "scope": "/",
+  "categories": [
+    "education",
+    "accessibility"
+  ],
+  "shortcuts": [
+    {
+      "name": "Emergency",
+      "url": "/emergency",
+      "description": "Emergency phrase cards and contacts"
+    },
+    {
+      "name": "Text to Sign",
+      "url": "/translate/text-to-sign"
+    }
+  ]
+}
