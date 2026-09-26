@@ -26,13 +26,16 @@ import {
 import { useSettings } from '../state/settings.js';
 
 /*
- * Capture ends when a full model window of frames is collected, not after a fixed time: a
- * fixed 1.6 s gave slow laptops (8–10 fps) only ~13 frames. MIN_MS stops a fast device
- * ending mid-sign; MAX_MS bounds a very slow one.
+ * Capture ends when a full model window of frames is collected, not after a fixed time.
+ * MIN_MS stops a fast device ending mid-sign. A recording is never saved with fewer than
+ * MIN_FRAMES frames that actually contain a hand: after SOFT_MAX_MS it stops as soon as it
+ * has MIN_FRAMES, and a very slow device keeps going up to HARD_MAX_MS to reach them.
  */
 const TARGET_FRAMES = WINDOW_FRAMES;
+const MIN_FRAMES = 16;
 const MIN_MS = 1200;
-const MAX_MS = 4500;
+const SOFT_MAX_MS = 4500;
+const HARD_MAX_MS = 10000;
 const COUNTDOWN_FROM = 3;
 
 type Phase = 'idle' | 'countdown' | 'recording' | 'saved';
@@ -55,6 +58,8 @@ export default function Recorder() {
   const startedAtRef = useRef(0);
   const savingRef = useRef(false);
   const motionRef = useRef<MotionFrame[]>([]);
+  const handFramesRef = useRef(0);
+  const [handFrames, setHandFrames] = useState(0);
   const saveRef = useRef<() => Promise<void>>(async () => {});
   const [frames, setFrames] = useState(0);
 
@@ -75,8 +80,12 @@ export default function Recorder() {
     window.pushEncoded(encodeFrame(frame, scratchRef.current));
     // The same frame, kept as motion so the 3D avatar can perform this sign.
     motionRef.current.push(captureFrame(frame, performance.now() - startedAtRef.current, meta.aspect));
+    if (frame.hands.length > 0) handFramesRef.current += 1;
     setFrames(window.length);
-    if (window.length >= TARGET_FRAMES && performance.now() - startedAtRef.current >= MIN_MS) {
+    setHandFrames(handFramesRef.current);
+    const elapsed = performance.now() - startedAtRef.current;
+    const enough = handFramesRef.current >= MIN_FRAMES;
+    if ((window.length >= TARGET_FRAMES && elapsed >= MIN_MS && enough) || (elapsed >= SOFT_MAX_MS && enough)) {
       savingRef.current = true;
       void saveRef.current();
     }
@@ -88,10 +97,11 @@ export default function Recorder() {
     const seconds = (performance.now() - startedAtRef.current) / 1000;
     const fps = seconds > 0 ? Math.round(sourceFrames / seconds) : 0;
 
-    if (sourceFrames < 8) {
+    if (handFramesRef.current < MIN_FRAMES) {
       setMessage(
-        `Only ${sourceFrames} frames were tracked in ${seconds.toFixed(1)} s (about ${fps} fps) — not enough. ` +
-          'Close other tabs, turn on “Hands only” in Settings to roughly double the speed, and keep your hands fully in frame and well lit.',
+        `Not saved: only ${handFramesRef.current} frames with your hand in view in ${seconds.toFixed(1)} s ` +
+          `(tracking at about ${fps} fps; at least ${MIN_FRAMES} are needed). Keep both hands inside the camera box and well lit, ` +
+          'close other tabs, and try again.',
       );
       window.clear();
       setPhase('idle');
@@ -117,8 +127,7 @@ export default function Recorder() {
       setMessage(
         sourceFrames >= TARGET_FRAMES
           ? `Saved ${activeLabel} — ${sourceFrames} frames in ${seconds.toFixed(1)} s. The avatar can now sign it too.`
-          : `Saved ${activeLabel} with ${sourceFrames} frames (about ${fps} fps, so it stopped at ${MAX_MS / 1000} s). ` +
-              'It still works; turn on “Hands only” in Settings for smoother recordings.',
+          : `Saved ${activeLabel} with ${sourceFrames} frames in ${seconds.toFixed(1)} s (tracking at about ${fps} fps).`,
       );
       setPhase('saved');
       refreshCounts();
@@ -146,6 +155,8 @@ export default function Recorder() {
     if (countdown <= 0) {
       windowRef.current.clear();
       motionRef.current = [];
+      handFramesRef.current = 0;
+      setHandFrames(0);
       savingRef.current = false;
       startedAtRef.current = performance.now();
       setFrames(0);
@@ -158,12 +169,12 @@ export default function Recorder() {
 
   useEffect(() => {
     if (phase !== 'recording') return;
-    // Safety net for slow devices: stop at MAX_MS with whatever was captured.
+    // Safety net for very slow devices: stop at HARD_MAX_MS (save() refuses if too few frames).
     const timer = setTimeout(() => {
       if (savingRef.current) return;
       savingRef.current = true;
       void saveRef.current();
-    }, MAX_MS);
+    }, HARD_MAX_MS);
     return () => clearTimeout(timer);
   }, [phase]);
 
@@ -230,7 +241,10 @@ export default function Recorder() {
             </button>
             <span className="small muted" aria-live="polite">
               {phase === 'countdown' && `Starting in ${countdown}…`}
-              {phase === 'recording' && `Sign now — ${Math.min(frames, TARGET_FRAMES)} of ${TARGET_FRAMES} frames`}
+              {phase === 'recording' &&
+                (handFrames < MIN_FRAMES
+                  ? `Sign now — ${handFrames} of at least ${MIN_FRAMES} frames with your hand in view`
+                  : `Sign now — ${Math.min(frames, TARGET_FRAMES)} of ${TARGET_FRAMES} frames`)}
             </span>
           </div>
           {message && (

@@ -83,6 +83,15 @@ export class LandmarkTracker {
   private pose: PoseLandmarker | null = null;
   private lastTimestamp = -1;
   private options: Required<TrackerOptions>;
+  private create: ((delegate: 'GPU' | 'CPU') => Promise<{ hand: HandLandmarker; pose: PoseLandmarker | null }>) | null = null;
+  private delegateInUse: 'GPU' | 'CPU' = 'GPU';
+  /** Recent per-frame detection times (ms), used to pick the faster processor. */
+  private timings: number[] = [];
+  private balance: 'measuring' | 'trying-cpu' | 'done' = 'measuring';
+  private gpuAverage = 0;
+  private parked: { hand: HandLandmarker; pose: PoseLandmarker | null } | null = null;
+  private frameCount = 0;
+  private lastPose: Point3[] | null = null;
 
   constructor(options: TrackerOptions = {}) {
     this.options = {
@@ -95,6 +104,11 @@ export class LandmarkTracker {
 
   get ready(): boolean {
     return this.hand !== null;
+  }
+
+  /** Which processor tracking is currently running on. */
+  get delegate(): 'GPU' | 'CPU' {
+    return this.delegateInUse;
   }
 
   setDominantHand(hand: DominantHand): void {
@@ -112,7 +126,11 @@ export class LandmarkTracker {
         runningMode: 'VIDEO',
         numHands: 2,
         minHandDetectionConfidence: 0.5,
-        minTrackingConfidence: 0.5,
+        // Lower presence/tracking thresholds keep a hand locked on through fast movement
+        // and partly-closed fingers, instead of dropping it and re-detecting from scratch
+        // (which is both slower and loses points).
+        minHandPresenceConfidence: 0.4,
+        minTrackingConfidence: 0.3,
       });
       const pose = this.options.handsOnly
         ? null
@@ -124,20 +142,84 @@ export class LandmarkTracker {
       return { hand, pose };
     };
 
+    this.create = create;
     const { processor } = this.options;
     let created;
     if (processor === 'cpu') {
       created = await create('CPU');
+      this.delegateInUse = 'CPU';
+      this.balance = 'done';
     } else {
       try {
         created = await create('GPU');
+        this.delegateInUse = 'GPU';
+        if (processor === 'gpu') this.balance = 'done';
       } catch (error) {
         if (processor === 'gpu') throw error;
         created = await create('CPU'); // no usable WebGL: the main processor still works
+        this.delegateInUse = 'CPU';
+        this.balance = 'done';
       }
     }
     this.hand = created.hand;
     this.pose = created.pose;
+  }
+
+  /**
+   * 'auto' mode: many laptops (integrated graphics, old drivers) track far faster on the
+   * main processor than on the graphics chip. If the graphics chip is slow, try the main
+   * processor for a moment and keep whichever is actually faster on this device.
+   */
+  private rebalance(ms: number): void {
+    if (this.balance === 'done' || !this.create) return;
+    this.timings.push(ms);
+    if (this.balance === 'measuring') {
+      // Decide quickly: on a slow device every frame counts. The first few are warm-up.
+      if (this.timings.length < 10) return;
+      const avg = average(this.timings.slice(3));
+      if (avg < 35) {
+        this.balance = 'done'; // fast enough (~25+ fps): leave it
+        return;
+      }
+      this.gpuAverage = avg;
+      this.balance = 'trying-cpu';
+      this.timings = [];
+      const create = this.create;
+      void create('CPU')
+        .then((cpu) => {
+          if (!this.hand) {
+            cpu.hand.close();
+            cpu.pose?.close();
+            return;
+          }
+          this.parked = { hand: this.hand, pose: this.pose };
+          this.hand = cpu.hand;
+          this.pose = cpu.pose;
+          this.delegateInUse = 'CPU';
+          this.lastTimestamp = -1;
+          this.timings = [];
+        })
+        .catch(() => {
+          this.balance = 'done';
+        });
+      return;
+    }
+    // trying-cpu: wait until the CPU models are in, then measure them.
+    if (!this.parked || this.timings.length < 10) return;
+    const cpuAverage = average(this.timings.slice(3));
+    if (cpuAverage < this.gpuAverage * 0.85) {
+      this.parked.hand.close();
+      this.parked.pose?.close();
+    } else {
+      this.hand?.close();
+      this.pose?.close();
+      this.hand = this.parked.hand;
+      this.pose = this.parked.pose;
+      this.delegateInUse = 'GPU';
+      this.lastTimestamp = -1;
+    }
+    this.parked = null;
+    this.balance = 'done';
   }
 
   /**
@@ -148,9 +230,15 @@ export class LandmarkTracker {
   detect(video: HTMLVideoElement, timestampMs: number): TrackedFrame | null {
     if (!this.hand || timestampMs <= this.lastTimestamp) return null;
     this.lastTimestamp = timestampMs;
+    const started = performance.now();
 
     const handResult = this.hand.detectForVideo(video, timestampMs);
-    const poseResult = this.pose?.detectForVideo(video, timestampMs);
+    // The body moves far less than the fingers, so pose runs on every other frame and the
+    // last result is reused in between. Nearly halves the cost of each frame, which is what
+    // lets slow laptops track (and record) enough frames.
+    this.frameCount += 1;
+    const runPose = this.pose && (this.frameCount % 2 === 1 || !this.lastPose);
+    const poseResult = runPose ? this.pose?.detectForVideo(video, timestampMs) : undefined;
 
     const hands: Point3[][] = handResult.landmarks.map((set) =>
       set.map((p) => ({ x: p.x, y: p.y, z: p.z })),
@@ -174,9 +262,15 @@ export class LandmarkTracker {
       else if (!nonDominant) nonDominant = points;
     }
 
-    const pose = poseResult?.landmarks?.[0]
-      ? poseResult.landmarks[0].map((p) => ({ x: p.x, y: p.y, z: p.z }))
-      : null;
+    let pose: Point3[] | null;
+    if (runPose) {
+      pose = poseResult?.landmarks?.[0] ? poseResult.landmarks[0].map((p) => ({ x: p.x, y: p.y, z: p.z })) : null;
+      this.lastPose = pose;
+    } else {
+      pose = this.lastPose;
+    }
+
+    this.rebalance(performance.now() - started);
 
     return { dominant, nonDominant, pose, hands, handedness, timestampMs };
   }
@@ -184,10 +278,18 @@ export class LandmarkTracker {
   close(): void {
     this.hand?.close();
     this.pose?.close();
+    this.parked?.hand.close();
+    this.parked?.pose?.close();
+    this.parked = null;
     this.hand = null;
     this.pose = null;
+    this.lastPose = null;
     this.lastTimestamp = -1;
   }
+}
+
+function average(values: number[]): number {
+  return values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
 }
 
 /** Hand skeleton edges, for drawing the overlay. */

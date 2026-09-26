@@ -981,3 +981,11 @@ button.chip {
   min-height: var(--tap);
   cursor: pointer;
 }
+
+.camera .points-badge {
+  top: auto;
+  bottom: 0.6rem;
+  left: 0.6rem;
+  right: auto;
+  font-variant-numeric: tabular-nums;
+}

@@ -41,6 +41,9 @@ export default function CameraView({ onFrame, badge, recording = false, paused =
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState<string | null>(null);
   const [fps, setFps] = useState(0);
+  const [aspect, setAspect] = useState(4 / 3);
+  const [points, setPoints] = useState<number[]>([]);
+  const [processorInUse, setProcessorInUse] = useState<'GPU' | 'CPU' | null>(null);
 
   const { settings } = useSettings();
 
@@ -61,6 +64,7 @@ export default function CameraView({ onFrame, badge, recording = false, paused =
     let stream: MediaStream | null = null;
     let frames = 0;
     let lastFpsAt = performance.now();
+    const frameStats: number[][] = [];
 
     async function start() {
       setStatus('starting');
@@ -119,6 +123,7 @@ export default function CameraView({ onFrame, badge, recording = false, paused =
         if (!frame) return;
 
         draw(canvasRef.current, currentVideo, frame);
+        frameStats.push(frame.hands.map((h) => h.length));
         onFrameRef.current(frame, {
           aspect: currentVideo.videoWidth && currentVideo.videoHeight ? currentVideo.videoWidth / currentVideo.videoHeight : 4 / 3,
         });
@@ -127,6 +132,10 @@ export default function CameraView({ onFrame, badge, recording = false, paused =
         const now = performance.now();
         if (now - lastFpsAt >= 1000) {
           setFps(Math.round((frames * 1000) / (now - lastFpsAt)));
+          setPoints(frameStats.at(-1) ?? []);
+          frameStats.length = 0;
+          setProcessorInUse(tracker.delegate);
+          if (currentVideo.videoWidth && currentVideo.videoHeight) setAspect(currentVideo.videoWidth / currentVideo.videoHeight);
           frames = 0;
           lastFpsAt = now;
         }
@@ -148,12 +157,18 @@ export default function CameraView({ onFrame, badge, recording = false, paused =
 
   return (
     <div className="stack">
-      <div className="camera">
+      <div className="camera" style={{ aspectRatio: String(aspect) }}>
         <video ref={videoRef} playsInline muted aria-label="Camera preview" />
         <canvas ref={canvasRef} aria-hidden="true" />
         <span className={`badge${recording ? ' recording' : ''}`}>
           {status === 'running' ? (badge ?? `Tracking · ${fps} fps`) : statusLabel(status)}
         </span>
+        {status === 'running' && (
+          <span className="badge points-badge" aria-hidden="true">
+            {points.length === 0 ? 'No hand in view' : points.map((n, i) => `Hand ${i + 1}: ${n}/21`).join(' · ')}
+            {processorInUse ? ` · ${processorInUse}` : ''}
+          </span>
+        )}
       </div>
 
       {/* Status is announced to screen readers, not just shown visually. */}
@@ -228,10 +243,17 @@ function draw(
       ctx.lineTo(to.x * width, to.y * height);
       ctx.stroke();
     }
-    for (const point of hand) {
+    const radius = Math.max(3, width / 150);
+    hand.forEach((point, i) => {
+      const tip = i === 4 || i === 8 || i === 12 || i === 16 || i === 20;
       ctx.beginPath();
-      ctx.arc(point.x * width, point.y * height, Math.max(2.5, width / 190), 0, Math.PI * 2);
+      ctx.arc(point.x * width, point.y * height, tip ? radius * 1.35 : radius, 0, Math.PI * 2);
       ctx.fill();
-    }
+      ctx.lineWidth = Math.max(1, width / 640);
+      ctx.strokeStyle = '#0b1f1d';
+      ctx.stroke();
+      ctx.strokeStyle = colour;
+      ctx.lineWidth = Math.max(2, width / 260);
+    });
   });
 }
