@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="SignSphere">
+  <rect width="512" height="512" rx="96" fill="#0b1020" />
+  <circle cx="256" cy="256" r="150" fill="none" stroke="#4cc9f0" stroke-width="14" opacity="0.5" />
+  <g fill="none" stroke="#f8f9ff" stroke-width="26" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M188 330V206a22 22 0 0 1 44 0v104" />
+    <path d="M232 226v-40a22 22 0 0 1 44 0v124" />
+    <path d="M276 236v-30a22 22 0 0 1 44 0v104c0 44-30 74-74 74s-78-30-78-74v-30" />
+  </g>
+</svg>

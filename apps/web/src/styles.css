@@ -1,0 +1,592 @@
+/*
+ * SignSphere styles.
+ *
+ * Accessibility is a correctness requirement in this app, not a feature. Rules:
+ *   - Every interactive target is at least 44x44 px (WCAG 2.2 AA, 2.5.8).
+ *   - Focus is always visible, never `outline: none`.
+ *   - Text contrast >= 4.5:1 in both themes; the high-contrast mode pushes past 7:1.
+ *   - Respect prefers-reduced-motion — some vestibular conditions co-occur with hearing loss.
+ *   - Font scale is user-controlled via --font-scale, so nothing may use fixed px font sizes.
+ *   - Never encode meaning in colour alone; always pair with text or an icon.
+ */
+
+:root {
+  --font-scale: 1;
+
+  --bg: #f7f8fc;
+  --surface: #ffffff;
+  --surface-2: #eef1f8;
+  --border: #d3d9e6;
+  --text: #131722;
+  --text-muted: #4d566d;
+  --accent: #1b4fd8;
+  --accent-text: #ffffff;
+  --success: #0f6b46;
+  --warning: #8a5200;
+  --danger: #b3261e;
+  --focus: #0a58ca;
+
+  --radius: 14px;
+  --radius-sm: 9px;
+  --gap: 1rem;
+  --tap: 44px;
+
+  color-scheme: light dark;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  font-size: calc(1rem * var(--font-scale));
+  line-height: 1.55;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b1020;
+    --surface: #151b30;
+    --surface-2: #1e2740;
+    --border: #333e5c;
+    --text: #f2f4fb;
+    --text-muted: #a9b3cc;
+    --accent: #6f9cff;
+    --accent-text: #06122b;
+    --success: #57d2a0;
+    --warning: #f0b757;
+    --danger: #ff8f85;
+    --focus: #9dc0ff;
+  }
+}
+
+/* Opt-in high contrast, independent of light/dark. */
+:root[data-contrast='high'] {
+  --bg: #000000;
+  --surface: #0a0a0a;
+  --surface-2: #141414;
+  --border: #ffffff;
+  --text: #ffffff;
+  --text-muted: #e8e8e8;
+  --accent: #ffe066;
+  --accent-text: #000000;
+  --success: #7dffb8;
+  --warning: #ffd24d;
+  --danger: #ff9c93;
+  --focus: #ffe066;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Visible on focus only — the first tab stop on every page. */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  padding: 0.75rem 1rem;
+  background: var(--accent);
+  color: var(--accent-text);
+  border-radius: 0 0 var(--radius-sm) 0;
+  font-weight: 700;
+}
+.skip-link:focus {
+  left: 0;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+:root[data-reduce-motion='true'] * {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* ------------------------------- layout ------------------------------- */
+
+.app {
+  min-height: 100dvh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap);
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  text-decoration: none;
+  font-size: 1.15rem;
+}
+.brand img {
+  width: 30px;
+  height: 30px;
+}
+
+main {
+  width: 100%;
+  max-width: 68rem;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 5.5rem;
+}
+
+/* Bottom nav on phones, horizontal row on wide screens. */
+.nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-around;
+  gap: 0.25rem;
+  padding: 0.4rem 0.5rem;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  overflow-x: auto;
+  z-index: 10;
+}
+.nav a {
+  flex: 1 1 0;
+  min-width: 4.5rem;
+  min-height: var(--tap);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  padding: 0.35rem 0.25rem;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-align: center;
+}
+.nav a[aria-current='page'] {
+  color: var(--accent-text);
+  background: var(--accent);
+}
+.nav a .nav-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+/* --------------------------- building blocks --------------------------- */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+
+.grid {
+  display: grid;
+  gap: var(--gap);
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+}
+
+h1 {
+  font-size: 1.6rem;
+  line-height: 1.2;
+  margin: 0 0 0.35rem;
+  letter-spacing: -0.02em;
+}
+h2 {
+  font-size: 1.15rem;
+  margin: 0 0 0.5rem;
+}
+h3 {
+  font-size: 1rem;
+  margin: 0 0 0.35rem;
+}
+.lede {
+  color: var(--text-muted);
+  margin: 0 0 1.25rem;
+  max-width: 42rem;
+}
+.muted {
+  color: var(--text-muted);
+}
+.small {
+  font-size: 0.85rem;
+}
+
+button,
+.btn {
+  min-height: var(--tap);
+  min-width: var(--tap);
+  padding: 0.6rem 1.1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  text-decoration: none;
+}
+button:hover:not(:disabled),
+.btn:hover {
+  border-color: var(--accent);
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+button.primary,
+.btn.primary {
+  background: var(--accent);
+  color: var(--accent-text);
+  border-color: transparent;
+}
+button.danger {
+  background: transparent;
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+.stack {
+  display: grid;
+  gap: var(--gap);
+}
+
+input[type='text'],
+input[type='tel'],
+textarea,
+select {
+  width: 100%;
+  min-height: var(--tap);
+  padding: 0.65rem 0.8rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+textarea {
+  resize: vertical;
+  min-height: 5.5rem;
+}
+label {
+  display: block;
+  font-weight: 650;
+  margin-bottom: 0.3rem;
+}
+.field {
+  margin-bottom: 0.9rem;
+}
+.hint {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+.switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: var(--tap);
+  padding: 0.4rem 0;
+  font-weight: 600;
+}
+.switch input {
+  width: 1.35rem;
+  height: 1.35rem;
+  accent-color: var(--accent);
+  flex: none;
+}
+
+/* ------------------------------- notices ------------------------------- */
+
+.notice {
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  border-left: 5px solid var(--accent);
+  background: var(--surface-2);
+  padding: 0.75rem 0.9rem;
+  font-size: 0.9rem;
+}
+.notice.warn {
+  border-left-color: var(--warning);
+}
+.notice.error {
+  border-left-color: var(--danger);
+}
+.notice strong {
+  display: block;
+}
+
+/* --------------------------- gloss + player --------------------------- */
+
+.gloss-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+}
+.chip.active {
+  background: var(--accent);
+  color: var(--accent-text);
+  border-color: transparent;
+}
+.chip.spelled {
+  border-style: dashed;
+  font-weight: 600;
+}
+/* Unverified glosses carry a visible marker. Do not remove: the seed lexicon is unreviewed
+   and pretending otherwise misrepresents ISL to learners. */
+.chip.unverified::after {
+  content: '?';
+  font-size: 0.7rem;
+  opacity: 0.75;
+}
+
+.stage {
+  aspect-ratio: 4 / 3;
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  position: relative;
+}
+.stage video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.stage .placeholder {
+  text-align: center;
+  padding: 1.25rem;
+}
+.stage .placeholder .big {
+  font-size: clamp(1.6rem, 7vw, 2.6rem);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.4rem;
+}
+
+/* --------------------------- camera + overlay --------------------------- */
+
+.camera {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: #000;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.camera video,
+.camera canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Mirror the preview: users expect a selfie view. Landmark coordinates are unaffected. */
+  transform: scaleX(-1);
+}
+.camera .badge {
+  position: absolute;
+  top: 0.6rem;
+  left: 0.6rem;
+  z-index: 2;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.72);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.camera .badge.recording {
+  background: var(--danger);
+  color: #fff;
+}
+
+.prediction {
+  display: grid;
+  gap: 0.4rem;
+}
+.prediction-row {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr auto;
+  gap: 0.6rem;
+  align-items: center;
+  font-weight: 650;
+}
+.meter {
+  height: 0.7rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.meter > span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+/* ------------------------------- misc ------------------------------- */
+
+.stat {
+  text-align: center;
+}
+.stat .value {
+  font-size: 1.7rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+.stat .label {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+th,
+td {
+  text-align: left;
+  padding: 0.5rem 0.4rem;
+  border-bottom: 1px solid var(--border);
+}
+th {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+details.trace {
+  margin-top: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+details.trace summary {
+  padding: 0.7rem 0.9rem;
+  cursor: pointer;
+  font-weight: 650;
+  min-height: var(--tap);
+  display: flex;
+  align-items: center;
+}
+details.trace .trace-body {
+  padding: 0 0.9rem 0.9rem;
+  font-size: 0.87rem;
+}
+details.trace ol {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+details.trace code {
+  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  background: var(--surface-2);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+footer.disclaimer {
+  grid-row: 3;
+  padding: 1rem;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  text-align: center;
+  margin-bottom: 4.5rem;
+}
+
+@media (min-width: 48rem) {
+  .nav {
+    position: static;
+    justify-content: flex-start;
+    border-top: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .nav a {
+    flex: 0 0 auto;
+    flex-direction: row;
+    min-width: 0;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
+  main {
+    padding-bottom: 2rem;
+  }
+  footer.disclaimer {
+    margin-bottom: 0;
+  }
+}

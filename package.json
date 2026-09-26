@@ -1,0 +1,21 @@
+{
+  "name": "signsphere",
+  "private": true,
+  "version": "0.1.0",
+  "description": "ISL learning and communication platform — on-device sign recognition, gloss-based text-to-sign",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace @signsphere/web",
+    "build": "npm run build --workspace @signsphere/web",
+    "preview": "npm run preview --workspace @signsphere/web",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "check": "npm run typecheck && npm run test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
