@@ -51,8 +51,8 @@ export function useNotices(): AppNotice[] {
       icon: 'hand',
       title: 'Teach SignSphere your first signs',
       body: 'Sign recognition needs examples first. Record 5 takes each of 3 signs.',
-      to: '/profile/teach',
-      action: 'Teach a sign',
+      to: '/record',
+      action: 'Record signs',
     });
   }
   const now = Date.now();

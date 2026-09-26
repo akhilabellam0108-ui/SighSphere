@@ -12,7 +12,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { buildIndex } from '@signsphere/gloss';
 import CameraView from '../../components/CameraView.js';
-import { FEATURE_VERSION, FRAME_DIM, FeatureWindow, encodeFrame } from '../../lib/features.js';
+import { FEATURE_VERSION, FRAME_DIM, FeatureWindow, WINDOW_FRAMES, encodeFrame } from '../../lib/features.js';
 import type { TrackedFrame } from '../../lib/landmarks.js';
 import {
   addSample,
@@ -21,10 +21,20 @@ import {
   sampleCounts,
   type SampleMeta,
 } from '../../lib/storage.js';
-import { PageHeader } from '../../components/ui/index.js';
+import { SignPacks } from '../../components/domain/SignPacks.js';
+import { OfflineReadiness } from '../../components/domain/OfflineReadiness.js';
+import { loadInstalledPacks } from '../../lib/datasets.js';
+import { PageHeader, Section } from '../../components/ui/index.js';
 import { useSettings } from '../../state/settings.js';
 
-const CAPTURE_MS = 1600;
+/*
+ * Capture ends when enough frames are collected, not after a fixed time. A fixed 1.6 s window
+ * gave slow devices (8–10 fps) only 13–16 frames per sign; now every recording aims for a full
+ * model window. MIN_MS stops a fast device ending mid-sign; MAX_MS bounds a very slow one.
+ */
+const TARGET_FRAMES = WINDOW_FRAMES;
+const MIN_MS = 1200;
+const MAX_MS = 4500;
 const COUNTDOWN_FROM = 3;
 
 type Phase = 'idle' | 'countdown' | 'recording' | 'saved';
@@ -44,6 +54,9 @@ export default function Recorder() {
   const windowRef = useRef(new FeatureWindow(90));
   const scratchRef = useRef(new Float32Array(FRAME_DIM));
   const phaseRef = useRef<Phase>('idle');
+  const startedAtRef = useRef(0);
+  const savingRef = useRef(false);
+  const [frames, setFrames] = useState(0);
 
   useEffect(() => {
     phaseRef.current = phase;
@@ -56,19 +69,32 @@ export default function Recorder() {
 
   const activeLabel = (customLabel.trim() || label).toUpperCase();
 
+  // Latest save(), callable from the frame loop without re-creating it every render.
+  const saveRef = useRef<() => Promise<void>>(async () => {});
+
   const handleFrame = useCallback((frame: TrackedFrame) => {
-    if (phaseRef.current !== 'recording') return;
-    windowRef.current.pushEncoded(encodeFrame(frame, scratchRef.current));
+    if (phaseRef.current !== 'recording' || savingRef.current) return;
+    const window = windowRef.current;
+    window.pushEncoded(encodeFrame(frame, scratchRef.current));
+    setFrames(window.length);
+    if (window.length >= TARGET_FRAMES && performance.now() - startedAtRef.current >= MIN_MS) {
+      savingRef.current = true;
+      void saveRef.current();
+    }
   }, []);
 
   const save = useCallback(async () => {
     const window = windowRef.current;
     const sourceFrames = window.length;
+    const seconds = (performance.now() - startedAtRef.current) / 1000;
+    const fps = seconds > 0 ? Math.round(sourceFrames / seconds) : 0;
 
     if (sourceFrames < 8) {
       setMessage(
-        `Only ${sourceFrames} frames were tracked — not enough. Make sure your hands are fully in frame and well lit, then try again.`,
+        `Only ${sourceFrames} frames were tracked in ${seconds.toFixed(1)} s (about ${fps} fps) — not enough. ` +
+          'Close other tabs, turn on “Hands only” in Settings to roughly double the speed, and make sure your hands are fully in frame and well lit.',
       );
+      window.clear();
       setPhase('idle');
       return;
     }
@@ -88,7 +114,12 @@ export default function Recorder() {
           consentTrain: settings.consentTrain,
         },
       });
-      setMessage(`Saved ${activeLabel} (${sourceFrames} frames tracked).`);
+      setMessage(
+        sourceFrames >= TARGET_FRAMES
+          ? `Saved ${activeLabel} — ${sourceFrames} frames in ${seconds.toFixed(1)} s.`
+          : `Saved ${activeLabel} with ${sourceFrames} frames (this device tracked about ${fps} fps, so it stopped at ${MAX_MS / 1000} s). ` +
+              'It will still work; turn on “Hands only” in Settings for smoother recordings.',
+      );
       setPhase('saved');
       refreshCounts();
     } catch (error: unknown) {
@@ -99,17 +130,24 @@ export default function Recorder() {
     }
   }, [activeLabel, lighting, refreshCounts, settings.consentTrain, settings.dominantHand, settings.signerId]);
 
+  useEffect(() => {
+    saveRef.current = save;
+  }, [save]);
+
   function startCapture() {
     setMessage(null);
     setCountdown(COUNTDOWN_FROM);
     setPhase('countdown');
   }
 
-  // Countdown, then record for CAPTURE_MS, then save.
+  // Countdown, then record until TARGET_FRAMES (or MAX_MS), then save.
   useEffect(() => {
     if (phase !== 'countdown') return;
     if (countdown <= 0) {
       windowRef.current.clear();
+      savingRef.current = false;
+      startedAtRef.current = performance.now();
+      setFrames(0);
       setPhase('recording');
       return;
     }
@@ -119,11 +157,14 @@ export default function Recorder() {
 
   useEffect(() => {
     if (phase !== 'recording') return;
+    // Safety net for slow devices: stop at MAX_MS with whatever was captured.
     const timer = setTimeout(() => {
-      void save();
-    }, CAPTURE_MS);
+      if (savingRef.current) return;
+      savingRef.current = true;
+      void saveRef.current();
+    }, MAX_MS);
     return () => clearTimeout(timer);
-  }, [phase, save]);
+  }, [phase]);
 
   async function download() {
     const { jsonl, included, skippedNoConsent, skippedOldVersion } = await exportSamples(FEATURE_VERSION);
@@ -148,14 +189,15 @@ export default function Recorder() {
   }
 
   const total = Object.values(counts).reduce((sum, n) => sum + n, 0);
+  // Each built-in example already averages several dataset videos, so "5 takes" does not apply.
+  const builtIn = new Set(loadInstalledPacks().flatMap((pack) => pack.signs));
 
   return (
     <>
       <PageHeader
-        back={{ to: '/profile', label: 'Back to profile' }}
-        eyebrow="Teach SignSphere"
-        title="Teach a sign"
-        subtitle="Record examples to teach recognition on this device, and to export training data. Nothing is uploaded — export is a manual file download you control."
+        eyebrow="Record"
+        title="Record signs"
+        subtitle="Record examples to teach recognition on this device, install ready-made ISL signs, and export training data. Nothing is uploaded — export is a manual file download you control."
       />
 
       <p className="notice">
@@ -174,7 +216,7 @@ export default function Recorder() {
               phase === 'countdown'
                 ? `Get ready… ${countdown}`
                 : phase === 'recording'
-                  ? `● Recording ${activeLabel}`
+                  ? `● Recording ${activeLabel} · ${Math.min(frames, TARGET_FRAMES)}/${TARGET_FRAMES} frames`
                   : undefined
             }
           />
@@ -189,7 +231,7 @@ export default function Recorder() {
             </button>
             <span className="small muted" aria-live="polite">
               {phase === 'countdown' && `Starting in ${countdown}…`}
-              {phase === 'recording' && 'Sign now'}
+              {phase === 'recording' && `Sign now — ${Math.min(frames, TARGET_FRAMES)} of ${TARGET_FRAMES} frames`}
             </span>
           </div>
           {message && (
@@ -300,7 +342,15 @@ export default function Recorder() {
                       <strong>{gloss}</strong>
                     </td>
                     <td>{count}</td>
-                    <td>{count >= 5 ? '✓ workable' : `needs ${5 - count} more`}</td>
+                    <td>
+                      {builtIn.has(gloss)
+                        ? count >= 5
+                          ? '✓ built-in + yours'
+                          : '✓ built-in'
+                        : count >= 5
+                          ? '✓ workable'
+                          : `needs ${5 - count} more`}
+                    </td>
                   </tr>
                 ))}
             </tbody>
@@ -330,6 +380,14 @@ export default function Recorder() {
       <p className="hint">
         After recording, reopen Sign → Text to rebuild the recogniser with the new samples.
       </p>
+
+      <Section title="Built-in ISL signs" description="Ready-made examples from a published ISL dataset — recognised without recording anything.">
+        <SignPacks onChange={refreshCounts} />
+      </Section>
+
+      <Section title="Use it without internet">
+        <OfflineReadiness />
+      </Section>
     </>
   );
 }

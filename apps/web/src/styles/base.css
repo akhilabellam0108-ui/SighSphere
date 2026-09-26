@@ -461,7 +461,8 @@ button.small {
   border-left-color: var(--success-fill);
   background: var(--success-soft);
 }
-.notice strong {
+/* Only the notice's leading title is a block; bold words inside the body stay inline. */
+.notice > strong:first-child {
   display: block;
   margin-bottom: 0.15rem;
 }

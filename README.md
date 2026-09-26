@@ -81,11 +81,14 @@ models/                    trained artifacts; metrics.json files are committed a
 | Community | `/community` | **Demo data only** (`src/data/demo/`), labelled on screen; posting disabled. |
 | Emergency | `/emergency` | Reachable without sign-in or onboarding; works offline; sign input only for emergency signs this device has been taught, and every result is confirmed by the user. |
 | Accessibility | `/accessibility` | Live captions, speech-to-text, text-to-speech, reading assistant; theme, contrast, text size, motion, haptics. |
-| Profile | `/profile`, `/profile/history`, `/profile/teach`, `/profile/settings`, `/profile/help` | Stats, achievements (computed from real local data), saved history with search/filter/delete, **Teach a sign** (the recorder), settings, help. |
+| Record | `/record` | The recorder (captures until 32 frames are tracked), built-in ISL sign packs, offline-readiness check, JSONL export. |
+| Profile | `/profile`, `/profile/history`, `/profile/settings`, `/profile/help` | Stats, achievements (computed from real local data), saved history with search/filter/delete, settings, help. |
 
-Old URLs (`/text-to-sign`, `/record`, `/settings`, …) redirect to their new locations.
+Old URLs (`/text-to-sign`, `/settings`, `/profile/teach`, …) redirect to their new locations.
 
 **Design system:** `src/styles/tokens.css` (colours, type, radii, spacing, motion — light, dark and high-contrast), shared UI components in `src/components/ui/`, SignSphere-specific ones in `src/components/domain/`. No CSS framework, no component library. Icons are Lucide geometry vendored as data (ISC); fonts are self-hosted Inter and Poppins (OFL).
+
+**Built-in ISL signs:** `services/ml/build_isl_pack.py` turns INCLUDE (CC BY 4.0) videos into a sign pack users install from **Record signs**, so emergency signs such as DOCTOR, POLICE and HOSPITAL are recognised without recording. See `services/ml/README.md`.
 
 **Offline:** `apps/web/sw.template.js` is turned into `/sw.js` at build time with the full file list, so every screen opens offline after the first visit. MediaPipe models are cached the first time a camera screen is used. Verify with `npm run build && npm run preview`, load once, stop the server, reload.
 

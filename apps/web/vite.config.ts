@@ -29,8 +29,10 @@ function signsphereServiceWorker(): Plugin {
       const publicDir = join(root, 'public');
       const publicFiles = listFiles(publicDir)
         .map((file) => `/${relative(publicDir, file).split('\\').join('/')}`)
-        // Licence texts are for humans, not for the offline cache.
-        .filter((path) => !path.endsWith('.txt'));
+        // Licence texts are for humans, not for the offline cache. Sign packs are optional
+        // multi-MB downloads that get installed into IndexedDB on request, so they are not
+        // forced on every visitor's first load.
+        .filter((path) => !path.endsWith('.txt') && !path.startsWith('/datasets/'));
       const built = Object.keys(bundle).map((file) => `/${file}`);
       // index.html is the offline shell for every route; it must always be precached.
       const urls = [...new Set(['/index.html', ...built, ...publicFiles])].filter((url) => url !== '/sw.js').sort();

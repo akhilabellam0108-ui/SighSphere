@@ -12,7 +12,7 @@ than guess at it.
 
 | Dataset | Source URL | License (exact) | Signs | Clips | Signers | Resolution / FPS | Landmarks extractable? | Verdict | Verified by / date |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| INCLUDE / INCLUDE-50 | | | | | | | | | |
+| INCLUDE / INCLUDE-50 | https://zenodo.org/records/4010759 | CC BY 4.0 (Zenodo record) | 263 (50) | 4,292 (3,475 train / 817 test) | not stated on record | varies; ~25 fps | Yes — MediaPipe; `services/ml/build_isl_pack.py` | USE-WITH-ATTRIBUTION | Claude, 2026-09-26 (Zenodo record + AI4Bharat/INCLUDE repo) |
 | CISLR | | | | | | | | | |
 | ISL-CSLTR | | | | | | | | | |
 | ISLRTC ISL Dictionary | | | | | | | | | |

@@ -11,7 +11,7 @@ import { useSettings } from '../../state/settings.js';
 
 const LINKS: Array<{ to: string; icon: IconName; title: string; body: string }> = [
   { to: '/profile/history', icon: 'bookmark', title: 'Saved conversations & translations', body: 'Search, re-open and delete your history.' },
-  { to: '/profile/teach', icon: 'hand', title: 'Teach a sign', body: 'Record examples so recognition works for you.' },
+  { to: '/record', icon: 'record', title: 'Record signs', body: 'Record your own signs or install built-in ISL signs.' },
   { to: '/profile/settings', icon: 'settings', title: 'Settings', body: 'Speech, recognition, display and your data.' },
   { to: '/accessibility', icon: 'accessibility', title: 'Accessibility tools', body: 'Captions, text-to-speech, reading aid.' },
   { to: '/profile/help', icon: 'help', title: 'Help & Support', body: 'FAQ, privacy and what SignSphere can and cannot do.' },

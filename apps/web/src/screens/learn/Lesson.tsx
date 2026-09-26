@@ -198,7 +198,7 @@ export default function Lesson() {
       {untrained && (
         <Notice tone="warn" title="Practice cannot be graded yet">
           No signs have been recorded on this device, so the app can show you a sign but cannot check
-          yours. <Link to="/profile/teach">Teach a sign</Link> first.
+          yours. <Link to="/record">Record signs</Link> first.
         </Notice>
       )}
 

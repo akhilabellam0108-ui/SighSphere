@@ -84,7 +84,7 @@ export default function LearningHub() {
       {knownSigns === 0 && (
         <Notice tone="warn" title="Practice cannot be graded yet">
           You can watch every lesson, but grading needs the recogniser to know the sign.{' '}
-          <Link to="/profile/teach">Teach a sign</Link> to unlock feedback for it.
+          <Link to="/record">Record signs</Link> to unlock feedback for it.
         </Notice>
       )}
 

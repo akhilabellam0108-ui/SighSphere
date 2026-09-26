@@ -71,7 +71,7 @@ export default function SignToText({ speakOutput }: SignToTextProps) {
 
       {untrained && (
         <Notice title="No signs recorded yet">
-          Recognition needs examples first. Go to <Link to="/profile/teach">Teach a sign</Link> and
+          Recognition needs examples first. Go to <Link to="/record">Record signs</Link> and
           capture 5 takes each of a few signs, then come back. It works immediately — no training run
           required.
         </Notice>

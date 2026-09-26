@@ -65,6 +65,7 @@ const QUICK = [
   { to: '/emergency', icon: 'sos', tone: 'red', title: 'Emergency Assistance', body: 'Phrase cards, contacts, location.' },
   { to: '/accessibility', icon: 'accessibility', tone: 'teal', title: 'Accessibility Tools', body: 'Captions, speech, reading aid.' },
   { to: '/community', icon: 'community', tone: 'cyan', title: 'Community', body: 'Forums, events, mentorship.' },
+  { to: '/record', icon: 'record', tone: 'amber', title: 'Record Signs', body: 'Teach it signs, or install built-in ISL.' },
 ] as const;
 
 interface SearchResult {
@@ -80,7 +81,7 @@ const DESTINATIONS: Array<Omit<SearchResult, 'key'>> = [
   { label: 'Live Conversation', detail: 'Split-screen voice and sign conversation', to: '/translate/conversation', icon: 'conversation' },
   ...QUICK.map((item) => ({ label: item.title, detail: item.body, to: item.to, icon: item.icon as IconName })),
   { label: 'Saved & history', detail: 'Your saved translations and conversations', to: '/profile/history', icon: 'history' },
-  { label: 'Teach a sign', detail: 'Record examples so recognition works', to: '/profile/teach', icon: 'hand' },
+  { label: 'Record signs', detail: 'Record examples or install built-in ISL signs', to: '/record', icon: 'record' },
   { label: 'Settings', detail: 'Speech, recognition, data', to: '/profile/settings', icon: 'settings' },
   { label: 'Help & Support', detail: 'FAQ, privacy, limitations', to: '/profile/help', icon: 'help' },
 ];
@@ -253,7 +254,7 @@ export default function Home() {
       {labels === 0 && (
         <Notice title="Start here: teach it three signs">
           Recognition needs examples before it can recognise anything. Open{' '}
-          <Link to="/profile/teach">Teach a sign</Link> and record 5 takes each of 3 signs — then{' '}
+          <Link to="/record">Record signs</Link> and record 5 takes each of 3 signs — then{' '}
           <Link to="/translate/sign-to-text">Sign → Text</Link> will start working. No training run or
           server needed.
         </Notice>

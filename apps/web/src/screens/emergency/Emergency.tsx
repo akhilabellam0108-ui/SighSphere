@@ -19,8 +19,10 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { translate } from '@signsphere/gloss';
 import CameraView from '../../components/CameraView.js';
+import { OfflineReadiness } from '../../components/domain/OfflineReadiness.js';
 import { Badge, Button, Card, Icon, Modal, Notice, PageHeader, TextField } from '../../components/ui/index.js';
 import { useHaptics } from '../../hooks/useDevice.js';
 import { useSignRecognition } from '../../hooks/useSignRecognition.js';
@@ -70,6 +72,7 @@ const SIGN_PHRASES: Readonly<Record<string, string>> = {
   PAIN: 'I have pain here.',
   SICK: 'I feel sick.',
   MEDICINE: 'I need medicine.',
+  DEAF: 'I am deaf. I cannot hear you.',
 };
 
 // ------------------------------------------------------------------ sign-a-phrase panel
@@ -296,17 +299,19 @@ export default function Emergency() {
               <strong>Not available on this device yet.</strong> Signing a phrase only works for
               emergency signs this device has been taught (such as HELP, DOCTOR or AMBULANCE), so a
               stressful moment never depends on a guess. Use the phrase cards above — they are
-              faster and always work. To enable it, teach those signs in Profile → Teach a sign.
+              faster and always work. To enable it, open <Link to="/record">Record signs</Link> and
+              install “ISL emergency signs”, or record HELP, PAIN and FIRE yourself.
             </p>
           </Card>
         ) : (
           <Card className="stack">
             <p className="small mb-0">
               Recognises only these taught emergency signs:{' '}
-              {signLabels.map((label) => (
-                <Badge key={label} tone="danger">
-                  {label}
-                </Badge>
+              {signLabels.map((label, i) => (
+                <span key={label}>
+                  {i > 0 && ' '}
+                  <Badge tone="danger">{label}</Badge>
+                </span>
               ))}
               . You confirm every result before it is shown.
             </p>
@@ -321,6 +326,11 @@ export default function Emergency() {
             )}
           </Card>
         )}
+      </section>
+
+      <section className="section" aria-labelledby="offline-heading">
+        <h2 id="offline-heading">Ready for no signal?</h2>
+        <OfflineReadiness />
       </section>
 
       {/* ------------------------------------------------------------- contacts */}

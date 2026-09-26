@@ -58,3 +58,41 @@ describe('splitSentences', () => {
     expect(splitSentences('   ')).toEqual([]);
   });
 });
+
+import { validatePack } from './datasets.js';
+import { FEATURE_VERSION, FRAME_DIM, WINDOW_DIM, WINDOW_FRAMES } from './features.js';
+
+describe('sign packs', () => {
+  const pack = {
+    format: 'signsphere-sign-pack',
+    formatVersion: 1,
+    id: 'isl-include-sos',
+    name: 'ISL emergency signs (INCLUDE)',
+    description: 'test',
+    language: 'isl',
+    featureVersion: FEATURE_VERSION,
+    windowFrames: WINDOW_FRAMES,
+    frameDim: FRAME_DIM,
+    source: 'INCLUDE',
+    sourceUrl: 'https://zenodo.org/records/4010759',
+    license: 'CC-BY-4.0',
+    attribution: 'INCLUDE by AI4Bharat, CC BY 4.0',
+    signs: { HOSPITAL: { videos: 3 } },
+    samples: [{ label: 'HOSPITAL', sourceFrames: 30, vector: new Array(WINDOW_DIM).fill(0.01) }],
+  };
+
+  it('accepts a well-formed pack for this feature version', () => {
+    expect(validatePack(pack).samples).toHaveLength(1);
+  });
+
+  it('rejects packs built for another feature layout', () => {
+    expect(() => validatePack({ ...pack, featureVersion: FEATURE_VERSION + 1 })).toThrow(/feature version/);
+    expect(() => validatePack({ ...pack, frameDim: FRAME_DIM - 1 })).toThrow();
+  });
+
+  it('rejects malformed examples and packs without attribution', () => {
+    expect(() => validatePack({ ...pack, samples: [{ label: 'X', sourceFrames: 1, vector: [1, 2, 3] }] })).toThrow(/malformed/);
+    expect(() => validatePack({ ...pack, attribution: '' })).toThrow(/licence|attribution/);
+    expect(() => validatePack({ nope: true })).toThrow(/not a SignSphere sign pack/);
+  });
+});

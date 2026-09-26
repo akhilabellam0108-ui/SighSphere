@@ -57,7 +57,7 @@ export default function App() {
           <Route path="/accessibility" element={<AccessibilityTools />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/history" element={<History />} />
-          <Route path="/profile/teach" element={<Teach />} />
+          <Route path="/record" element={<Teach />} />
           <Route path="/profile/settings" element={<SettingsPage />} />
           <Route path="/profile/help" element={<Help />} />
         </Route>

@@ -4,11 +4,11 @@ import { Card, Icon, PageHeader, Section } from '../../components/ui/index.js';
 const FAQ: Array<{ q: string; a: string }> = [
   {
     q: 'Why does Sign → Text not recognise anything?',
-    a: 'Recognition learns from examples recorded on this device. Open Profile → Teach a sign, record 5 takes each of a few signs, then try again. It only recognises signs it has been taught, one at a time.',
+    a: 'Recognition learns from examples recorded on this device. Open Record signs, record 5 takes each of a few signs, then try again. It only recognises signs it has been taught, one at a time.',
   },
   {
     q: 'Is my camera video uploaded?',
-    a: 'No. Every camera frame is processed in your browser and discarded. Recordings from Teach a sign are stored on this device as hand-position numbers, not video, and only leave it if you export them yourself.',
+    a: 'No. Every camera frame is processed in your browser and discarded. Recordings from Record signs are stored on this device as hand-position numbers, not video, and only leave it if you export them yourself.',
   },
   {
     q: 'Is my voice uploaded?',
@@ -23,8 +23,16 @@ const FAQ: Array<{ q: string; a: string }> = [
     a: 'No. Accounts are not connected yet — sign-in currently creates a local demo profile only. Guest mode has every feature.',
   },
   {
-    q: 'Does it work offline?',
-    a: 'Yes, after the first visit. The app, lessons, translation and emergency cards work with no connection. Speech recognition and the hospital map search need the internet.',
+    q: 'Does it work offline, somewhere remote?',
+    a: 'Yes, if you prepare while you have a connection. The app, lessons, translation and emergency phrase cards work offline after the first visit. Sign recognition runs entirely on your device, but its models (~15 MB) must be downloaded once: open Record signs → “Download for offline use”. Speech recognition and the hospital map search always need the internet.',
+  },
+  {
+    q: 'Can it recognise signs without me recording them?',
+    a: 'Yes, for the built-in ISL signs: open Record signs → Built-in ISL signs → Install. These come from the INCLUDE dataset (CC BY 4.0) and work offline once installed. Adding a few recordings of your own for the same sign makes recognition more reliable for you.',
+  },
+  {
+    q: 'Why did my recording have so few frames?',
+    a: 'Each frame is tracked on your device, so a slower laptop tracks fewer frames per second. Recording now continues until it has 32 frames (up to 4.5 seconds). Turning on “Hands only” in Settings roughly doubles tracking speed.',
   },
   {
     q: 'How do I delete my data?',

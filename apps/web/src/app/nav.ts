@@ -45,6 +45,7 @@ export const SIDEBAR: readonly NavGroup[] = [
     label: 'Explore',
     items: [
       { to: '/learn', label: 'Learning Hub', short: 'Learn', icon: 'learn' },
+      { to: '/record', label: 'Record signs', short: 'Record', icon: 'record' },
       { to: '/community', label: 'Community', icon: 'community' },
       { to: '/accessibility', label: 'Accessibility Tools', short: 'Access', icon: 'accessibility' },
     ],
@@ -62,7 +63,7 @@ export const LEGACY_REDIRECTS: Readonly<Record<string, string>> = {
   '/voice-to-sign': '/translate/voice-to-sign',
   '/sign-to-text': '/translate/sign-to-text',
   '/sign-to-voice': '/translate/sign-to-voice',
-  '/record': '/profile/teach',
+  '/profile/teach': '/record',
   '/settings': '/profile/settings',
 };
 

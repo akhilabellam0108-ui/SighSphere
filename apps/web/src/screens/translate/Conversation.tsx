@@ -193,7 +193,7 @@ export default function Conversation() {
           {recognition.untrained && (
             <Notice title="Teach it some signs first">
               The camera side only recognises signs this device has been taught.{' '}
-              <Link to="/profile/teach">Teach a sign</Link>, then come back.
+              <Link to="/record">Record signs</Link>, then come back.
             </Notice>
           )}
           {recognition.loadError && (
