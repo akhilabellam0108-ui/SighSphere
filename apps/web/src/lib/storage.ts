@@ -13,8 +13,10 @@
 import { WINDOW_DIM } from './features.js';
 
 const DB_NAME = 'signsphere';
-const DB_VERSION = 1;
+// v2 adds the 'motions' store (signer motion for the 3D avatar). Upgrading keeps samples.
+const DB_VERSION = 2;
 const SAMPLE_STORE = 'samples';
+const MOTION_STORE = 'motions';
 
 export interface SampleMeta {
   /** Pseudonymous signer ID (e.g. "S014"). Never a real name. */
@@ -54,6 +56,10 @@ function openDb(): Promise<IDBDatabase> {
         const store = db.createObjectStore(SAMPLE_STORE, { keyPath: 'id', autoIncrement: true });
         store.createIndex('label', 'label', { unique: false });
       }
+      if (!db.objectStoreNames.contains(MOTION_STORE)) {
+        const motions = db.createObjectStore(MOTION_STORE, { keyPath: 'id', autoIncrement: true });
+        motions.createIndex('gloss', 'gloss', { unique: false });
+      }
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error ?? new Error('IndexedDB open failed'));
@@ -61,12 +67,16 @@ function openDb(): Promise<IDBDatabase> {
   return dbPromise;
 }
 
-function tx<T>(mode: IDBTransactionMode, run: (store: IDBObjectStore) => IDBRequest<T>): Promise<T> {
+function tx<T>(
+  mode: IDBTransactionMode,
+  run: (store: IDBObjectStore) => IDBRequest<T>,
+  storeName: string = SAMPLE_STORE,
+): Promise<T> {
   return openDb().then(
     (db) =>
       new Promise<T>((resolve, reject) => {
-        const transaction = db.transaction(SAMPLE_STORE, mode);
-        const request = run(transaction.objectStore(SAMPLE_STORE));
+        const transaction = db.transaction(storeName, mode);
+        const request = run(transaction.objectStore(storeName));
         request.onsuccess = () => resolve(request.result);
         request.onerror = () => reject(request.error ?? new Error('IndexedDB request failed'));
       }),
@@ -94,6 +104,37 @@ export async function deleteSample(id: number): Promise<void> {
 
 export async function clearSamples(): Promise<void> {
   await tx('readwrite', (store) => store.clear());
+}
+
+// ---------------------------------------------------------------------------
+// Signer motion (IndexedDB) — what the 3D avatar replays. See lib/motion.ts.
+// ---------------------------------------------------------------------------
+
+export interface StoredMotion {
+  id?: number;
+  gloss: string;
+  /** 'recorded' = made on this device; 'dataset:<pack>' = installed from a sign pack. */
+  source: string;
+  createdAt: number;
+  /** Encoded clip (lib/motion.ts encodeClip). Kept opaque here. */
+  clip: string;
+}
+
+export async function addMotion(motion: Omit<StoredMotion, 'id'>): Promise<number> {
+  const key = await tx<IDBValidKey>('readwrite', (store) => store.add(motion), MOTION_STORE);
+  return Number(key);
+}
+
+export async function getMotions(): Promise<StoredMotion[]> {
+  return tx<StoredMotion[]>('readonly', (store) => store.getAll(), MOTION_STORE);
+}
+
+export async function deleteMotion(id: number): Promise<void> {
+  await tx('readwrite', (store) => store.delete(id), MOTION_STORE);
+}
+
+export async function clearMotions(): Promise<void> {
+  await tx('readwrite', (store) => store.clear(), MOTION_STORE);
 }
 
 export async function sampleCounts(): Promise<Record<string, number>> {
@@ -167,6 +208,8 @@ export interface Settings {
   signerId: string;
   consentTrain: boolean;
   handsOnly: boolean;
+  /** Where hand tracking runs: 'auto' (graphics chip, falling back), 'gpu' or 'cpu'. */
+  processor: 'auto' | 'gpu' | 'cpu';
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -181,6 +224,7 @@ export const DEFAULT_SETTINGS: Settings = {
   // Opt-IN, never opt-out. Do not flip this default.
   consentTrain: false,
   handsOnly: false,
+  processor: 'auto',
 };
 
 const SETTINGS_KEY = 'signsphere.settings.v1';
@@ -298,6 +342,7 @@ export function isMastered(progress: Progress, gloss: string): boolean {
 /** Wipe everything local. Wired to the "Delete my data" button in Settings. */
 export async function deleteAllLocalData(): Promise<void> {
   await clearSamples();
+  await clearMotions();
   localStorage.removeItem(SETTINGS_KEY);
   localStorage.removeItem(PROGRESS_KEY);
   localStorage.removeItem(CONTACTS_KEY);

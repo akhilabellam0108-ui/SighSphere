@@ -7,6 +7,7 @@
  */
 
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { buildIndex, validateLexicon } from '@signsphere/gloss';
 import { FEATURE_VERSION, FRAME_DIM, WINDOW_FRAMES } from '../lib/features.js';
 import { deleteAllLocalData } from '../lib/storage.js';
@@ -114,6 +115,23 @@ export default function SettingsPage() {
         </label>
 
         <div className="field">
+          <label htmlFor="processor">Tracking runs on</label>
+          <select
+            id="processor"
+            value={settings.processor}
+            onChange={(event) => update({ processor: event.target.value as 'auto' | 'gpu' | 'cpu' })}
+          >
+            <option value="auto">Automatic (recommended)</option>
+            <option value="gpu">Graphics chip</option>
+            <option value="cpu">Main processor</option>
+          </select>
+          <p className="hint">
+            If the camera screens show fewer than about 12 frames per second, try “Main processor” —
+            on some laptops it is much faster.
+          </p>
+        </div>
+
+        <div className="field">
           <label htmlFor="signer-id-setting">Signer ID</label>
           <input
             id="signer-id-setting"
@@ -212,6 +230,18 @@ export default function SettingsPage() {
             {message}
           </p>
         )}
+      </section>
+
+      <section className="card stack" aria-labelledby="dataset-heading" style={{ marginTop: '1rem' }}>
+        <h2 id="dataset-heading">Indian Sign Language dataset</h2>
+        <p className="small" style={{ margin: 0 }}>
+          Import the INCLUDE ISL dataset so signs are recognised and the 3D avatar can sign them without anyone recording.
+        </p>
+        <div>
+          <Link className="btn" to="/dataset">
+            Open ISL dataset
+          </Link>
+        </div>
       </section>
 
       <section className="card stack" aria-labelledby="about-heading" style={{ marginTop: '1rem' }}>

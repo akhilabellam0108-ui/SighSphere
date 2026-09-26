@@ -14,8 +14,13 @@ import {
 } from '../lib/landmarks.js';
 import { useSettings } from '../state/settings.js';
 
+export interface FrameMeta {
+  /** Video width / height, so motion can be stored with correct proportions. */
+  aspect: number;
+}
+
 export interface CameraViewProps {
-  onFrame(frame: TrackedFrame): void;
+  onFrame(frame: TrackedFrame, meta: FrameMeta): void;
   /** Short status text shown over the video. */
   badge?: string;
   /** Renders the badge in the recording colour. */
@@ -87,6 +92,7 @@ export default function CameraView({ onFrame, badge, recording = false, paused =
       const tracker = new LandmarkTracker({
         dominantHand: settings.dominantHand,
         handsOnly: settings.handsOnly,
+        processor: settings.processor,
       });
       try {
         await tracker.init();
@@ -113,7 +119,9 @@ export default function CameraView({ onFrame, badge, recording = false, paused =
         if (!frame) return;
 
         draw(canvasRef.current, currentVideo, frame);
-        onFrameRef.current(frame);
+        onFrameRef.current(frame, {
+          aspect: currentVideo.videoWidth && currentVideo.videoHeight ? currentVideo.videoWidth / currentVideo.videoHeight : 4 / 3,
+        });
 
         frames += 1;
         const now = performance.now();
@@ -136,7 +144,7 @@ export default function CameraView({ onFrame, badge, recording = false, paused =
       stream?.getTracks().forEach((track) => track.stop());
     };
     // Restarting on handsOnly is intentional: it changes which models get created.
-  }, [settings.dominantHand, settings.handsOnly]);
+  }, [settings.dominantHand, settings.handsOnly, settings.processor]);
 
   return (
     <div className="stack">
@@ -163,8 +171,8 @@ export default function CameraView({ onFrame, badge, recording = false, paused =
       {status === 'running' && fps > 0 && fps < 12 && (
         <p className="notice warn">
           <strong>Tracking is slow ({fps} fps)</strong>
-          Recognition needs about 15 fps to work well. Close other tabs, or turn on
-          &ldquo;hands only&rdquo; in Settings to halve the processing cost.
+          Recognition needs about 15 fps to work well. Close other tabs, or in Settings try
+          &ldquo;Tracking runs on: Main processor&rdquo; or turn on &ldquo;hands only&rdquo;.
         </p>
       )}
     </div>

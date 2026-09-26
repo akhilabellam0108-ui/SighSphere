@@ -17,140 +17,3378 @@
     "  pos        noun | verb | adj | adv | pron | num | wh | neg | time | quant | other",
     "  clip       filename under VITE_CLIP_BASE_URL (omit if not recorded yet)",
     "  twoHanded  true if the sign uses both hands",
-    "  reviewed   false until a fluent signer confirms gloss AND clip"
+    "  reviewed   false until a fluent signer confirms gloss AND clip",
+    "",
+    "Entries with notes \"INCLUDE\" were added so every sign in the INCLUDE dataset has a gloss; all remain unreviewed."
   ],
   "entries": [
-    { "gloss": "I", "english": ["i", "me", "myself"], "pos": "pron", "category": "pronoun", "reviewed": false },
-    { "gloss": "MY", "english": ["my", "mine"], "pos": "pron", "category": "pronoun", "reviewed": false },
-    { "gloss": "YOU", "english": ["you", "yourself"], "pos": "pron", "category": "pronoun", "reviewed": false },
-    { "gloss": "YOUR", "english": ["your", "yours"], "pos": "pron", "category": "pronoun", "reviewed": false },
-    { "gloss": "HE-SHE", "english": ["he", "she", "him", "her", "it"], "pos": "pron", "category": "pronoun", "reviewed": false, "notes": "ISL commonly indexes a location in signing space rather than marking gender." },
-    { "gloss": "WE", "english": ["we", "us", "our"], "pos": "pron", "category": "pronoun", "reviewed": false },
-    { "gloss": "THEY", "english": ["they", "them", "their"], "pos": "pron", "category": "pronoun", "reviewed": false },
-
-    { "gloss": "MOTHER", "english": ["mother", "mom", "mummy", "ma"], "pos": "noun", "category": "family", "reviewed": false },
-    { "gloss": "FATHER", "english": ["father", "dad", "papa"], "pos": "noun", "category": "family", "reviewed": false },
-    { "gloss": "SISTER", "english": ["sister"], "pos": "noun", "category": "family", "reviewed": false },
-    { "gloss": "BROTHER", "english": ["brother"], "pos": "noun", "category": "family", "reviewed": false },
-    { "gloss": "FAMILY", "english": ["family"], "pos": "noun", "category": "family", "twoHanded": true, "reviewed": false },
-    { "gloss": "CHILD", "english": ["child", "kid", "baby"], "pos": "noun", "category": "family", "reviewed": false },
-    { "gloss": "FRIEND", "english": ["friend"], "pos": "noun", "category": "people", "twoHanded": true, "reviewed": false },
-    { "gloss": "PERSON", "english": ["person", "man", "woman", "people"], "pos": "noun", "category": "people", "reviewed": false },
-    { "gloss": "NAME", "english": ["name"], "pos": "noun", "category": "people", "twoHanded": true, "reviewed": false },
-
-    { "gloss": "SCHOOL", "english": ["school"], "pos": "noun", "category": "school", "twoHanded": true, "reviewed": false },
-    { "gloss": "TEACHER", "english": ["teacher"], "pos": "noun", "category": "school", "reviewed": false },
-    { "gloss": "STUDENT", "english": ["student"], "pos": "noun", "category": "school", "reviewed": false },
-    { "gloss": "BOOK", "english": ["book"], "pos": "noun", "category": "school", "twoHanded": true, "reviewed": false },
-    { "gloss": "LEARN", "english": ["learn", "study"], "pos": "verb", "category": "school", "reviewed": false },
-    { "gloss": "TEACH", "english": ["teach"], "pos": "verb", "category": "school", "reviewed": false },
-    { "gloss": "WRITE", "english": ["write"], "pos": "verb", "category": "school", "twoHanded": true, "reviewed": false },
-    { "gloss": "READ", "english": ["read"], "pos": "verb", "category": "school", "twoHanded": true, "reviewed": false },
-    { "gloss": "HOME", "english": ["home", "house"], "pos": "noun", "category": "place", "twoHanded": true, "reviewed": false },
-    { "gloss": "WORK", "english": ["work", "job"], "pos": "verb", "category": "place", "twoHanded": true, "reviewed": false },
-
-    { "gloss": "WATER", "english": ["water"], "pos": "noun", "category": "food", "reviewed": false },
-    { "gloss": "FOOD", "english": ["food", "meal"], "pos": "noun", "category": "food", "reviewed": false },
-    { "gloss": "EAT", "english": ["eat"], "pos": "verb", "category": "food", "reviewed": false },
-    { "gloss": "DRINK", "english": ["drink"], "pos": "verb", "category": "food", "reviewed": false },
-    { "gloss": "MILK", "english": ["milk"], "pos": "noun", "category": "food", "reviewed": false },
-    { "gloss": "RICE", "english": ["rice"], "pos": "noun", "category": "food", "reviewed": false },
-    { "gloss": "TEA", "english": ["tea", "chai"], "pos": "noun", "category": "food", "reviewed": false },
-    { "gloss": "HUNGRY", "english": ["hungry"], "pos": "adj", "category": "food", "reviewed": false },
-
-    { "gloss": "HAPPY", "english": ["happy", "glad"], "pos": "adj", "category": "feeling", "reviewed": false },
-    { "gloss": "SAD", "english": ["sad", "unhappy"], "pos": "adj", "category": "feeling", "reviewed": false },
-    { "gloss": "ANGRY", "english": ["angry", "mad"], "pos": "adj", "category": "feeling", "reviewed": false },
-    { "gloss": "TIRED", "english": ["tired"], "pos": "adj", "category": "feeling", "reviewed": false },
-    { "gloss": "AFRAID", "english": ["afraid", "scared", "frightened"], "pos": "adj", "category": "feeling", "reviewed": false },
-    { "gloss": "FINE", "english": ["fine", "okay", "ok", "well"], "pos": "adj", "category": "feeling", "reviewed": false },
-    { "gloss": "LOVE", "english": ["love"], "pos": "verb", "category": "feeling", "twoHanded": true, "reviewed": false },
-    { "gloss": "LIKE", "english": ["like", "enjoy"], "pos": "verb", "category": "feeling", "reviewed": false },
-
-    { "gloss": "PAIN", "english": ["pain", "hurt", "ache"], "pos": "noun", "category": "health", "reviewed": false },
-    { "gloss": "SICK", "english": ["sick", "ill", "unwell"], "pos": "adj", "category": "health", "reviewed": false },
-    { "gloss": "DOCTOR", "english": ["doctor"], "pos": "noun", "category": "health", "reviewed": false },
-    { "gloss": "HOSPITAL", "english": ["hospital", "clinic"], "pos": "noun", "category": "health", "twoHanded": true, "reviewed": false },
-    { "gloss": "MEDICINE", "english": ["medicine", "tablet", "pill"], "pos": "noun", "category": "health", "reviewed": false },
-    { "gloss": "HELP", "english": ["help", "assist"], "pos": "verb", "category": "emergency", "twoHanded": true, "reviewed": false },
-    { "gloss": "EMERGENCY", "english": ["emergency"], "pos": "noun", "category": "emergency", "twoHanded": true, "reviewed": false },
-    { "gloss": "POLICE", "english": ["police", "cop"], "pos": "noun", "category": "emergency", "reviewed": false },
-    { "gloss": "FIRE", "english": ["fire"], "pos": "noun", "category": "emergency", "twoHanded": true, "reviewed": false },
-    { "gloss": "AMBULANCE", "english": ["ambulance"], "pos": "noun", "category": "emergency", "reviewed": false },
-    { "gloss": "DEAF", "english": ["deaf"], "pos": "adj", "category": "identity", "reviewed": false },
-    { "gloss": "HEAR", "english": ["hear", "listen"], "pos": "verb", "category": "identity", "reviewed": false },
-    { "gloss": "HEARING", "english": ["hearing"], "pos": "adj", "category": "identity", "reviewed": false, "notes": "Community term for a non-deaf person, not the act of hearing." },
-    { "gloss": "SIGN-LANGUAGE", "english": ["sign", "signing"], "pos": "noun", "category": "identity", "twoHanded": true, "reviewed": false },
-    { "gloss": "INTERPRETER", "english": ["interpreter"], "pos": "noun", "category": "identity", "twoHanded": true, "reviewed": false },
-
-    { "gloss": "TODAY", "english": ["today"], "pos": "time", "category": "time", "reviewed": false },
-    { "gloss": "TOMORROW", "english": ["tomorrow"], "pos": "time", "category": "time", "reviewed": false },
-    { "gloss": "YESTERDAY", "english": ["yesterday"], "pos": "time", "category": "time", "reviewed": false },
-    { "gloss": "NOW", "english": ["now"], "pos": "time", "category": "time", "reviewed": false },
-    { "gloss": "MORNING", "english": ["morning"], "pos": "time", "category": "time", "reviewed": false },
-    { "gloss": "NIGHT", "english": ["night", "tonight"], "pos": "time", "category": "time", "reviewed": false },
-    { "gloss": "PAST", "english": ["past"], "pos": "time", "category": "time", "reviewed": false, "notes": "Emitted automatically for past-tense verbs; ISL marks tense with time markers." },
-    { "gloss": "FUTURE", "english": ["future"], "pos": "time", "category": "time", "reviewed": false, "notes": "Emitted automatically for 'will'/'shall'." },
-    { "gloss": "TIME", "english": ["time", "clock"], "pos": "noun", "category": "time", "reviewed": false },
-
-    { "gloss": "WHAT", "english": ["what"], "pos": "wh", "category": "question", "reviewed": false },
-    { "gloss": "WHO", "english": ["who", "whom"], "pos": "wh", "category": "question", "reviewed": false },
-    { "gloss": "WHERE", "english": ["where"], "pos": "wh", "category": "question", "reviewed": false },
-    { "gloss": "WHEN", "english": ["when"], "pos": "wh", "category": "question", "reviewed": false },
-    { "gloss": "WHY", "english": ["why"], "pos": "wh", "category": "question", "reviewed": false },
-    { "gloss": "HOW", "english": ["how"], "pos": "wh", "category": "question", "reviewed": false },
-    { "gloss": "HOW-MANY", "english": ["how-many"], "pos": "wh", "category": "question", "twoHanded": true, "reviewed": false },
-    { "gloss": "HOW-MUCH", "english": ["how-much"], "pos": "wh", "category": "question", "twoHanded": true, "reviewed": false },
-    { "gloss": "WHICH", "english": ["which"], "pos": "wh", "category": "question", "reviewed": false },
-    { "gloss": "WHOSE", "english": ["whose"], "pos": "wh", "category": "question", "reviewed": false },
-
-    { "gloss": "YES", "english": ["yes", "yeah"], "pos": "other", "category": "courtesy", "reviewed": false },
-    { "gloss": "NO", "english": ["no"], "pos": "neg", "category": "courtesy", "reviewed": false },
-    { "gloss": "NOT", "english": ["not"], "pos": "neg", "category": "courtesy", "reviewed": false },
-    { "gloss": "NEVER", "english": ["never"], "pos": "neg", "category": "courtesy", "reviewed": false },
-    { "gloss": "NOTHING", "english": ["nothing", "none"], "pos": "neg", "category": "courtesy", "reviewed": false },
-    { "gloss": "CANNOT", "english": ["cannot"], "pos": "neg", "category": "courtesy", "reviewed": false },
-    { "gloss": "THANK-YOU", "english": ["thanks", "thank-you"], "pos": "other", "category": "courtesy", "twoHanded": true, "reviewed": false },
-    { "gloss": "SORRY", "english": ["sorry"], "pos": "other", "category": "courtesy", "reviewed": false },
-    { "gloss": "HELLO", "english": ["hello", "hi", "namaste"], "pos": "other", "category": "courtesy", "reviewed": false },
-    { "gloss": "GOODBYE", "english": ["goodbye", "bye"], "pos": "other", "category": "courtesy", "reviewed": false },
-    { "gloss": "EXCUSE-ME", "english": ["excuse-me"], "pos": "other", "category": "courtesy", "reviewed": false },
-    { "gloss": "GOOD", "english": ["good", "nice"], "pos": "adj", "category": "courtesy", "reviewed": false },
-    { "gloss": "BAD", "english": ["bad"], "pos": "adj", "category": "courtesy", "reviewed": false },
-
-    { "gloss": "GO", "english": ["go", "leave"], "pos": "verb", "category": "verb", "reviewed": false },
-    { "gloss": "COME", "english": ["come", "arrive"], "pos": "verb", "category": "verb", "reviewed": false },
-    { "gloss": "WANT", "english": ["want"], "pos": "verb", "category": "verb", "reviewed": false },
-    { "gloss": "NEED", "english": ["need"], "pos": "verb", "category": "verb", "reviewed": false },
-    { "gloss": "KNOW", "english": ["know"], "pos": "verb", "category": "verb", "reviewed": false },
-    { "gloss": "UNDERSTAND", "english": ["understand"], "pos": "verb", "category": "verb", "reviewed": false },
-    { "gloss": "SEE", "english": ["see", "look", "watch"], "pos": "verb", "category": "verb", "reviewed": false },
-    { "gloss": "GIVE", "english": ["give"], "pos": "verb", "category": "verb", "reviewed": false },
-    { "gloss": "HAVE", "english": ["have", "own"], "pos": "verb", "category": "verb", "reviewed": false },
-    { "gloss": "MAKE", "english": ["make", "do"], "pos": "verb", "category": "verb", "twoHanded": true, "reviewed": false },
-    { "gloss": "SLEEP", "english": ["sleep"], "pos": "verb", "category": "verb", "reviewed": false },
-    { "gloss": "TALK", "english": ["talk", "speak", "say", "tell"], "pos": "verb", "category": "verb", "reviewed": false },
-    { "gloss": "THINK", "english": ["think"], "pos": "verb", "category": "verb", "reviewed": false },
-    { "gloss": "CAN", "english": ["can", "able"], "pos": "verb", "category": "verb", "reviewed": false },
-    { "gloss": "MUST", "english": ["must"], "pos": "verb", "category": "verb", "reviewed": false },
-    { "gloss": "SHOULD", "english": ["should"], "pos": "verb", "category": "verb", "reviewed": false },
-    { "gloss": "MAYBE", "english": ["maybe", "perhaps"], "pos": "adv", "category": "verb", "reviewed": false },
-
-    { "gloss": "MANY", "english": ["many", "lots", "much"], "pos": "quant", "category": "quantity", "reviewed": false },
-    { "gloss": "FEW", "english": ["few", "little"], "pos": "quant", "category": "quantity", "reviewed": false },
-    { "gloss": "ALL", "english": ["all", "every", "everything"], "pos": "quant", "category": "quantity", "reviewed": false },
-    { "gloss": "BIG", "english": ["big", "large"], "pos": "adj", "category": "quantity", "twoHanded": true, "reviewed": false },
-    { "gloss": "SMALL", "english": ["small", "tiny"], "pos": "adj", "category": "quantity", "twoHanded": true, "reviewed": false },
-
-    { "gloss": "ONE", "english": ["one", "1"], "pos": "num", "category": "number", "reviewed": false },
-    { "gloss": "TWO", "english": ["two", "2"], "pos": "num", "category": "number", "reviewed": false },
-    { "gloss": "THREE", "english": ["three", "3"], "pos": "num", "category": "number", "reviewed": false },
-    { "gloss": "FOUR", "english": ["four", "4"], "pos": "num", "category": "number", "reviewed": false },
-    { "gloss": "FIVE", "english": ["five", "5"], "pos": "num", "category": "number", "reviewed": false },
-    { "gloss": "SIX", "english": ["six", "6"], "pos": "num", "category": "number", "reviewed": false },
-    { "gloss": "SEVEN", "english": ["seven", "7"], "pos": "num", "category": "number", "reviewed": false },
-    { "gloss": "EIGHT", "english": ["eight", "8"], "pos": "num", "category": "number", "reviewed": false },
-    { "gloss": "NINE", "english": ["nine", "9"], "pos": "num", "category": "number", "reviewed": false },
-    { "gloss": "TEN", "english": ["ten", "10"], "pos": "num", "category": "number", "reviewed": false }
+    {
+      "gloss": "I",
+      "english": [
+        "i",
+        "me",
+        "myself"
+      ],
+      "pos": "pron",
+      "category": "pronoun",
+      "reviewed": false
+    },
+    {
+      "gloss": "MY",
+      "english": [
+        "my",
+        "mine"
+      ],
+      "pos": "pron",
+      "category": "pronoun",
+      "reviewed": false
+    },
+    {
+      "gloss": "YOU",
+      "english": [
+        "you",
+        "yourself"
+      ],
+      "pos": "pron",
+      "category": "pronoun",
+      "reviewed": false
+    },
+    {
+      "gloss": "YOUR",
+      "english": [
+        "your",
+        "yours"
+      ],
+      "pos": "pron",
+      "category": "pronoun",
+      "reviewed": false
+    },
+    {
+      "gloss": "HE-SHE",
+      "english": [
+        "he",
+        "she",
+        "him",
+        "her",
+        "it"
+      ],
+      "pos": "pron",
+      "category": "pronoun",
+      "reviewed": false,
+      "notes": "ISL commonly indexes a location in signing space rather than marking gender."
+    },
+    {
+      "gloss": "WE",
+      "english": [
+        "we",
+        "us",
+        "our"
+      ],
+      "pos": "pron",
+      "category": "pronoun",
+      "reviewed": false
+    },
+    {
+      "gloss": "THEY",
+      "english": [
+        "they",
+        "them",
+        "their"
+      ],
+      "pos": "pron",
+      "category": "pronoun",
+      "reviewed": false
+    },
+    {
+      "gloss": "MOTHER",
+      "english": [
+        "mother",
+        "mom",
+        "mummy",
+        "ma"
+      ],
+      "pos": "noun",
+      "category": "family",
+      "reviewed": false
+    },
+    {
+      "gloss": "FATHER",
+      "english": [
+        "father",
+        "dad",
+        "papa"
+      ],
+      "pos": "noun",
+      "category": "family",
+      "reviewed": false
+    },
+    {
+      "gloss": "SISTER",
+      "english": [
+        "sister"
+      ],
+      "pos": "noun",
+      "category": "family",
+      "reviewed": false
+    },
+    {
+      "gloss": "BROTHER",
+      "english": [
+        "brother"
+      ],
+      "pos": "noun",
+      "category": "family",
+      "reviewed": false
+    },
+    {
+      "gloss": "FAMILY",
+      "english": [
+        "family"
+      ],
+      "pos": "noun",
+      "category": "family",
+      "twoHanded": true,
+      "reviewed": false
+    },
+    {
+      "gloss": "CHILD",
+      "english": [
+        "child",
+        "kid",
+        "baby"
+      ],
+      "pos": "noun",
+      "category": "family",
+      "reviewed": false
+    },
+    {
+      "gloss": "FRIEND",
+      "english": [
+        "friend"
+      ],
+      "pos": "noun",
+      "category": "people",
+      "twoHanded": true,
+      "reviewed": false
+    },
+    {
+      "gloss": "PERSON",
+      "english": [
+        "person",
+        "man",
+        "woman",
+        "people"
+      ],
+      "pos": "noun",
+      "category": "people",
+      "reviewed": false
+    },
+    {
+      "gloss": "NAME",
+      "english": [
+        "name"
+      ],
+      "pos": "noun",
+      "category": "people",
+      "twoHanded": true,
+      "reviewed": false
+    },
+    {
+      "gloss": "SCHOOL",
+      "english": [
+        "school"
+      ],
+      "pos": "noun",
+      "category": "school",
+      "twoHanded": true,
+      "reviewed": false
+    },
+    {
+      "gloss": "TEACHER",
+      "english": [
+        "teacher"
+      ],
+      "pos": "noun",
+      "category": "school",
+      "reviewed": false
+    },
+    {
+      "gloss": "STUDENT",
+      "english": [
+        "student"
+      ],
+      "pos": "noun",
+      "category": "school",
+      "reviewed": false
+    },
+    {
+      "gloss": "BOOK",
+      "english": [
+        "book"
+      ],
+      "pos": "noun",
+      "category": "school",
+      "twoHanded": true,
+      "reviewed": false
+    },
+    {
+      "gloss": "LEARN",
+      "english": [
+        "learn",
+        "study"
+      ],
+      "pos": "verb",
+      "category": "school",
+      "reviewed": false
+    },
+    {
+      "gloss": "TEACH",
+      "english": [
+        "teach"
+      ],
+      "pos": "verb",
+      "category": "school",
+      "reviewed": false
+    },
+    {
+      "gloss": "WRITE",
+      "english": [
+        "write"
+      ],
+      "pos": "verb",
+      "category": "school",
+      "twoHanded": true,
+      "reviewed": false
+    },
+    {
+      "gloss": "READ",
+      "english": [
+        "read"
+      ],
+      "pos": "verb",
+      "category": "school",
+      "twoHanded": true,
+      "reviewed": false
+    },
+    {
+      "gloss": "HOME",
+      "english": [
+        "home",
+        "house"
+      ],
+      "pos": "noun",
+      "category": "place",
+      "twoHanded": true,
+      "reviewed": false
+    },
+    {
+      "gloss": "WORK",
+      "english": [
+        "work",
+        "job"
+      ],
+      "pos": "verb",
+      "category": "place",
+      "twoHanded": true,
+      "reviewed": false
+    },
+    {
+      "gloss": "WATER",
+      "english": [
+        "water"
+      ],
+      "pos": "noun",
+      "category": "food",
+      "reviewed": false
+    },
+    {
+      "gloss": "FOOD",
+      "english": [
+        "food",
+        "meal"
+      ],
+      "pos": "noun",
+      "category": "food",
+      "reviewed": false
+    },
+    {
+      "gloss": "EAT",
+      "english": [
+        "eat"
+      ],
+      "pos": "verb",
+      "category": "food",
+      "reviewed": false
+    },
+    {
+      "gloss": "DRINK",
+      "english": [
+        "drink"
+      ],
+      "pos": "verb",
+      "category": "food",
+      "reviewed": false
+    },
+    {
+      "gloss": "MILK",
+      "english": [
+        "milk"
+      ],
+      "pos": "noun",
+      "category": "food",
+      "reviewed": false
+    },
+    {
+      "gloss": "RICE",
+      "english": [
+        "rice"
+      ],
+      "pos": "noun",
+      "category": "food",
+      "reviewed": false
+    },
+    {
+      "gloss": "TEA",
+      "english": [
+        "tea",
+        "chai"
+      ],
+      "pos": "noun",
+      "category": "food",
+      "reviewed": false
+    },
+    {
+      "gloss": "HUNGRY",
+      "english": [
+        "hungry"
+      ],
+      "pos": "adj",
+      "category": "food",
+      "reviewed": false
+    },
+    {
+      "gloss": "HAPPY",
+      "english": [
+        "happy",
+        "glad"
+      ],
+      "pos": "adj",
+      "category": "feeling",
+      "reviewed": false
+    },
+    {
+      "gloss": "SAD",
+      "english": [
+        "sad",
+        "unhappy"
+      ],
+      "pos": "adj",
+      "category": "feeling",
+      "reviewed": false
+    },
+    {
+      "gloss": "ANGRY",
+      "english": [
+        "angry",
+        "mad"
+      ],
+      "pos": "adj",
+      "category": "feeling",
+      "reviewed": false
+    },
+    {
+      "gloss": "TIRED",
+      "english": [
+        "tired"
+      ],
+      "pos": "adj",
+      "category": "feeling",
+      "reviewed": false
+    },
+    {
+      "gloss": "AFRAID",
+      "english": [
+        "afraid",
+        "scared",
+        "frightened"
+      ],
+      "pos": "adj",
+      "category": "feeling",
+      "reviewed": false
+    },
+    {
+      "gloss": "FINE",
+      "english": [
+        "fine",
+        "okay",
+        "ok",
+        "well"
+      ],
+      "pos": "adj",
+      "category": "feeling",
+      "reviewed": false
+    },
+    {
+      "gloss": "LOVE",
+      "english": [
+        "love"
+      ],
+      "pos": "verb",
+      "category": "feeling",
+      "twoHanded": true,
+      "reviewed": false
+    },
+    {
+      "gloss": "LIKE",
+      "english": [
+        "like",
+        "enjoy"
+      ],
+      "pos": "verb",
+      "category": "feeling",
+      "reviewed": false
+    },
+    {
+      "gloss": "PAIN",
+      "english": [
+        "pain",
+        "hurt",
+        "ache"
+      ],
+      "pos": "noun",
+      "category": "health",
+      "reviewed": false
+    },
+    {
+      "gloss": "SICK",
+      "english": [
+        "sick",
+        "ill",
+        "unwell"
+      ],
+      "pos": "adj",
+      "category": "health",
+      "reviewed": false
+    },
+    {
+      "gloss": "DOCTOR",
+      "english": [
+        "doctor"
+      ],
+      "pos": "noun",
+      "category": "health",
+      "reviewed": false
+    },
+    {
+      "gloss": "HOSPITAL",
+      "english": [
+        "hospital",
+        "clinic"
+      ],
+      "pos": "noun",
+      "category": "health",
+      "twoHanded": true,
+      "reviewed": false
+    },
+    {
+      "gloss": "MEDICINE",
+      "english": [
+        "medicine",
+        "tablet",
+        "pill"
+      ],
+      "pos": "noun",
+      "category": "health",
+      "reviewed": false
+    },
+    {
+      "gloss": "HELP",
+      "english": [
+        "help",
+        "assist"
+      ],
+      "pos": "verb",
+      "category": "emergency",
+      "twoHanded": true,
+      "reviewed": false
+    },
+    {
+      "gloss": "EMERGENCY",
+      "english": [
+        "emergency"
+      ],
+      "pos": "noun",
+      "category": "emergency",
+      "twoHanded": true,
+      "reviewed": false
+    },
+    {
+      "gloss": "POLICE",
+      "english": [
+        "police",
+        "cop"
+      ],
+      "pos": "noun",
+      "category": "emergency",
+      "reviewed": false
+    },
+    {
+      "gloss": "FIRE",
+      "english": [
+        "fire"
+      ],
+      "pos": "noun",
+      "category": "emergency",
+      "twoHanded": true,
+      "reviewed": false
+    },
+    {
+      "gloss": "AMBULANCE",
+      "english": [
+        "ambulance"
+      ],
+      "pos": "noun",
+      "category": "emergency",
+      "reviewed": false
+    },
+    {
+      "gloss": "DEAF",
+      "english": [
+        "deaf"
+      ],
+      "pos": "adj",
+      "category": "identity",
+      "reviewed": false
+    },
+    {
+      "gloss": "HEAR",
+      "english": [
+        "hear",
+        "listen"
+      ],
+      "pos": "verb",
+      "category": "identity",
+      "reviewed": false
+    },
+    {
+      "gloss": "HEARING",
+      "english": [
+        "hearing"
+      ],
+      "pos": "adj",
+      "category": "identity",
+      "reviewed": false,
+      "notes": "Community term for a non-deaf person, not the act of hearing."
+    },
+    {
+      "gloss": "SIGN-LANGUAGE",
+      "english": [
+        "sign",
+        "signing"
+      ],
+      "pos": "noun",
+      "category": "identity",
+      "twoHanded": true,
+      "reviewed": false
+    },
+    {
+      "gloss": "INTERPRETER",
+      "english": [
+        "interpreter"
+      ],
+      "pos": "noun",
+      "category": "identity",
+      "twoHanded": true,
+      "reviewed": false
+    },
+    {
+      "gloss": "TODAY",
+      "english": [
+        "today"
+      ],
+      "pos": "time",
+      "category": "time",
+      "reviewed": false
+    },
+    {
+      "gloss": "TOMORROW",
+      "english": [
+        "tomorrow"
+      ],
+      "pos": "time",
+      "category": "time",
+      "reviewed": false
+    },
+    {
+      "gloss": "YESTERDAY",
+      "english": [
+        "yesterday"
+      ],
+      "pos": "time",
+      "category": "time",
+      "reviewed": false
+    },
+    {
+      "gloss": "NOW",
+      "english": [
+        "now"
+      ],
+      "pos": "time",
+      "category": "time",
+      "reviewed": false
+    },
+    {
+      "gloss": "MORNING",
+      "english": [
+        "morning"
+      ],
+      "pos": "time",
+      "category": "time",
+      "reviewed": false
+    },
+    {
+      "gloss": "NIGHT",
+      "english": [
+        "night",
+        "tonight"
+      ],
+      "pos": "time",
+      "category": "time",
+      "reviewed": false
+    },
+    {
+      "gloss": "PAST",
+      "english": [
+        "past"
+      ],
+      "pos": "time",
+      "category": "time",
+      "reviewed": false,
+      "notes": "Emitted automatically for past-tense verbs; ISL marks tense with time markers."
+    },
+    {
+      "gloss": "FUTURE",
+      "english": [
+        "future"
+      ],
+      "pos": "time",
+      "category": "time",
+      "reviewed": false,
+      "notes": "Emitted automatically for 'will'/'shall'."
+    },
+    {
+      "gloss": "TIME",
+      "english": [
+        "time",
+        "clock"
+      ],
+      "pos": "noun",
+      "category": "time",
+      "reviewed": false
+    },
+    {
+      "gloss": "WHAT",
+      "english": [
+        "what"
+      ],
+      "pos": "wh",
+      "category": "question",
+      "reviewed": false
+    },
+    {
+      "gloss": "WHO",
+      "english": [
+        "who",
+        "whom"
+      ],
+      "pos": "wh",
+      "category": "question",
+      "reviewed": false
+    },
+    {
+      "gloss": "WHERE",
+      "english": [
+        "where"
+      ],
+      "pos": "wh",
+      "category": "question",
+      "reviewed": false
+    },
+    {
+      "gloss": "WHEN",
+      "english": [
+        "when"
+      ],
+      "pos": "wh",
+      "category": "question",
+      "reviewed": false
+    },
+    {
+      "gloss": "WHY",
+      "english": [
+        "why"
+      ],
+      "pos": "wh",
+      "category": "question",
+      "reviewed": false
+    },
+    {
+      "gloss": "HOW",
+      "english": [
+        "how"
+      ],
+      "pos": "wh",
+      "category": "question",
+      "reviewed": false
+    },
+    {
+      "gloss": "HOW-MANY",
+      "english": [
+        "how-many"
+      ],
+      "pos": "wh",
+      "category": "question",
+      "twoHanded": true,
+      "reviewed": false
+    },
+    {
+      "gloss": "HOW-MUCH",
+      "english": [
+        "how-much"
+      ],
+      "pos": "wh",
+      "category": "question",
+      "twoHanded": true,
+      "reviewed": false
+    },
+    {
+      "gloss": "WHICH",
+      "english": [
+        "which"
+      ],
+      "pos": "wh",
+      "category": "question",
+      "reviewed": false
+    },
+    {
+      "gloss": "WHOSE",
+      "english": [
+        "whose"
+      ],
+      "pos": "wh",
+      "category": "question",
+      "reviewed": false
+    },
+    {
+      "gloss": "YES",
+      "english": [
+        "yes",
+        "yeah"
+      ],
+      "pos": "other",
+      "category": "courtesy",
+      "reviewed": false
+    },
+    {
+      "gloss": "NO",
+      "english": [
+        "no"
+      ],
+      "pos": "neg",
+      "category": "courtesy",
+      "reviewed": false
+    },
+    {
+      "gloss": "NOT",
+      "english": [
+        "not"
+      ],
+      "pos": "neg",
+      "category": "courtesy",
+      "reviewed": false
+    },
+    {
+      "gloss": "NEVER",
+      "english": [
+        "never"
+      ],
+      "pos": "neg",
+      "category": "courtesy",
+      "reviewed": false
+    },
+    {
+      "gloss": "NOTHING",
+      "english": [
+        "nothing",
+        "none"
+      ],
+      "pos": "neg",
+      "category": "courtesy",
+      "reviewed": false
+    },
+    {
+      "gloss": "CANNOT",
+      "english": [
+        "cannot"
+      ],
+      "pos": "neg",
+      "category": "courtesy",
+      "reviewed": false
+    },
+    {
+      "gloss": "THANK-YOU",
+      "english": [
+        "thanks",
+        "thank-you"
+      ],
+      "pos": "other",
+      "category": "courtesy",
+      "twoHanded": true,
+      "reviewed": false
+    },
+    {
+      "gloss": "SORRY",
+      "english": [
+        "sorry"
+      ],
+      "pos": "other",
+      "category": "courtesy",
+      "reviewed": false
+    },
+    {
+      "gloss": "HELLO",
+      "english": [
+        "hello",
+        "hi",
+        "namaste"
+      ],
+      "pos": "other",
+      "category": "courtesy",
+      "reviewed": false
+    },
+    {
+      "gloss": "GOODBYE",
+      "english": [
+        "goodbye",
+        "bye"
+      ],
+      "pos": "other",
+      "category": "courtesy",
+      "reviewed": false
+    },
+    {
+      "gloss": "EXCUSE-ME",
+      "english": [
+        "excuse-me"
+      ],
+      "pos": "other",
+      "category": "courtesy",
+      "reviewed": false
+    },
+    {
+      "gloss": "GOOD",
+      "english": [
+        "good",
+        "nice"
+      ],
+      "pos": "adj",
+      "category": "courtesy",
+      "reviewed": false
+    },
+    {
+      "gloss": "BAD",
+      "english": [
+        "bad"
+      ],
+      "pos": "adj",
+      "category": "courtesy",
+      "reviewed": false
+    },
+    {
+      "gloss": "GO",
+      "english": [
+        "go",
+        "leave"
+      ],
+      "pos": "verb",
+      "category": "verb",
+      "reviewed": false
+    },
+    {
+      "gloss": "COME",
+      "english": [
+        "come",
+        "arrive"
+      ],
+      "pos": "verb",
+      "category": "verb",
+      "reviewed": false
+    },
+    {
+      "gloss": "WANT",
+      "english": [
+        "want"
+      ],
+      "pos": "verb",
+      "category": "verb",
+      "reviewed": false
+    },
+    {
+      "gloss": "NEED",
+      "english": [
+        "need"
+      ],
+      "pos": "verb",
+      "category": "verb",
+      "reviewed": false
+    },
+    {
+      "gloss": "KNOW",
+      "english": [
+        "know"
+      ],
+      "pos": "verb",
+      "category": "verb",
+      "reviewed": false
+    },
+    {
+      "gloss": "UNDERSTAND",
+      "english": [
+        "understand"
+      ],
+      "pos": "verb",
+      "category": "verb",
+      "reviewed": false
+    },
+    {
+      "gloss": "SEE",
+      "english": [
+        "see",
+        "look",
+        "watch"
+      ],
+      "pos": "verb",
+      "category": "verb",
+      "reviewed": false
+    },
+    {
+      "gloss": "GIVE",
+      "english": [
+        "give"
+      ],
+      "pos": "verb",
+      "category": "verb",
+      "reviewed": false
+    },
+    {
+      "gloss": "HAVE",
+      "english": [
+        "have",
+        "own"
+      ],
+      "pos": "verb",
+      "category": "verb",
+      "reviewed": false
+    },
+    {
+      "gloss": "MAKE",
+      "english": [
+        "make",
+        "do"
+      ],
+      "pos": "verb",
+      "category": "verb",
+      "twoHanded": true,
+      "reviewed": false
+    },
+    {
+      "gloss": "SLEEP",
+      "english": [
+        "sleep"
+      ],
+      "pos": "verb",
+      "category": "verb",
+      "reviewed": false
+    },
+    {
+      "gloss": "TALK",
+      "english": [
+        "talk",
+        "speak",
+        "say",
+        "tell"
+      ],
+      "pos": "verb",
+      "category": "verb",
+      "reviewed": false
+    },
+    {
+      "gloss": "THINK",
+      "english": [
+        "think"
+      ],
+      "pos": "verb",
+      "category": "verb",
+      "reviewed": false
+    },
+    {
+      "gloss": "CAN",
+      "english": [
+        "can",
+        "able"
+      ],
+      "pos": "verb",
+      "category": "verb",
+      "reviewed": false
+    },
+    {
+      "gloss": "MUST",
+      "english": [
+        "must"
+      ],
+      "pos": "verb",
+      "category": "verb",
+      "reviewed": false
+    },
+    {
+      "gloss": "SHOULD",
+      "english": [
+        "should"
+      ],
+      "pos": "verb",
+      "category": "verb",
+      "reviewed": false
+    },
+    {
+      "gloss": "MAYBE",
+      "english": [
+        "maybe",
+        "perhaps"
+      ],
+      "pos": "adv",
+      "category": "verb",
+      "reviewed": false
+    },
+    {
+      "gloss": "MANY",
+      "english": [
+        "many",
+        "lots",
+        "much"
+      ],
+      "pos": "quant",
+      "category": "quantity",
+      "reviewed": false
+    },
+    {
+      "gloss": "FEW",
+      "english": [
+        "few",
+        "little"
+      ],
+      "pos": "quant",
+      "category": "quantity",
+      "reviewed": false
+    },
+    {
+      "gloss": "ALL",
+      "english": [
+        "all",
+        "every",
+        "everything"
+      ],
+      "pos": "quant",
+      "category": "quantity",
+      "reviewed": false
+    },
+    {
+      "gloss": "BIG",
+      "english": [
+        "big",
+        "large"
+      ],
+      "pos": "adj",
+      "category": "quantity",
+      "twoHanded": true,
+      "reviewed": false
+    },
+    {
+      "gloss": "SMALL",
+      "english": [
+        "small",
+        "tiny"
+      ],
+      "pos": "adj",
+      "category": "quantity",
+      "twoHanded": true,
+      "reviewed": false
+    },
+    {
+      "gloss": "ONE",
+      "english": [
+        "one",
+        "1"
+      ],
+      "pos": "num",
+      "category": "number",
+      "reviewed": false
+    },
+    {
+      "gloss": "TWO",
+      "english": [
+        "two",
+        "2"
+      ],
+      "pos": "num",
+      "category": "number",
+      "reviewed": false
+    },
+    {
+      "gloss": "THREE",
+      "english": [
+        "three",
+        "3"
+      ],
+      "pos": "num",
+      "category": "number",
+      "reviewed": false
+    },
+    {
+      "gloss": "FOUR",
+      "english": [
+        "four",
+        "4"
+      ],
+      "pos": "num",
+      "category": "number",
+      "reviewed": false
+    },
+    {
+      "gloss": "FIVE",
+      "english": [
+        "five",
+        "5"
+      ],
+      "pos": "num",
+      "category": "number",
+      "reviewed": false
+    },
+    {
+      "gloss": "SIX",
+      "english": [
+        "six",
+        "6"
+      ],
+      "pos": "num",
+      "category": "number",
+      "reviewed": false
+    },
+    {
+      "gloss": "SEVEN",
+      "english": [
+        "seven",
+        "7"
+      ],
+      "pos": "num",
+      "category": "number",
+      "reviewed": false
+    },
+    {
+      "gloss": "EIGHT",
+      "english": [
+        "eight",
+        "8"
+      ],
+      "pos": "num",
+      "category": "number",
+      "reviewed": false
+    },
+    {
+      "gloss": "NINE",
+      "english": [
+        "nine",
+        "9"
+      ],
+      "pos": "num",
+      "category": "number",
+      "reviewed": false
+    },
+    {
+      "gloss": "TEN",
+      "english": [
+        "ten",
+        "10"
+      ],
+      "pos": "num",
+      "category": "number",
+      "reviewed": false
+    },
+    {
+      "gloss": "ACTOR",
+      "english": [
+        "actor"
+      ],
+      "pos": "noun",
+      "category": "jobs",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "ADULT",
+      "english": [
+        "adult"
+      ],
+      "pos": "noun",
+      "category": "people",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "AFTERNOON",
+      "english": [
+        "afternoon"
+      ],
+      "pos": "time",
+      "category": "time",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "ALIVE",
+      "english": [
+        "alive"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "ANIMAL",
+      "english": [
+        "animal"
+      ],
+      "pos": "noun",
+      "category": "animals",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "ARTIST",
+      "english": [
+        "artist"
+      ],
+      "pos": "noun",
+      "category": "jobs",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "ATTACK",
+      "english": [
+        "attack"
+      ],
+      "pos": "noun",
+      "category": "society",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "AUTHOR",
+      "english": [
+        "author"
+      ],
+      "pos": "noun",
+      "category": "jobs",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "BAG",
+      "english": [
+        "bag"
+      ],
+      "pos": "noun",
+      "category": "home",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "BALL",
+      "english": [
+        "ball"
+      ],
+      "pos": "noun",
+      "category": "society",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "BANK",
+      "english": [
+        "bank"
+      ],
+      "pos": "noun",
+      "category": "places",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "BATHROOM",
+      "english": [
+        "bathroom"
+      ],
+      "pos": "noun",
+      "category": "home",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "BEAUTIFUL",
+      "english": [
+        "beautiful"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "BED",
+      "english": [
+        "bed"
+      ],
+      "pos": "noun",
+      "category": "home",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "BEDROOM",
+      "english": [
+        "bedroom"
+      ],
+      "pos": "noun",
+      "category": "home",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "BICYCLE",
+      "english": [
+        "bicycle"
+      ],
+      "pos": "noun",
+      "category": "transport",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "BILL",
+      "english": [
+        "bill"
+      ],
+      "pos": "noun",
+      "category": "society",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "BIRD",
+      "english": [
+        "bird"
+      ],
+      "pos": "noun",
+      "category": "animals",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "BLACK",
+      "english": [
+        "black"
+      ],
+      "pos": "adj",
+      "category": "colours",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "BLIND",
+      "english": [
+        "blind"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "BLUE",
+      "english": [
+        "blue"
+      ],
+      "pos": "adj",
+      "category": "colours",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "BOAT",
+      "english": [
+        "boat"
+      ],
+      "pos": "noun",
+      "category": "transport",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "BOX",
+      "english": [
+        "box"
+      ],
+      "pos": "noun",
+      "category": "home",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "BOY",
+      "english": [
+        "boy"
+      ],
+      "pos": "noun",
+      "category": "people",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "BROWN",
+      "english": [
+        "brown"
+      ],
+      "pos": "adj",
+      "category": "colours",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "BUS",
+      "english": [
+        "bus"
+      ],
+      "pos": "noun",
+      "category": "transport",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "CAMERA",
+      "english": [
+        "camera"
+      ],
+      "pos": "noun",
+      "category": "electronics",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "CAR",
+      "english": [
+        "car"
+      ],
+      "pos": "noun",
+      "category": "transport",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "CARD",
+      "english": [
+        "card"
+      ],
+      "pos": "noun",
+      "category": "home",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "CAT",
+      "english": [
+        "cat"
+      ],
+      "pos": "noun",
+      "category": "animals",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "CELLPHONE",
+      "english": [
+        "cellphone",
+        "mobile"
+      ],
+      "pos": "noun",
+      "category": "electronics",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "CHAIR",
+      "english": [
+        "chair"
+      ],
+      "pos": "noun",
+      "category": "home",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "CHEAP",
+      "english": [
+        "cheap"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "CITY",
+      "english": [
+        "city"
+      ],
+      "pos": "noun",
+      "category": "places",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "CLEAN",
+      "english": [
+        "clean"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "CLOTHING",
+      "english": [
+        "clothing"
+      ],
+      "pos": "noun",
+      "category": "clothes",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "COLD",
+      "english": [
+        "cold"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "COLOUR",
+      "english": [
+        "colour"
+      ],
+      "pos": "adj",
+      "category": "colours",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "COMPUTER",
+      "english": [
+        "computer"
+      ],
+      "pos": "noun",
+      "category": "electronics",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "COOL",
+      "english": [
+        "cool"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "COURT",
+      "english": [
+        "court"
+      ],
+      "pos": "noun",
+      "category": "places",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "COW",
+      "english": [
+        "cow"
+      ],
+      "pos": "noun",
+      "category": "animals",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "CROWD",
+      "english": [
+        "crowd"
+      ],
+      "pos": "noun",
+      "category": "people",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "CURVED",
+      "english": [
+        "curved"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "DAUGHTER",
+      "english": [
+        "daughter"
+      ],
+      "pos": "noun",
+      "category": "people",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "DEAD",
+      "english": [
+        "dead"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "DEATH",
+      "english": [
+        "death"
+      ],
+      "pos": "noun",
+      "category": "society",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "DEEP",
+      "english": [
+        "deep"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "DIRTY",
+      "english": [
+        "dirty"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "DOG",
+      "english": [
+        "dog"
+      ],
+      "pos": "noun",
+      "category": "animals",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "DOOR",
+      "english": [
+        "door"
+      ],
+      "pos": "noun",
+      "category": "home",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "DREAM",
+      "english": [
+        "dream"
+      ],
+      "pos": "noun",
+      "category": "home",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "DRESS",
+      "english": [
+        "dress"
+      ],
+      "pos": "noun",
+      "category": "clothes",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "DRY",
+      "english": [
+        "dry"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "ELECTION",
+      "english": [
+        "election"
+      ],
+      "pos": "noun",
+      "category": "society",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "ENERGY",
+      "english": [
+        "energy"
+      ],
+      "pos": "noun",
+      "category": "society",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "EVENING",
+      "english": [
+        "evening"
+      ],
+      "pos": "time",
+      "category": "time",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "EXERCISE",
+      "english": [
+        "exercise"
+      ],
+      "pos": "noun",
+      "category": "society",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "MONSOON",
+      "english": [
+        "monsoon"
+      ],
+      "pos": "noun",
+      "category": "seasons",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "EXPENSIVE",
+      "english": [
+        "expensive"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "FALL",
+      "english": [
+        "fall"
+      ],
+      "pos": "noun",
+      "category": "seasons",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "FAMOUS",
+      "english": [
+        "famous"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "FAN",
+      "english": [
+        "fan"
+      ],
+      "pos": "noun",
+      "category": "electronics",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "FAST",
+      "english": [
+        "fast"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "FEMALE",
+      "english": [
+        "female"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "FISH",
+      "english": [
+        "fish"
+      ],
+      "pos": "noun",
+      "category": "animals",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "FLAT",
+      "english": [
+        "flat"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "FRIDAY",
+      "english": [
+        "friday"
+      ],
+      "pos": "time",
+      "category": "time",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "GIFT",
+      "english": [
+        "gift"
+      ],
+      "pos": "noun",
+      "category": "home",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "GIRL",
+      "english": [
+        "girl"
+      ],
+      "pos": "noun",
+      "category": "people",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "GOD",
+      "english": [
+        "god"
+      ],
+      "pos": "noun",
+      "category": "society",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "GOOD-AFTERNOON",
+      "english": [
+        "good-afternoon"
+      ],
+      "pos": "other",
+      "category": "courtesy",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "GOOD-EVENING",
+      "english": [
+        "good-evening"
+      ],
+      "pos": "other",
+      "category": "courtesy",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "GOOD-MORNING",
+      "english": [
+        "good-morning"
+      ],
+      "pos": "other",
+      "category": "courtesy",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "GOOD-NIGHT",
+      "english": [
+        "good-night"
+      ],
+      "pos": "other",
+      "category": "courtesy",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "GRANDFATHER",
+      "english": [
+        "grandfather"
+      ],
+      "pos": "noun",
+      "category": "people",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "GRANDMOTHER",
+      "english": [
+        "grandmother"
+      ],
+      "pos": "noun",
+      "category": "people",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "GREEN",
+      "english": [
+        "green"
+      ],
+      "pos": "adj",
+      "category": "colours",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "GREY",
+      "english": [
+        "grey"
+      ],
+      "pos": "adj",
+      "category": "colours",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "GROUND",
+      "english": [
+        "ground"
+      ],
+      "pos": "noun",
+      "category": "places",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "GUN",
+      "english": [
+        "gun"
+      ],
+      "pos": "noun",
+      "category": "society",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "HARD",
+      "english": [
+        "hard"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "HAT",
+      "english": [
+        "hat"
+      ],
+      "pos": "noun",
+      "category": "clothes",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "HEALTHY",
+      "english": [
+        "healthy"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "HEAVY",
+      "english": [
+        "heavy"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "HIGH",
+      "english": [
+        "high"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "HORSE",
+      "english": [
+        "horse"
+      ],
+      "pos": "noun",
+      "category": "animals",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "HOT",
+      "english": [
+        "hot"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "HOUR",
+      "english": [
+        "hour"
+      ],
+      "pos": "time",
+      "category": "time",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "HOW-ARE-YOU",
+      "english": [
+        "how-are-you"
+      ],
+      "pos": "other",
+      "category": "courtesy",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "HUSBAND",
+      "english": [
+        "husband"
+      ],
+      "pos": "noun",
+      "category": "people",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "INDIA",
+      "english": [
+        "india"
+      ],
+      "pos": "noun",
+      "category": "places",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "KEY",
+      "english": [
+        "key"
+      ],
+      "pos": "noun",
+      "category": "home",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "KING",
+      "english": [
+        "king"
+      ],
+      "pos": "noun",
+      "category": "people",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "KITCHEN",
+      "english": [
+        "kitchen"
+      ],
+      "pos": "noun",
+      "category": "home",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "LAMP",
+      "english": [
+        "lamp"
+      ],
+      "pos": "noun",
+      "category": "electronics",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "LAPTOP",
+      "english": [
+        "laptop"
+      ],
+      "pos": "noun",
+      "category": "electronics",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "LAWYER",
+      "english": [
+        "lawyer"
+      ],
+      "pos": "noun",
+      "category": "jobs",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "LETTER",
+      "english": [
+        "letter"
+      ],
+      "pos": "noun",
+      "category": "home",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "LIBRARY",
+      "english": [
+        "library"
+      ],
+      "pos": "noun",
+      "category": "places",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "LIGHT",
+      "english": [
+        "light"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "LOCATION",
+      "english": [
+        "location"
+      ],
+      "pos": "noun",
+      "category": "places",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "LOCK",
+      "english": [
+        "lock"
+      ],
+      "pos": "noun",
+      "category": "home",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "LONG",
+      "english": [
+        "long"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "LOOSE",
+      "english": [
+        "loose"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "LOUD",
+      "english": [
+        "loud"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "LOW",
+      "english": [
+        "low"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "MALE",
+      "english": [
+        "male"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "MANAGER",
+      "english": [
+        "manager"
+      ],
+      "pos": "noun",
+      "category": "jobs",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "MARKET",
+      "english": [
+        "market"
+      ],
+      "pos": "noun",
+      "category": "places",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "MARRIAGE",
+      "english": [
+        "marriage"
+      ],
+      "pos": "noun",
+      "category": "society",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "MEAN",
+      "english": [
+        "mean"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "MINUTE",
+      "english": [
+        "minute"
+      ],
+      "pos": "time",
+      "category": "time",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "MONDAY",
+      "english": [
+        "monday"
+      ],
+      "pos": "time",
+      "category": "time",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "MONEY",
+      "english": [
+        "money"
+      ],
+      "pos": "noun",
+      "category": "society",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "MONTH",
+      "english": [
+        "month"
+      ],
+      "pos": "time",
+      "category": "time",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "MOUSE",
+      "english": [
+        "mouse"
+      ],
+      "pos": "noun",
+      "category": "animals",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "NARROW",
+      "english": [
+        "narrow"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "NEIGHBOUR",
+      "english": [
+        "neighbour"
+      ],
+      "pos": "noun",
+      "category": "people",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "NEW",
+      "english": [
+        "new"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "NEWSPAPER",
+      "english": [
+        "newspaper"
+      ],
+      "pos": "noun",
+      "category": "society",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "OFFICE",
+      "english": [
+        "office"
+      ],
+      "pos": "noun",
+      "category": "places",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "OLD",
+      "english": [
+        "old"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "ORANGE",
+      "english": [
+        "orange"
+      ],
+      "pos": "adj",
+      "category": "colours",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "PAGE",
+      "english": [
+        "page"
+      ],
+      "pos": "noun",
+      "category": "home",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "PAINT",
+      "english": [
+        "paint"
+      ],
+      "pos": "noun",
+      "category": "home",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "PANT",
+      "english": [
+        "pant"
+      ],
+      "pos": "noun",
+      "category": "clothes",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "PAPER",
+      "english": [
+        "paper"
+      ],
+      "pos": "noun",
+      "category": "home",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "PARENT",
+      "english": [
+        "parent"
+      ],
+      "pos": "noun",
+      "category": "people",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "PARK",
+      "english": [
+        "park"
+      ],
+      "pos": "noun",
+      "category": "places",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "PATIENT",
+      "english": [
+        "patient"
+      ],
+      "pos": "noun",
+      "category": "jobs",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "PEACE",
+      "english": [
+        "peace"
+      ],
+      "pos": "noun",
+      "category": "society",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "PEN",
+      "english": [
+        "pen"
+      ],
+      "pos": "noun",
+      "category": "home",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "PENCIL",
+      "english": [
+        "pencil"
+      ],
+      "pos": "noun",
+      "category": "home",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "PHOTOGRAPH",
+      "english": [
+        "photograph"
+      ],
+      "pos": "noun",
+      "category": "home",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "PINK",
+      "english": [
+        "pink"
+      ],
+      "pos": "adj",
+      "category": "colours",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "PLANE",
+      "english": [
+        "plane"
+      ],
+      "pos": "noun",
+      "category": "transport",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "PLAYER",
+      "english": [
+        "player"
+      ],
+      "pos": "noun",
+      "category": "people",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "PLEASED",
+      "english": [
+        "pleased"
+      ],
+      "pos": "other",
+      "category": "courtesy",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "POCKET",
+      "english": [
+        "pocket"
+      ],
+      "pos": "noun",
+      "category": "clothes",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "POOR",
+      "english": [
+        "poor"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "PRESIDENT",
+      "english": [
+        "president"
+      ],
+      "pos": "noun",
+      "category": "people",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "PRICE",
+      "english": [
+        "price"
+      ],
+      "pos": "noun",
+      "category": "society",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "PRIEST",
+      "english": [
+        "priest"
+      ],
+      "pos": "noun",
+      "category": "jobs",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "QUEEN",
+      "english": [
+        "queen"
+      ],
+      "pos": "noun",
+      "category": "people",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "QUIET",
+      "english": [
+        "quiet"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "RACE",
+      "english": [
+        "race",
+        "ethnicity"
+      ],
+      "pos": "noun",
+      "category": "society",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "RADIO",
+      "english": [
+        "radio"
+      ],
+      "pos": "noun",
+      "category": "electronics",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "RED",
+      "english": [
+        "red"
+      ],
+      "pos": "adj",
+      "category": "colours",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "RELIGION",
+      "english": [
+        "religion"
+      ],
+      "pos": "noun",
+      "category": "society",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "REPORTER",
+      "english": [
+        "reporter"
+      ],
+      "pos": "noun",
+      "category": "jobs",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "RESTAURANT",
+      "english": [
+        "restaurant"
+      ],
+      "pos": "noun",
+      "category": "places",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "RICH",
+      "english": [
+        "rich"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "RING",
+      "english": [
+        "ring"
+      ],
+      "pos": "noun",
+      "category": "home",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "SATURDAY",
+      "english": [
+        "saturday"
+      ],
+      "pos": "time",
+      "category": "time",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "SCIENCE",
+      "english": [
+        "science"
+      ],
+      "pos": "noun",
+      "category": "society",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "SCREEN",
+      "english": [
+        "screen"
+      ],
+      "pos": "noun",
+      "category": "electronics",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "SEASON",
+      "english": [
+        "season"
+      ],
+      "pos": "noun",
+      "category": "seasons",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "SECOND",
+      "english": [
+        "second"
+      ],
+      "pos": "time",
+      "category": "time",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "SECOND-NUMBER",
+      "english": [
+        "second-number"
+      ],
+      "pos": "time",
+      "category": "time",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "SECRETARY",
+      "english": [
+        "secretary"
+      ],
+      "pos": "noun",
+      "category": "jobs",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "SHALLOW",
+      "english": [
+        "shallow"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "SHIRT",
+      "english": [
+        "shirt"
+      ],
+      "pos": "noun",
+      "category": "clothes",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "SHOES",
+      "english": [
+        "shoes"
+      ],
+      "pos": "noun",
+      "category": "clothes",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "SHORT",
+      "english": [
+        "short"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "SKIRT",
+      "english": [
+        "skirt"
+      ],
+      "pos": "noun",
+      "category": "clothes",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "SLOW",
+      "english": [
+        "slow"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "SOAP",
+      "english": [
+        "soap"
+      ],
+      "pos": "noun",
+      "category": "home",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "SOFT",
+      "english": [
+        "soft"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "SOLDIER",
+      "english": [
+        "soldier"
+      ],
+      "pos": "noun",
+      "category": "jobs",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "SON",
+      "english": [
+        "son"
+      ],
+      "pos": "noun",
+      "category": "people",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "SPORT",
+      "english": [
+        "sport"
+      ],
+      "pos": "noun",
+      "category": "society",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "SPRING",
+      "english": [
+        "spring"
+      ],
+      "pos": "noun",
+      "category": "seasons",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "STORE",
+      "english": [
+        "store",
+        "shop"
+      ],
+      "pos": "noun",
+      "category": "places",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "STREET",
+      "english": [
+        "street",
+        "road"
+      ],
+      "pos": "noun",
+      "category": "places",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "STRONG",
+      "english": [
+        "strong"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "SUIT",
+      "english": [
+        "suit"
+      ],
+      "pos": "noun",
+      "category": "clothes",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "SUMMER",
+      "english": [
+        "summer"
+      ],
+      "pos": "noun",
+      "category": "seasons",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "SUNDAY",
+      "english": [
+        "sunday"
+      ],
+      "pos": "time",
+      "category": "time",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "TABLE",
+      "english": [
+        "table"
+      ],
+      "pos": "noun",
+      "category": "home",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "TALL",
+      "english": [
+        "tall"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "TEAM",
+      "english": [
+        "team"
+      ],
+      "pos": "noun",
+      "category": "society",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "TECHNOLOGY",
+      "english": [
+        "technology"
+      ],
+      "pos": "noun",
+      "category": "society",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "TELEPHONE",
+      "english": [
+        "telephone"
+      ],
+      "pos": "noun",
+      "category": "home",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "TELEVISION",
+      "english": [
+        "television"
+      ],
+      "pos": "noun",
+      "category": "electronics",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "TEMPLE",
+      "english": [
+        "temple"
+      ],
+      "pos": "noun",
+      "category": "places",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "THICK",
+      "english": [
+        "thick"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "THIN",
+      "english": [
+        "thin"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "THURSDAY",
+      "english": [
+        "thursday"
+      ],
+      "pos": "time",
+      "category": "time",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "TIGHT",
+      "english": [
+        "tight"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "TOOL",
+      "english": [
+        "tool"
+      ],
+      "pos": "noun",
+      "category": "home",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "TRAIN",
+      "english": [
+        "train"
+      ],
+      "pos": "noun",
+      "category": "transport",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "TRAIN-STATION",
+      "english": [
+        "train-station",
+        "station"
+      ],
+      "pos": "noun",
+      "category": "places",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "TRAIN-TICKET",
+      "english": [
+        "train-ticket",
+        "ticket"
+      ],
+      "pos": "noun",
+      "category": "transport",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "TRANSPORTATION",
+      "english": [
+        "transportation"
+      ],
+      "pos": "noun",
+      "category": "transport",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "TRUCK",
+      "english": [
+        "truck"
+      ],
+      "pos": "noun",
+      "category": "transport",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "TSHIRT",
+      "english": [
+        "tshirt",
+        "t-shirt"
+      ],
+      "pos": "noun",
+      "category": "clothes",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "TUESDAY",
+      "english": [
+        "tuesday"
+      ],
+      "pos": "time",
+      "category": "time",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "UGLY",
+      "english": [
+        "ugly"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "UNIVERSITY",
+      "english": [
+        "university"
+      ],
+      "pos": "noun",
+      "category": "places",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "WAITER",
+      "english": [
+        "waiter"
+      ],
+      "pos": "noun",
+      "category": "jobs",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "WAR",
+      "english": [
+        "war"
+      ],
+      "pos": "noun",
+      "category": "society",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "WARM",
+      "english": [
+        "warm"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "WEAK",
+      "english": [
+        "weak"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "WEDNESDAY",
+      "english": [
+        "wednesday"
+      ],
+      "pos": "time",
+      "category": "time",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "WEEK",
+      "english": [
+        "week"
+      ],
+      "pos": "time",
+      "category": "time",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "WET",
+      "english": [
+        "wet"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "WHITE",
+      "english": [
+        "white"
+      ],
+      "pos": "adj",
+      "category": "colours",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "WIDE",
+      "english": [
+        "wide"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "WIFE",
+      "english": [
+        "wife"
+      ],
+      "pos": "noun",
+      "category": "people",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "WINDOW",
+      "english": [
+        "window"
+      ],
+      "pos": "noun",
+      "category": "home",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "WINTER",
+      "english": [
+        "winter"
+      ],
+      "pos": "noun",
+      "category": "seasons",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "YEAR",
+      "english": [
+        "year"
+      ],
+      "pos": "time",
+      "category": "time",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "YELLOW",
+      "english": [
+        "yellow"
+      ],
+      "pos": "adj",
+      "category": "colours",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "YOUNG",
+      "english": [
+        "young"
+      ],
+      "pos": "adj",
+      "category": "describing",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    },
+    {
+      "gloss": "YOU-ALL",
+      "english": [
+        "you-all"
+      ],
+      "pos": "pron",
+      "category": "pronoun",
+      "reviewed": false,
+      "notes": "Sign present in the INCLUDE dataset (AI4Bharat, CC BY 4.0)."
+    }
   ]
 }

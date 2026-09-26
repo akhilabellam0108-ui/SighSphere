@@ -9,17 +9,48 @@ import { FilesetResolver, HandLandmarker, PoseLandmarker } from '@mediapipe/task
 import type { Point3, RawFrame } from './features.js';
 
 /**
- * Hosted WASM + model assets.
+ * WASM + model assets.
  *
- * TODO (Week 16, offline support): vendor these into public/mediapipe/ and point at local
- * paths. As written, first load requires network access — which breaks the offline
- * promise in a classroom with no Wi-Fi.
+ * Served from this app (public/mediapipe/, filled by `npm run setup:mediapipe`) so the
+ * service worker precaches them and recognition works offline without depending on a CDN.
+ * Falls back to the hosted copies when the local files are not present.
  */
-const WASM_BASE = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.20/wasm';
-const HAND_MODEL =
+const CDN_WASM = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.20/wasm';
+const CDN_HAND =
   'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
-const POSE_MODEL =
+const CDN_POSE =
   'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
+const LOCAL_WASM = '/mediapipe/wasm';
+const LOCAL_HAND = '/mediapipe/models/hand_landmarker.task';
+const LOCAL_POSE = '/mediapipe/models/pose_landmarker_lite.task';
+
+interface Assets {
+  wasm: string;
+  hand: string;
+  pose: string;
+}
+
+async function isLocal(url: string): Promise<boolean> {
+  try {
+    const response = await fetch(url, { method: 'HEAD' });
+    // An SPA server answers unknown paths with index.html — that is "missing", not "present".
+    return response.ok && !(response.headers.get('content-type') ?? '').includes('text/html');
+  } catch {
+    return false;
+  }
+}
+
+let assets: Promise<Assets> | null = null;
+function resolveAssets(): Promise<Assets> {
+  assets ??= Promise.all([isLocal(`${LOCAL_WASM}/vision_wasm_internal.wasm`), isLocal(LOCAL_HAND), isLocal(LOCAL_POSE)]).then(
+    ([wasm, hand, pose]) => ({
+      wasm: wasm ? LOCAL_WASM : CDN_WASM,
+      hand: hand ? LOCAL_HAND : CDN_HAND,
+      pose: pose ? LOCAL_POSE : CDN_POSE,
+    }),
+  );
+  return assets;
+}
 
 export type DominantHand = 'left' | 'right';
 
@@ -39,6 +70,12 @@ export interface TrackerOptions {
   mirrored?: boolean;
   /** Skip pose detection. Roughly halves CPU cost, at a real accuracy penalty. */
   handsOnly?: boolean;
+  /**
+   * Where tracking runs. 'auto' tries the graphics chip and falls back to the main
+   * processor if that fails. Some laptops have slow or broken graphics drivers, where 'cpu'
+   * is several times faster.
+   */
+  processor?: 'auto' | 'gpu' | 'cpu';
 }
 
 export class LandmarkTracker {
@@ -52,6 +89,7 @@ export class LandmarkTracker {
       dominantHand: options.dominantHand ?? 'right',
       mirrored: options.mirrored ?? true,
       handsOnly: options.handsOnly ?? false,
+      processor: options.processor ?? 'auto',
     };
   }
 
@@ -65,23 +103,41 @@ export class LandmarkTracker {
 
   async init(): Promise<void> {
     if (this.hand) return;
-    const fileset = await FilesetResolver.forVisionTasks(WASM_BASE);
+    const { wasm, hand: handModel, pose: poseModel } = await resolveAssets();
+    const fileset = await FilesetResolver.forVisionTasks(wasm);
 
-    this.hand = await HandLandmarker.createFromOptions(fileset, {
-      baseOptions: { modelAssetPath: HAND_MODEL, delegate: 'GPU' },
-      runningMode: 'VIDEO',
-      numHands: 2,
-      minHandDetectionConfidence: 0.5,
-      minTrackingConfidence: 0.5,
-    });
-
-    if (!this.options.handsOnly) {
-      this.pose = await PoseLandmarker.createFromOptions(fileset, {
-        baseOptions: { modelAssetPath: POSE_MODEL, delegate: 'GPU' },
+    const create = async (delegate: 'GPU' | 'CPU') => {
+      const hand = await HandLandmarker.createFromOptions(fileset, {
+        baseOptions: { modelAssetPath: handModel, delegate },
         runningMode: 'VIDEO',
-        numPoses: 1,
+        numHands: 2,
+        minHandDetectionConfidence: 0.5,
+        minTrackingConfidence: 0.5,
       });
+      const pose = this.options.handsOnly
+        ? null
+        : await PoseLandmarker.createFromOptions(fileset, {
+            baseOptions: { modelAssetPath: poseModel, delegate },
+            runningMode: 'VIDEO',
+            numPoses: 1,
+          });
+      return { hand, pose };
+    };
+
+    const { processor } = this.options;
+    let created;
+    if (processor === 'cpu') {
+      created = await create('CPU');
+    } else {
+      try {
+        created = await create('GPU');
+      } catch (error) {
+        if (processor === 'gpu') throw error;
+        created = await create('CPU'); // no usable WebGL: the main processor still works
+      }
     }
+    this.hand = created.hand;
+    this.pose = created.pose;
   }
 
   /**

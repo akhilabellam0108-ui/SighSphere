@@ -19,6 +19,7 @@ import {
 import { FRAME_DIM, FeatureWindow, SignSegmenter, encodeFrame } from '../lib/features.js';
 import type { TrackedFrame } from '../lib/landmarks.js';
 import { speak, stopSpeaking } from '../lib/speech.js';
+import { useRecordHistory } from '../state/history.js';
 import { useSettings } from '../state/settings.js';
 
 export interface SignToTextProps {
@@ -106,6 +107,8 @@ export default function SignToText({ speakOutput }: SignToTextProps) {
 
   const untrained = classifier !== null && classifier.labels.length === 0;
   const sentenceText = sentence.join(' ');
+  // Save what was signed to this account's history (consecutive signs merge into one entry).
+  useRecordHistory(speakOutput ? 'sign-to-voice' : 'sign-to-text', sentenceText, sentenceText, 1200);
 
   return (
     <>

@@ -3,11 +3,16 @@
  * after the input is identical, so duplicating it would just mean two places to fix bugs.
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { translate } from '@signsphere/gloss';
 import SignPlayer from '../components/SignPlayer.js';
+
 import { createRecognizer, isSpeechRecognitionSupported, type Recognizer } from '../lib/speech.js';
+import { useRecordHistory } from '../state/history.js';
 import { useSettings } from '../state/settings.js';
+
+// three.js is large: load the 3D avatar only on the screens that show it.
+const AvatarPlayer = lazy(() => import('../components/avatar/AvatarPlayer.js'));
 
 const EXAMPLES = [
   'Where is the school?',
@@ -34,6 +39,9 @@ export default function TextToSign({ mode }: TextToSignProps) {
     () => translate(text, { speed: settings.playbackSpeed }),
     [text, settings.playbackSpeed],
   );
+
+  // Save finished translations to this account's history.
+  useRecordHistory(mode === 'voice' ? 'voice-to-sign' : 'text-to-sign', text, result.glosses.join(' '));
 
   // Tear down the recogniser on unmount or when leaving voice mode.
   useEffect(() => {
@@ -195,7 +203,9 @@ export default function TextToSign({ mode }: TextToSignProps) {
             )}
           </div>
 
-          <SignPlayer plan={result.plan} />
+          <Suspense fallback={<SignPlayer plan={result.plan} />}>
+            <AvatarPlayer plan={result.plan} />
+          </Suspense>
 
           {result.unknown.length > 0 && (
             <p className="notice warn">

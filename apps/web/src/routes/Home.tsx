@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { buildIndex } from '@signsphere/gloss';
 import { isMastered, sampleCounts } from '../lib/storage.js';
+import { useSession } from '../state/session.js';
 import { useSettings } from '../state/settings.js';
 
 const FEATURES = [
@@ -35,10 +36,21 @@ const FEATURES = [
     title: 'Emergency',
     body: 'Offline phrase cards and contacts. Works with no network, always free.',
   },
+  {
+    to: '/history',
+    title: 'History',
+    body: 'Everything signed, typed or spoken in this account, searchable.',
+  },
+  {
+    to: '/dataset',
+    title: 'ISL dataset',
+    body: 'Install Indian Sign Language signs so nobody has to record them first.',
+  },
 ] as const;
 
 export default function Home() {
   const { progress } = useSettings();
+  const { active } = useSession();
   const [recorded, setRecorded] = useState(0);
   const [labels, setLabels] = useState(0);
 
@@ -54,7 +66,7 @@ export default function Home() {
 
   return (
     <>
-      <h1>SignSphere</h1>
+      <h1>{active ? `Welcome, ${active.type === 'individual' ? active.displayName.split(' ')[0] : active.displayName}` : 'SignSphere'}</h1>
       <p className="lede">
         Learn and communicate in Indian Sign Language. Your camera is processed entirely on this
         device — no video is uploaded, and it works offline once loaded.
@@ -62,11 +74,11 @@ export default function Home() {
 
       {labels === 0 && (
         <p className="notice">
-          <strong>Start here: teach it three signs</strong>
-          Recognition needs examples before it can recognise anything. Open{' '}
-          <Link to="/record">Record</Link> and record 5 takes each of 3 signs — then{' '}
-          <Link to="/sign-to-text">Sign → Text</Link> will start working. No training run or
-          server needed.
+          <strong>Start here: add some signs</strong>
+          Recognition needs examples before it can recognise anything. Install ready-made ISL signs
+          from the <Link to="/dataset">ISL dataset</Link>, or open <Link to="/record">Record</Link> and
+          record 5 takes each of 3 signs — then <Link to="/sign-to-text">Sign → Text</Link> will start
+          working.
         </p>
       )}
 

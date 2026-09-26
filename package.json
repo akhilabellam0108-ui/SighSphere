@@ -2,7 +2,7 @@
   "name": "signsphere",
   "private": true,
   "version": "0.1.0",
-  "description": "ISL learning and communication platform — on-device sign recognition, gloss-based text-to-sign",
+  "description": "ISL learning and communication platform \u2014 on-device sign recognition, gloss-based text-to-sign",
   "workspaces": [
     "packages/*",
     "apps/*"
@@ -13,9 +13,13 @@
     "preview": "npm run preview --workspace @signsphere/web",
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "check": "npm run typecheck && npm run test"
+    "check": "npm run typecheck && npm test && npm run test:db",
+    "test:db": "node supabase/tests/rls.test.mjs"
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.2.17"
   }
 }

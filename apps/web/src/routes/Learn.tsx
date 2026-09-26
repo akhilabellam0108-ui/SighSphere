@@ -8,15 +8,19 @@
  * vocabulary, the app says so rather than pretending to grade.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { buildIndex, translate, type LexEntry } from '@signsphere/gloss';
 import CameraView from '../components/CameraView.js';
 import SignPlayer from '../components/SignPlayer.js';
+
 import { REJECTION_THRESHOLD, createClassifier, type SignClassifier } from '../lib/classifier.js';
 import { FRAME_DIM, FeatureWindow, OFFSET, encodeFrame } from '../lib/features.js';
 import type { TrackedFrame } from '../lib/landmarks.js';
 import { isMastered, recordAttempt } from '../lib/storage.js';
 import { useSettings } from '../state/settings.js';
+
+// three.js is large: load the 3D avatar only on the screens that show it.
+const AvatarPlayer = lazy(() => import('../components/avatar/AvatarPlayer.js'));
 
 const CAPTURE_MS = 1800;
 const SIGNS_PER_LESSON = 6;
@@ -268,7 +272,9 @@ export default function Learn() {
       <div className="grid" style={{ gridTemplateColumns: 'minmax(18rem, 1fr) minmax(18rem, 1fr)' }}>
         <section className="card stack" aria-label="Reference sign">
           <h2 className="small">Watch</h2>
-          <SignPlayer plan={referencePlan} autoPlay />
+          <Suspense fallback={<SignPlayer plan={referencePlan} />}>
+            <AvatarPlayer plan={referencePlan} autoPlay />
+          </Suspense>
           {target && !target.reviewed && (
             <p className="notice warn">
               <strong>Unverified sign</strong>

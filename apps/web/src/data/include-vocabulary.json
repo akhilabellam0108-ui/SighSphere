@@ -1,0 +1,1587 @@
+{
+ "_README": [
+  "INCLUDE dataset vocabulary (AI4Bharat, CC BY 4.0, https://zenodo.org/records/4010759).",
+  "label = INCLUDE label (folder name, letters only, lowercase); folder = folder in the dataset zips; gloss = SignSphere lexicon gloss.",
+  "Generated from the INCLUDE repo train/val/test path lists. Used by the in-app dataset importer."
+ ],
+ "signs": [
+  {
+   "label": "actor",
+   "category": "Jobs",
+   "folder": "98. Actor",
+   "gloss": "ACTOR"
+  },
+  {
+   "label": "adult",
+   "category": "People",
+   "folder": "80. Adult",
+   "gloss": "ADULT"
+  },
+  {
+   "label": "afternoon",
+   "category": "Days_and_Time",
+   "folder": "83. Afternoon",
+   "gloss": "AFTERNOON"
+  },
+  {
+   "label": "alive",
+   "category": "Adjectives",
+   "folder": "34. alive",
+   "gloss": "ALIVE"
+  },
+  {
+   "label": "alright",
+   "category": "Greetings",
+   "folder": "50. Alright",
+   "gloss": "FINE"
+  },
+  {
+   "label": "animal",
+   "category": "Animals",
+   "folder": "8. Animal",
+   "gloss": "ANIMAL"
+  },
+  {
+   "label": "artist",
+   "category": "Jobs",
+   "folder": "94. Artist",
+   "gloss": "ARTIST"
+  },
+  {
+   "label": "attack",
+   "category": "Society",
+   "folder": "13. Attack",
+   "gloss": "ATTACK"
+  },
+  {
+   "label": "author",
+   "category": "Jobs",
+   "folder": "95. Author",
+   "gloss": "AUTHOR"
+  },
+  {
+   "label": "baby",
+   "category": "People",
+   "folder": "63. Baby",
+   "gloss": "CHILD"
+  },
+  {
+   "label": "bad",
+   "category": "Adjectives",
+   "folder": "95. bad",
+   "gloss": "BAD"
+  },
+  {
+   "label": "bag",
+   "category": "Home",
+   "folder": "45. Bag",
+   "gloss": "BAG"
+  },
+  {
+   "label": "ball",
+   "category": "Society",
+   "folder": "19. Ball",
+   "gloss": "BALL"
+  },
+  {
+   "label": "bank",
+   "category": "Places",
+   "folder": "35. Bank",
+   "gloss": "BANK"
+  },
+  {
+   "label": "bathroom",
+   "category": "Home",
+   "folder": "32. Bathroom",
+   "gloss": "BATHROOM"
+  },
+  {
+   "label": "beautiful",
+   "category": "Adjectives",
+   "folder": "5. Beautiful",
+   "gloss": "BEAUTIFUL"
+  },
+  {
+   "label": "bed",
+   "category": "Home",
+   "folder": "26. Bed",
+   "gloss": "BED"
+  },
+  {
+   "label": "bedroom",
+   "category": "Home",
+   "folder": "30. Bedroom",
+   "gloss": "BEDROOM"
+  },
+  {
+   "label": "bicycle",
+   "category": "Means_of_Transportation",
+   "folder": "13. Bicycle",
+   "gloss": "BICYCLE"
+  },
+  {
+   "label": "biglarge",
+   "category": "Adjectives",
+   "folder": "83. big large",
+   "gloss": "BIG"
+  },
+  {
+   "label": "bill",
+   "category": "Society",
+   "folder": "5. Bill",
+   "gloss": "BILL"
+  },
+  {
+   "label": "bird",
+   "category": "Animals",
+   "folder": "4. Bird",
+   "gloss": "BIRD"
+  },
+  {
+   "label": "black",
+   "category": "Colours",
+   "folder": "54. Black",
+   "gloss": "BLACK"
+  },
+  {
+   "label": "blind",
+   "category": "Adjectives",
+   "folder": "8. Blind",
+   "gloss": "BLIND"
+  },
+  {
+   "label": "blue",
+   "category": "Colours",
+   "folder": "49. Blue",
+   "gloss": "BLUE"
+  },
+  {
+   "label": "boat",
+   "category": "Means_of_Transportation",
+   "folder": "15. Boat",
+   "gloss": "BOAT"
+  },
+  {
+   "label": "book",
+   "category": "Home",
+   "folder": "37. Book",
+   "gloss": "BOOK"
+  },
+  {
+   "label": "box",
+   "category": "Home",
+   "folder": "46. Box",
+   "gloss": "BOX"
+  },
+  {
+   "label": "boy",
+   "category": "People",
+   "folder": "77. Boy",
+   "gloss": "BOY"
+  },
+  {
+   "label": "brother",
+   "category": "People",
+   "folder": "66. Brother",
+   "gloss": "BROTHER"
+  },
+  {
+   "label": "brown",
+   "category": "Colours",
+   "folder": "51. Brown",
+   "gloss": "BROWN"
+  },
+  {
+   "label": "bus",
+   "category": "Means_of_Transportation",
+   "folder": "14. Bus",
+   "gloss": "BUS"
+  },
+  {
+   "label": "camera",
+   "category": "Electronics",
+   "folder": "58. Camera",
+   "gloss": "CAMERA"
+  },
+  {
+   "label": "car",
+   "category": "Means_of_Transportation",
+   "folder": "11. Car",
+   "gloss": "CAR"
+  },
+  {
+   "label": "card",
+   "category": "Home",
+   "folder": "48. Card",
+   "gloss": "CARD"
+  },
+  {
+   "label": "cat",
+   "category": "Animals",
+   "folder": "2. Cat",
+   "gloss": "CAT"
+  },
+  {
+   "label": "cellphone",
+   "category": "Electronics",
+   "folder": "54. Cell phone",
+   "gloss": "CELLPHONE"
+  },
+  {
+   "label": "chair",
+   "category": "Home",
+   "folder": "25. Chair",
+   "gloss": "CHAIR"
+  },
+  {
+   "label": "cheap",
+   "category": "Adjectives",
+   "folder": "16. cheap",
+   "gloss": "CHEAP"
+  },
+  {
+   "label": "child",
+   "category": "People",
+   "folder": "79. Child",
+   "gloss": "CHILD"
+  },
+  {
+   "label": "city",
+   "category": "Places",
+   "folder": "18. City",
+   "gloss": "CITY"
+  },
+  {
+   "label": "clean",
+   "category": "Adjectives",
+   "folder": "29. clean",
+   "gloss": "CLEAN"
+  },
+  {
+   "label": "clock",
+   "category": "Electronics",
+   "folder": "51. Clock",
+   "gloss": "TIME"
+  },
+  {
+   "label": "clothing",
+   "category": "Clothes",
+   "folder": "46. Clothing",
+   "gloss": "CLOTHING"
+  },
+  {
+   "label": "cold",
+   "category": "Adjectives",
+   "folder": "88. cold",
+   "gloss": "COLD"
+  },
+  {
+   "label": "colour",
+   "category": "Colours",
+   "folder": "57. Colour",
+   "gloss": "COLOUR"
+  },
+  {
+   "label": "computer",
+   "category": "Electronics",
+   "folder": "55. Computer",
+   "gloss": "COMPUTER"
+  },
+  {
+   "label": "cool",
+   "category": "Adjectives",
+   "folder": "90. cool",
+   "gloss": "COOL"
+  },
+  {
+   "label": "court",
+   "category": "Places",
+   "folder": "23. Court",
+   "gloss": "COURT"
+  },
+  {
+   "label": "cow",
+   "category": "Animals",
+   "folder": "5. Cow",
+   "gloss": "COW"
+  },
+  {
+   "label": "crowd",
+   "category": "People",
+   "folder": "83. Crowd",
+   "gloss": "CROWD"
+  },
+  {
+   "label": "curved",
+   "category": "Adjectives",
+   "folder": "18. curved",
+   "gloss": "CURVED"
+  },
+  {
+   "label": "daughter",
+   "category": "People",
+   "folder": "59. Daughter",
+   "gloss": "DAUGHTER"
+  },
+  {
+   "label": "dead",
+   "category": "Adjectives",
+   "folder": "33. dead",
+   "gloss": "DEAD"
+  },
+  {
+   "label": "deaf",
+   "category": "Adjectives",
+   "folder": "7. Deaf",
+   "gloss": "DEAF"
+  },
+  {
+   "label": "death",
+   "category": "Society",
+   "folder": "2. Death",
+   "gloss": "DEATH"
+  },
+  {
+   "label": "deep",
+   "category": "Adjectives",
+   "folder": "27. deep",
+   "gloss": "DEEP"
+  },
+  {
+   "label": "dirty",
+   "category": "Adjectives",
+   "folder": "30. dirty",
+   "gloss": "DIRTY"
+  },
+  {
+   "label": "doctor",
+   "category": "Jobs",
+   "folder": "87. Doctor",
+   "gloss": "DOCTOR"
+  },
+  {
+   "label": "dog",
+   "category": "Animals",
+   "folder": "1. Dog",
+   "gloss": "DOG"
+  },
+  {
+   "label": "door",
+   "category": "Home",
+   "folder": "29. Door",
+   "gloss": "DOOR"
+  },
+  {
+   "label": "dream",
+   "category": "Home",
+   "folder": "27. Dream",
+   "gloss": "DREAM"
+  },
+  {
+   "label": "dress",
+   "category": "Clothes",
+   "folder": "38. Dress",
+   "gloss": "DRESS"
+  },
+  {
+   "label": "dry",
+   "category": "Adjectives",
+   "folder": "97. dry",
+   "gloss": "DRY"
+  },
+  {
+   "label": "election",
+   "category": "Society",
+   "folder": "14. Election",
+   "gloss": "ELECTION"
+  },
+  {
+   "label": "energy",
+   "category": "Society",
+   "folder": "10. Energy",
+   "gloss": "ENERGY"
+  },
+  {
+   "label": "evening",
+   "category": "Days_and_Time",
+   "folder": "84. Evening",
+   "gloss": "EVENING"
+  },
+  {
+   "label": "exercise",
+   "category": "Society",
+   "folder": "18. Exercise",
+   "gloss": "EXERCISE"
+  },
+  {
+   "label": "exmonsoon",
+   "category": "Seasons",
+   "folder": "Ex. Monsoon",
+   "gloss": "MONSOON"
+  },
+  {
+   "label": "expensive",
+   "category": "Adjectives",
+   "folder": "15. expensive",
+   "gloss": "EXPENSIVE"
+  },
+  {
+   "label": "fall",
+   "category": "Seasons",
+   "folder": "64. Fall",
+   "gloss": "FALL"
+  },
+  {
+   "label": "family",
+   "category": "People",
+   "folder": "68. Family",
+   "gloss": "FAMILY"
+  },
+  {
+   "label": "famous",
+   "category": "Adjectives",
+   "folder": "39. famous",
+   "gloss": "FAMOUS"
+  },
+  {
+   "label": "fan",
+   "category": "Electronics",
+   "folder": "53. Fan",
+   "gloss": "FAN"
+  },
+  {
+   "label": "fast",
+   "category": "Adjectives",
+   "folder": "86. fast",
+   "gloss": "FAST"
+  },
+  {
+   "label": "father",
+   "category": "People",
+   "folder": "61. Father",
+   "gloss": "FATHER"
+  },
+  {
+   "label": "female",
+   "category": "Adjectives",
+   "folder": "20. female",
+   "gloss": "FEMALE"
+  },
+  {
+   "label": "fish",
+   "category": "Animals",
+   "folder": "3. Fish",
+   "gloss": "FISH"
+  },
+  {
+   "label": "flat",
+   "category": "Adjectives",
+   "folder": "17. flat",
+   "gloss": "FLAT"
+  },
+  {
+   "label": "friday",
+   "category": "Days_and_Time",
+   "folder": "71. Friday",
+   "gloss": "FRIDAY"
+  },
+  {
+   "label": "friend",
+   "category": "People",
+   "folder": "81. Friend",
+   "gloss": "FRIEND"
+  },
+  {
+   "label": "gift",
+   "category": "Home",
+   "folder": "47. Gift",
+   "gloss": "GIFT"
+  },
+  {
+   "label": "girl",
+   "category": "People",
+   "folder": "78. Girl",
+   "gloss": "GIRL"
+  },
+  {
+   "label": "god",
+   "category": "Society",
+   "folder": "23. God",
+   "gloss": "GOD"
+  },
+  {
+   "label": "good",
+   "category": "Adjectives",
+   "folder": "94. good",
+   "gloss": "GOOD"
+  },
+  {
+   "label": "goodafternoon",
+   "category": "Greetings",
+   "folder": "52. Good afternoon",
+   "gloss": "GOOD-AFTERNOON"
+  },
+  {
+   "label": "goodevening",
+   "category": "Greetings",
+   "folder": "53. Good evening",
+   "gloss": "GOOD-EVENING"
+  },
+  {
+   "label": "goodmorning",
+   "category": "Greetings",
+   "folder": "51. Good Morning",
+   "gloss": "GOOD-MORNING"
+  },
+  {
+   "label": "goodnight",
+   "category": "Greetings",
+   "folder": "54. Good night",
+   "gloss": "GOOD-NIGHT"
+  },
+  {
+   "label": "grandfather",
+   "category": "People",
+   "folder": "69. Grandfather",
+   "gloss": "GRANDFATHER"
+  },
+  {
+   "label": "grandmother",
+   "category": "People",
+   "folder": "70. Grandmother",
+   "gloss": "GRANDMOTHER"
+  },
+  {
+   "label": "green",
+   "category": "Colours",
+   "folder": "48. Green",
+   "gloss": "GREEN"
+  },
+  {
+   "label": "grey",
+   "category": "Colours",
+   "folder": "56. Grey",
+   "gloss": "GREY"
+  },
+  {
+   "label": "ground",
+   "category": "Places",
+   "folder": "34. Ground",
+   "gloss": "GROUND"
+  },
+  {
+   "label": "gun",
+   "category": "Society",
+   "folder": "16. Gun",
+   "gloss": "GUN"
+  },
+  {
+   "label": "happy",
+   "category": "Adjectives",
+   "folder": "3. happy",
+   "gloss": "HAPPY"
+  },
+  {
+   "label": "hard",
+   "category": "Adjectives",
+   "folder": "26. hard",
+   "gloss": "HARD"
+  },
+  {
+   "label": "hat",
+   "category": "Clothes",
+   "folder": "37. Hat",
+   "gloss": "HAT"
+  },
+  {
+   "label": "he",
+   "category": "Pronouns",
+   "folder": "42. he",
+   "gloss": "HE-SHE"
+  },
+  {
+   "label": "healthy",
+   "category": "Adjectives",
+   "folder": "99. healthy",
+   "gloss": "HEALTHY"
+  },
+  {
+   "label": "heavy",
+   "category": "Adjectives",
+   "folder": "35. heavy",
+   "gloss": "HEAVY"
+  },
+  {
+   "label": "hello",
+   "category": "Greetings",
+   "folder": "48. Hello",
+   "gloss": "HELLO"
+  },
+  {
+   "label": "high",
+   "category": "Adjectives",
+   "folder": "23. high",
+   "gloss": "HIGH"
+  },
+  {
+   "label": "horse",
+   "category": "Animals",
+   "folder": "7. Horse",
+   "gloss": "HORSE"
+  },
+  {
+   "label": "hospital",
+   "category": "Places",
+   "folder": "30. Hospital",
+   "gloss": "HOSPITAL"
+  },
+  {
+   "label": "hot",
+   "category": "Adjectives",
+   "folder": "87. hot",
+   "gloss": "HOT"
+  },
+  {
+   "label": "hour",
+   "category": "Days_and_Time",
+   "folder": "79. Hour",
+   "gloss": "HOUR"
+  },
+  {
+   "label": "house",
+   "category": "Places",
+   "folder": "19. House",
+   "gloss": "HOME"
+  },
+  {
+   "label": "howareyou",
+   "category": "Greetings",
+   "folder": "49. How are you",
+   "gloss": "HOW-ARE-YOU"
+  },
+  {
+   "label": "husband",
+   "category": "People",
+   "folder": "71. Husband",
+   "gloss": "HUSBAND"
+  },
+  {
+   "label": "i",
+   "category": "Pronouns",
+   "folder": "40. I",
+   "gloss": "I"
+  },
+  {
+   "label": "india",
+   "category": "Places",
+   "folder": "33. India",
+   "gloss": "INDIA"
+  },
+  {
+   "label": "it",
+   "category": "Pronouns",
+   "folder": "44. it",
+   "gloss": "HE-SHE"
+  },
+  {
+   "label": "job",
+   "category": "Jobs",
+   "folder": "99. Job",
+   "gloss": "WORK"
+  },
+  {
+   "label": "key",
+   "category": "Home",
+   "folder": "39. Key",
+   "gloss": "KEY"
+  },
+  {
+   "label": "king",
+   "category": "People",
+   "folder": "73. King",
+   "gloss": "KING"
+  },
+  {
+   "label": "kitchen",
+   "category": "Home",
+   "folder": "31. Kitchen",
+   "gloss": "KITCHEN"
+  },
+  {
+   "label": "lamp",
+   "category": "Electronics",
+   "folder": "52. Lamp",
+   "gloss": "LAMP"
+  },
+  {
+   "label": "laptop",
+   "category": "Electronics",
+   "folder": "56. Laptop",
+   "gloss": "LAPTOP"
+  },
+  {
+   "label": "lawyer",
+   "category": "Jobs",
+   "folder": "86. Lawyer",
+   "gloss": "LAWYER"
+  },
+  {
+   "label": "letter",
+   "category": "Home",
+   "folder": "41. Letter",
+   "gloss": "LETTER"
+  },
+  {
+   "label": "library",
+   "category": "Places",
+   "folder": "29. Library",
+   "gloss": "LIBRARY"
+  },
+  {
+   "label": "light",
+   "category": "Adjectives",
+   "folder": "36. light",
+   "gloss": "LIGHT"
+  },
+  {
+   "label": "location",
+   "category": "Places",
+   "folder": "36. Location",
+   "gloss": "LOCATION"
+  },
+  {
+   "label": "lock",
+   "category": "Home",
+   "folder": "43. Lock",
+   "gloss": "LOCK"
+  },
+  {
+   "label": "long",
+   "category": "Adjectives",
+   "folder": "78. long",
+   "gloss": "LONG"
+  },
+  {
+   "label": "loose",
+   "category": "Adjectives",
+   "folder": "22. loose",
+   "gloss": "LOOSE"
+  },
+  {
+   "label": "loud",
+   "category": "Adjectives",
+   "folder": "1. loud",
+   "gloss": "LOUD"
+  },
+  {
+   "label": "low",
+   "category": "Adjectives",
+   "folder": "24. low",
+   "gloss": "LOW"
+  },
+  {
+   "label": "male",
+   "category": "Adjectives",
+   "folder": "19. male",
+   "gloss": "MALE"
+  },
+  {
+   "label": "man",
+   "category": "People",
+   "folder": "64. Man",
+   "gloss": "PERSON"
+  },
+  {
+   "label": "manager",
+   "category": "Jobs",
+   "folder": "96. Manager",
+   "gloss": "MANAGER"
+  },
+  {
+   "label": "market",
+   "category": "Places",
+   "folder": "32. Market",
+   "gloss": "MARKET"
+  },
+  {
+   "label": "marriage",
+   "category": "Society",
+   "folder": "6. Marriage",
+   "gloss": "MARRIAGE"
+  },
+  {
+   "label": "mean",
+   "category": "Adjectives",
+   "folder": "10. Mean",
+   "gloss": "MEAN"
+  },
+  {
+   "label": "medicine",
+   "category": "Society",
+   "folder": "3. Medicine",
+   "gloss": "MEDICINE"
+  },
+  {
+   "label": "minute",
+   "category": "Days_and_Time",
+   "folder": "80. Minute",
+   "gloss": "MINUTE"
+  },
+  {
+   "label": "monday",
+   "category": "Days_and_Time",
+   "folder": "67. Monday",
+   "gloss": "MONDAY"
+  },
+  {
+   "label": "money",
+   "category": "Society",
+   "folder": "4. Money",
+   "gloss": "MONEY"
+  },
+  {
+   "label": "month",
+   "category": "Days_and_Time",
+   "folder": "77. Month",
+   "gloss": "MONTH"
+  },
+  {
+   "label": "morning",
+   "category": "Days_and_Time",
+   "folder": "82. Morning",
+   "gloss": "MORNING"
+  },
+  {
+   "label": "mother",
+   "category": "People",
+   "folder": "60. Mother",
+   "gloss": "MOTHER"
+  },
+  {
+   "label": "mouse",
+   "category": "Animals",
+   "folder": "6. Mouse",
+   "gloss": "MOUSE"
+  },
+  {
+   "label": "narrow",
+   "category": "Adjectives",
+   "folder": "82. narrow",
+   "gloss": "NARROW"
+  },
+  {
+   "label": "neighbour",
+   "category": "People",
+   "folder": "76. Neighbour",
+   "gloss": "NEIGHBOUR"
+  },
+  {
+   "label": "new",
+   "category": "Adjectives",
+   "folder": "91. new",
+   "gloss": "NEW"
+  },
+  {
+   "label": "newspaper",
+   "category": "Society",
+   "folder": "15. Newspaper",
+   "gloss": "NEWSPAPER"
+  },
+  {
+   "label": "nice",
+   "category": "Adjectives",
+   "folder": "9. Nice",
+   "gloss": "GOOD"
+  },
+  {
+   "label": "night",
+   "category": "Days_and_Time",
+   "folder": "85. Night",
+   "gloss": "NIGHT"
+  },
+  {
+   "label": "office",
+   "category": "Places",
+   "folder": "25. Office",
+   "gloss": "OFFICE"
+  },
+  {
+   "label": "old",
+   "category": "Adjectives",
+   "folder": "92. old",
+   "gloss": "OLD"
+  },
+  {
+   "label": "orange",
+   "category": "Colours",
+   "folder": "53. Orange",
+   "gloss": "ORANGE"
+  },
+  {
+   "label": "page",
+   "category": "Home",
+   "folder": "38. Page",
+   "gloss": "PAGE"
+  },
+  {
+   "label": "paint",
+   "category": "Home",
+   "folder": "40. Paint",
+   "gloss": "PAINT"
+  },
+  {
+   "label": "pant",
+   "category": "Clothes",
+   "folder": "43. Pant",
+   "gloss": "PANT"
+  },
+  {
+   "label": "paper",
+   "category": "Home",
+   "folder": "42. Paper",
+   "gloss": "PAPER"
+  },
+  {
+   "label": "parent",
+   "category": "People",
+   "folder": "62. Parent",
+   "gloss": "PARENT"
+  },
+  {
+   "label": "park",
+   "category": "Places",
+   "folder": "27. Park",
+   "gloss": "PARK"
+  },
+  {
+   "label": "patient",
+   "category": "Jobs",
+   "folder": "88. Patient",
+   "gloss": "PATIENT"
+  },
+  {
+   "label": "peace",
+   "category": "Society",
+   "folder": "12. Peace",
+   "gloss": "PEACE"
+  },
+  {
+   "label": "pen",
+   "category": "Home",
+   "folder": "34. Pen",
+   "gloss": "PEN"
+  },
+  {
+   "label": "pencil",
+   "category": "Home",
+   "folder": "33. Pencil",
+   "gloss": "PENCIL"
+  },
+  {
+   "label": "photograph",
+   "category": "Home",
+   "folder": "35. Photograph",
+   "gloss": "PHOTOGRAPH"
+  },
+  {
+   "label": "pink",
+   "category": "Colours",
+   "folder": "52. Pink",
+   "gloss": "PINK"
+  },
+  {
+   "label": "plane",
+   "category": "Means_of_Transportation",
+   "folder": "10. Plane",
+   "gloss": "PLANE"
+  },
+  {
+   "label": "player",
+   "category": "People",
+   "folder": "82. Player",
+   "gloss": "PLAYER"
+  },
+  {
+   "label": "pleased",
+   "category": "Greetings",
+   "folder": "56. Pleased",
+   "gloss": "PLEASED"
+  },
+  {
+   "label": "pocket",
+   "category": "Clothes",
+   "folder": "45. Pocket",
+   "gloss": "POCKET"
+  },
+  {
+   "label": "police",
+   "category": "Jobs",
+   "folder": "92. Police",
+   "gloss": "POLICE"
+  },
+  {
+   "label": "poor",
+   "category": "Adjectives",
+   "folder": "12. poor",
+   "gloss": "POOR"
+  },
+  {
+   "label": "president",
+   "category": "People",
+   "folder": "75. President",
+   "gloss": "PRESIDENT"
+  },
+  {
+   "label": "price",
+   "category": "Society",
+   "folder": "20. Price",
+   "gloss": "PRICE"
+  },
+  {
+   "label": "priest",
+   "category": "Jobs",
+   "folder": "91. Priest",
+   "gloss": "PRIEST"
+  },
+  {
+   "label": "queen",
+   "category": "People",
+   "folder": "74. Queen",
+   "gloss": "QUEEN"
+  },
+  {
+   "label": "quiet",
+   "category": "Adjectives",
+   "folder": "2. quiet",
+   "gloss": "QUIET"
+  },
+  {
+   "label": "raceethnicity",
+   "category": "Society",
+   "folder": "8. Race (ethnicity)",
+   "gloss": "RACE"
+  },
+  {
+   "label": "radio",
+   "category": "Electronics",
+   "folder": "60. Radio",
+   "gloss": "RADIO"
+  },
+  {
+   "label": "red",
+   "category": "Colours",
+   "folder": "47. Red",
+   "gloss": "RED"
+  },
+  {
+   "label": "religion",
+   "category": "Society",
+   "folder": "1. Religion",
+   "gloss": "RELIGION"
+  },
+  {
+   "label": "reporter",
+   "category": "Jobs",
+   "folder": "97. Reporter",
+   "gloss": "REPORTER"
+  },
+  {
+   "label": "restaurant",
+   "category": "Places",
+   "folder": "22. Restaurant",
+   "gloss": "RESTAURANT"
+  },
+  {
+   "label": "rich",
+   "category": "Adjectives",
+   "folder": "11. rich",
+   "gloss": "RICH"
+  },
+  {
+   "label": "ring",
+   "category": "Home",
+   "folder": "49. Ring",
+   "gloss": "RING"
+  },
+  {
+   "label": "sad",
+   "category": "Adjectives",
+   "folder": "4. sad",
+   "gloss": "SAD"
+  },
+  {
+   "label": "saturday",
+   "category": "Days_and_Time",
+   "folder": "72. Saturday",
+   "gloss": "SATURDAY"
+  },
+  {
+   "label": "school",
+   "category": "Places",
+   "folder": "24. School",
+   "gloss": "SCHOOL"
+  },
+  {
+   "label": "science",
+   "category": "Society",
+   "folder": "22. Science",
+   "gloss": "SCIENCE"
+  },
+  {
+   "label": "screen",
+   "category": "Electronics",
+   "folder": "57. Screen",
+   "gloss": "SCREEN"
+  },
+  {
+   "label": "season",
+   "category": "Seasons",
+   "folder": "65. Season",
+   "gloss": "SEASON"
+  },
+  {
+   "label": "second",
+   "category": "Days_and_Time",
+   "folder": "81. Second",
+   "gloss": "SECOND"
+  },
+  {
+   "label": "secondnumber",
+   "category": "Days_and_Time",
+   "folder": "Second (Number)",
+   "gloss": "SECOND-NUMBER"
+  },
+  {
+   "label": "secretary",
+   "category": "Jobs",
+   "folder": "90. Secretary",
+   "gloss": "SECRETARY"
+  },
+  {
+   "label": "shallow",
+   "category": "Adjectives",
+   "folder": "28. shallow",
+   "gloss": "SHALLOW"
+  },
+  {
+   "label": "she",
+   "category": "Pronouns",
+   "folder": "43. she",
+   "gloss": "HE-SHE"
+  },
+  {
+   "label": "shirt",
+   "category": "Clothes",
+   "folder": "41. Shirt",
+   "gloss": "SHIRT"
+  },
+  {
+   "label": "shoes",
+   "category": "Clothes",
+   "folder": "44. Shoes",
+   "gloss": "SHOES"
+  },
+  {
+   "label": "short",
+   "category": "Adjectives",
+   "folder": "79. short",
+   "gloss": "SHORT"
+  },
+  {
+   "label": "sick",
+   "category": "Adjectives",
+   "folder": "98. sick",
+   "gloss": "SICK"
+  },
+  {
+   "label": "sign",
+   "category": "Society",
+   "folder": "21. Sign",
+   "gloss": "SIGN-LANGUAGE"
+  },
+  {
+   "label": "sister",
+   "category": "People",
+   "folder": "67. Sister",
+   "gloss": "SISTER"
+  },
+  {
+   "label": "skirt",
+   "category": "Clothes",
+   "folder": "40. Skirt",
+   "gloss": "SKIRT"
+  },
+  {
+   "label": "slow",
+   "category": "Adjectives",
+   "folder": "85. slow",
+   "gloss": "SLOW"
+  },
+  {
+   "label": "smalllittle",
+   "category": "Adjectives",
+   "folder": "84. small little",
+   "gloss": "SMALL"
+  },
+  {
+   "label": "soap",
+   "category": "Home",
+   "folder": "36. Soap",
+   "gloss": "SOAP"
+  },
+  {
+   "label": "soft",
+   "category": "Adjectives",
+   "folder": "25. soft",
+   "gloss": "SOFT"
+  },
+  {
+   "label": "soldier",
+   "category": "Jobs",
+   "folder": "93. Soldier",
+   "gloss": "SOLDIER"
+  },
+  {
+   "label": "son",
+   "category": "People",
+   "folder": "58. Son",
+   "gloss": "SON"
+  },
+  {
+   "label": "sport",
+   "category": "Society",
+   "folder": "17. Sport",
+   "gloss": "SPORT"
+  },
+  {
+   "label": "spring",
+   "category": "Seasons",
+   "folder": "62. Spring",
+   "gloss": "SPRING"
+  },
+  {
+   "label": "storeorshop",
+   "category": "Places",
+   "folder": "28. Store or Shop",
+   "gloss": "STORE"
+  },
+  {
+   "label": "streetorroad",
+   "category": "Places",
+   "folder": "20. Street or Road",
+   "gloss": "STREET"
+  },
+  {
+   "label": "strong",
+   "category": "Adjectives",
+   "folder": "31. strong",
+   "gloss": "STRONG"
+  },
+  {
+   "label": "student",
+   "category": "Jobs",
+   "folder": "85. Student",
+   "gloss": "STUDENT"
+  },
+  {
+   "label": "suit",
+   "category": "Clothes",
+   "folder": "39. Suit",
+   "gloss": "SUIT"
+  },
+  {
+   "label": "summer",
+   "category": "Seasons",
+   "folder": "61. Summer",
+   "gloss": "SUMMER"
+  },
+  {
+   "label": "sunday",
+   "category": "Days_and_Time",
+   "folder": "66. Sunday",
+   "gloss": "SUNDAY"
+  },
+  {
+   "label": "table",
+   "category": "Home",
+   "folder": "24. Table",
+   "gloss": "TABLE"
+  },
+  {
+   "label": "tall",
+   "category": "Adjectives",
+   "folder": "80. tall",
+   "gloss": "TALL"
+  },
+  {
+   "label": "teacher",
+   "category": "Jobs",
+   "folder": "84. Teacher",
+   "gloss": "TEACHER"
+  },
+  {
+   "label": "team",
+   "category": "Society",
+   "folder": "7. Team",
+   "gloss": "TEAM"
+  },
+  {
+   "label": "technology",
+   "category": "Society",
+   "folder": "9. Technology",
+   "gloss": "TECHNOLOGY"
+  },
+  {
+   "label": "telephone",
+   "category": "Home",
+   "folder": "44. Telephone",
+   "gloss": "TELEPHONE"
+  },
+  {
+   "label": "television",
+   "category": "Electronics",
+   "folder": "59. Television",
+   "gloss": "TELEVISION"
+  },
+  {
+   "label": "temple",
+   "category": "Places",
+   "folder": "31. Temple",
+   "gloss": "TEMPLE"
+  },
+  {
+   "label": "thankyou",
+   "category": "Greetings",
+   "folder": "55. Thank you",
+   "gloss": "THANK-YOU"
+  },
+  {
+   "label": "they",
+   "category": "Pronouns",
+   "folder": "47. they",
+   "gloss": "THEY"
+  },
+  {
+   "label": "thick",
+   "category": "Adjectives",
+   "folder": "13. thick",
+   "gloss": "THICK"
+  },
+  {
+   "label": "thin",
+   "category": "Adjectives",
+   "folder": "14. thin",
+   "gloss": "THIN"
+  },
+  {
+   "label": "thursday",
+   "category": "Days_and_Time",
+   "folder": "70. Thursday",
+   "gloss": "THURSDAY"
+  },
+  {
+   "label": "tight",
+   "category": "Adjectives",
+   "folder": "21. tight",
+   "gloss": "TIGHT"
+  },
+  {
+   "label": "time",
+   "category": "Days_and_Time",
+   "folder": "86. Time",
+   "gloss": "TIME"
+  },
+  {
+   "label": "today",
+   "category": "Days_and_Time",
+   "folder": "73. Today",
+   "gloss": "TODAY"
+  },
+  {
+   "label": "tomorrow",
+   "category": "Days_and_Time",
+   "folder": "74. Tomorrow",
+   "gloss": "TOMORROW"
+  },
+  {
+   "label": "tool",
+   "category": "Home",
+   "folder": "50. Tool",
+   "gloss": "TOOL"
+  },
+  {
+   "label": "train",
+   "category": "Means_of_Transportation",
+   "folder": "9. Train",
+   "gloss": "TRAIN"
+  },
+  {
+   "label": "trainstation",
+   "category": "Places",
+   "folder": "21. Train Station",
+   "gloss": "TRAIN-STATION"
+  },
+  {
+   "label": "trainticket",
+   "category": "Means_of_Transportation",
+   "folder": "16. train ticket",
+   "gloss": "TRAIN-TICKET"
+  },
+  {
+   "label": "transportation",
+   "category": "Means_of_Transportation",
+   "folder": "17. Transportation",
+   "gloss": "TRANSPORTATION"
+  },
+  {
+   "label": "truck",
+   "category": "Means_of_Transportation",
+   "folder": "12. Truck",
+   "gloss": "TRUCK"
+  },
+  {
+   "label": "tshirt",
+   "category": "Clothes",
+   "folder": "42. T-Shirt",
+   "gloss": "TSHIRT"
+  },
+  {
+   "label": "tuesday",
+   "category": "Days_and_Time",
+   "folder": "68. Tuesday",
+   "gloss": "TUESDAY"
+  },
+  {
+   "label": "ugly",
+   "category": "Adjectives",
+   "folder": "6. Ugly",
+   "gloss": "UGLY"
+  },
+  {
+   "label": "university",
+   "category": "Places",
+   "folder": "26. University",
+   "gloss": "UNIVERSITY"
+  },
+  {
+   "label": "waiter",
+   "category": "Jobs",
+   "folder": "89. Waiter",
+   "gloss": "WAITER"
+  },
+  {
+   "label": "war",
+   "category": "Society",
+   "folder": "11. War",
+   "gloss": "WAR"
+  },
+  {
+   "label": "warm",
+   "category": "Adjectives",
+   "folder": "89. warm",
+   "gloss": "WARM"
+  },
+  {
+   "label": "we",
+   "category": "Pronouns",
+   "folder": "45. we",
+   "gloss": "WE"
+  },
+  {
+   "label": "weak",
+   "category": "Adjectives",
+   "folder": "32. weak",
+   "gloss": "WEAK"
+  },
+  {
+   "label": "wednesday",
+   "category": "Days_and_Time",
+   "folder": "69. Wednesday",
+   "gloss": "WEDNESDAY"
+  },
+  {
+   "label": "week",
+   "category": "Days_and_Time",
+   "folder": "76. Week",
+   "gloss": "WEEK"
+  },
+  {
+   "label": "wet",
+   "category": "Adjectives",
+   "folder": "96. wet",
+   "gloss": "WET"
+  },
+  {
+   "label": "white",
+   "category": "Colours",
+   "folder": "55. White",
+   "gloss": "WHITE"
+  },
+  {
+   "label": "wide",
+   "category": "Adjectives",
+   "folder": "81. wide",
+   "gloss": "WIDE"
+  },
+  {
+   "label": "wife",
+   "category": "People",
+   "folder": "72. Wife",
+   "gloss": "WIFE"
+  },
+  {
+   "label": "window",
+   "category": "Home",
+   "folder": "28. Window",
+   "gloss": "WINDOW"
+  },
+  {
+   "label": "winter",
+   "category": "Seasons",
+   "folder": "63. Winter",
+   "gloss": "WINTER"
+  },
+  {
+   "label": "woman",
+   "category": "People",
+   "folder": "65. Woman",
+   "gloss": "PERSON"
+  },
+  {
+   "label": "year",
+   "category": "Days_and_Time",
+   "folder": "78. Year",
+   "gloss": "YEAR"
+  },
+  {
+   "label": "yellow",
+   "category": "Colours",
+   "folder": "50. Yellow",
+   "gloss": "YELLOW"
+  },
+  {
+   "label": "yesterday",
+   "category": "Days_and_Time",
+   "folder": "75. Yesterday",
+   "gloss": "YESTERDAY"
+  },
+  {
+   "label": "you",
+   "category": "Pronouns",
+   "folder": "41. you",
+   "gloss": "YOU"
+  },
+  {
+   "label": "young",
+   "category": "Adjectives",
+   "folder": "93. young",
+   "gloss": "YOUNG"
+  },
+  {
+   "label": "youplural",
+   "category": "Pronouns",
+   "folder": "46. you (plural)",
+   "gloss": "YOU-ALL"
+  }
+ ]
+}
