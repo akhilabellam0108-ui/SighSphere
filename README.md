@@ -229,3 +229,9 @@ the same normalization, and a mismatch between them is the single most common ca
   30–40 points and will invalidate your results.
 - Every gloss rule and every lexicon entry needs fluent-signer review before it ships.
 - Emergency features stay free and work offline, forever.
+
+---
+
+## Licence
+
+Copyright © 2026 Akhila Bellam. All rights reserved — see [LICENSE](LICENSE). The INCLUDE dataset keeps its own CC BY 4.0 licence.

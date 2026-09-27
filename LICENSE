@@ -1,0 +1,12 @@
+Copyright (c) 2026 Akhila Bellam. All rights reserved.
+
+This source code is published so that others can read and evaluate it.
+No permission is granted to copy, modify, distribute, sublicense or sell
+this software, or to use it in another product, without prior written
+permission from the copyright holder.
+
+Third-party material keeps its own licence. In particular, the INCLUDE
+Indian Sign Language dataset (AI4Bharat) is licensed CC BY 4.0, and
+dependencies listed in package.json are covered by their own licences.
+
+Contact: https://github.com/akhilabellam0108-ui

@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(rm -rf apps/web/node_modules)",
-      "Bash(npm install *)",
-      "Bash(node -e \"console.log\\('root vite', require\\('./node_modules/vite/package.json'\\).version\\)\")"
-    ]
-  }
-}
