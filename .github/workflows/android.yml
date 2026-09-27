@@ -1,0 +1,65 @@
+name: Android app
+
+# Builds the SignSphere Android app (APK) on every push to main and publishes it at a
+# fixed address, so the download link / QR code always gives the newest version:
+#   https://github.com/<owner>/<repo>/releases/download/android-latest/SignSphere.apk
+# Optional repo Variables VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY connect it to the server.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - name: Build the app for Android
+        env:
+          VITE_NATIVE: '1'
+          VITE_PUBLIC_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+          VITE_SUPPORT_EMAIL: ${{ vars.VITE_SUPPORT_EMAIL }}
+        run: npm run build
+      - name: Copy into the Android project
+        working-directory: apps/web
+        run: npx cap sync android
+      - name: Build APK
+        working-directory: apps/web/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+          cp app/build/outputs/apk/debug/app-debug.apk "$GITHUB_WORKSPACE/SignSphere.apk"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SignSphere-apk
+          path: SignSphere.apk
+      - name: Publish as the "android-latest" download
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          notes="Newest SignSphere Android app, built from ${GITHUB_SHA::7}. Download SignSphere.apk on your phone and open it (allow installing from this source when asked)."
+          if gh release view android-latest >/dev/null 2>&1; then
+            gh release upload android-latest SignSphere.apk --clobber
+            gh release edit android-latest --notes "$notes" --title "SignSphere for Android"
+          else
+            gh release create android-latest SignSphere.apk --title "SignSphere for Android" --notes "$notes" --latest
+          fi

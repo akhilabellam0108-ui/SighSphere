@@ -112,6 +112,20 @@ stay on that device, and the admin panel is unavailable.
   installed on the user's other devices (offline recordings upload when back online). *Delete
   all samples* removes them everywhere.
 
+## Android app (APK)
+
+`.github/workflows/android.yml` wraps the same app with [Capacitor](https://capacitorjs.com)
+and builds an Android APK on every push to `main`. The newest build is always at
+<https://github.com/akhilabellam0108-ui/SighSphere/releases/download/android-latest/SignSphere.apk>
+(open it on the phone and allow installing from that source). Tracking models and the sign
+pack are inside the app, so it works offline. It is a test build signed with a debug key;
+publishing on the Play Store needs a release signing key (Android Studio → Generate Signed
+Bundle). Voice input depends on the phone's WebView and may not be available in the app;
+it works in the browser version.
+
+Local build (needs Android Studio / the Android SDK): `VITE_NATIVE=1 npm run build`, then
+`cd apps/web && npx cap sync android && npx cap open android`.
+
 ## Run on any device (GitHub Pages + QR code)
 
 `.github/workflows/pages.yml` publishes the app to

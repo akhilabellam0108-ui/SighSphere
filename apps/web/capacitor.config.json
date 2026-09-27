@@ -1,0 +1,8 @@
+{
+  "appId": "in.signsphere.app",
+  "appName": "SignSphere",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": false
+  }
+}

@@ -6,6 +6,9 @@ import { appUrl } from '../lib/base.js';
 /** The hosted app. On localhost the page's own address would be useless to a phone. */
 const PUBLIC_URL: string = import.meta.env['VITE_PUBLIC_URL'] || 'https://akhilabellam0108-ui.github.io/SighSphere/';
 
+/** Always the newest Android build (GitHub release "android-latest"). */
+export const APK_URL = 'https://github.com/akhilabellam0108-ui/SighSphere/releases/download/android-latest/SignSphere.apk';
+
 function shareUrl(): string {
   const local = ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname) || window.location.hostname.endsWith('.local');
   return local ? PUBLIC_URL : appUrl('');
@@ -65,6 +68,9 @@ export default function ShareApp() {
             </button>
           )}
         </div>
+        <p className="small" style={{ margin: 0 }}>
+          Android phone? <a href={APK_URL}>Download the SignSphere app (APK)</a>
+        </p>
         <p className="muted small" style={{ margin: 0 }}>
           Each device keeps its own sign data. Accounts and history follow your login once the cloud server is connected.
         </p>

@@ -23,7 +23,8 @@ createRoot(container).render(
 );
 
 // Offline support (production only — the dev server serves unbundled modules).
-if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+// The Android app already has every file on the phone; it needs no service worker.
+if (import.meta.env.PROD && !import.meta.env['VITE_NATIVE'] && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register(asset('sw.js'), { scope: BASE }).catch(() => {
       /* offline support is a bonus; the app works without it */
