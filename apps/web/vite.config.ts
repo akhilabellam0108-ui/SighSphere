@@ -41,6 +41,10 @@ export default defineConfig({
     // To test on a phone on your LAN you need HTTPS — use `vite --host` behind a tunnel
     // (cloudflared / ngrok) rather than fighting self-signed certs.
     host: true,
+    // npm run dev: the SignSphere backend server (services/api) answers /api.
+    proxy: {
+      '/api': { target: process.env['SIGNSPHERE_API'] ?? 'http://localhost:8787' },
+    },
   },
   optimizeDeps: {
     // Workspace source dependency — let Vite transform it rather than pre-bundling.

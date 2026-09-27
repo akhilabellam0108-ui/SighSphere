@@ -60,6 +60,8 @@ export default function Accounts() {
         </button>
       </div>
 
+      {backend.mode === 'cloud' && <ChangePassword />}
+
       <section className="card stack" style={{ marginTop: '2rem' }} aria-labelledby="danger-heading">
         <h2 id="danger-heading">Delete login</h2>
         <p className="small" style={{ margin: 0 }}>
@@ -88,5 +90,59 @@ export default function Accounts() {
         </div>
       </section>
     </>
+  );
+}
+
+function ChangePassword() {
+  const { backend } = useSession();
+  const [current, setCurrent] = useState('');
+  const [next, setNext] = useState('');
+  const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+  return (
+    <form
+      className="card stack"
+      style={{ marginTop: '2rem' }}
+      aria-labelledby="password-heading"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (next.length < 8) {
+          setStatus({ ok: false, text: 'Use a password of at least 8 characters.' });
+          return;
+        }
+        setBusy(true);
+        backend
+          .changePassword(current, next)
+          .then(() => {
+            setStatus({ ok: true, text: 'Password changed.' });
+            setCurrent('');
+            setNext('');
+          })
+          .catch((e: unknown) => setStatus({ ok: false, text: friendlyError(e) }))
+          .finally(() => setBusy(false));
+      }}
+    >
+      <h2 id="password-heading">Change password</h2>
+      <div className="form-grid">
+        <label className="field">
+          <span>Current password</span>
+          <input type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} required />
+        </label>
+        <label className="field">
+          <span>New password</span>
+          <input type="password" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} minLength={8} required />
+        </label>
+      </div>
+      {status && (
+        <p className={`notice ${status.ok ? '' : 'error'}`} role={status.ok ? 'status' : 'alert'}>
+          {status.text}
+        </p>
+      )}
+      <div>
+        <button type="submit" disabled={busy}>
+          {busy ? 'Saving…' : 'Change password'}
+        </button>
+      </div>
+    </form>
   );
 }

@@ -93,6 +93,7 @@ export interface Backend {
   signIn(email: string, password: string): Promise<void>;
   signOut(): Promise<void>;
   resetPassword(email: string): Promise<void>;
+  changePassword(current: string, next: string): Promise<void>;
   deleteUser(): Promise<void>;
   listAccounts(): Promise<Account[]>;
   createAccount(type: AccountType, displayName: string, details: Record<string, string>): Promise<Account>;
@@ -291,12 +292,19 @@ export function cloudBackend(client: SupabaseClient, projectUrl = ''): Backend {
       const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo: appUrl('login?reset=1') });
       if (error) throw new Error(friendlyError(error));
     },
+    async changePassword(_current, next) {
+      const { error } = await client.auth.updateUser({ password: next });
+      if (error) throw new Error(friendlyError(error));
+    },
     async deleteUser() {
       check(await client.rpc('delete_my_user'));
       await client.auth.signOut();
     },
     async listAccounts() {
-      const rows = check(await client.from('accounts').select('*').order('created_at'));
+      // Filter by owner: admins can also *see* other hospitals/organisations (for review).
+      const { data } = await client.auth.getSession();
+      const uid = data.session?.user.id ?? '';
+      const rows = check(await client.from('accounts').select('*').eq('user_id', uid).order('created_at'));
       return (rows as AccountRow[]).map(fromAccountRow);
     },
     async createAccount(type, displayName, details) {
@@ -479,6 +487,9 @@ export function deviceBackend(): Backend {
     async resetPassword() {
       throw new Error('Passwords are not used in this-device mode.');
     },
+    async changePassword() {
+      throw new Error('Passwords are not used in this-device mode.');
+    },
     async deleteUser() {
       localStorage.removeItem(DEVICE_ACCOUNTS);
       localStorage.removeItem(DEVICE_HISTORY);
@@ -573,6 +584,178 @@ export function deviceBackend(): Backend {
   };
 }
 
+
+// ----------------------------------------------------------------------- server
+
+const SERVER_SESSION = 'signsphere.server-session.v1';
+
+/**
+ * SignSphere's own backend server (services/api): real logins, the same database rules as
+ * Supabase, no third-party account needed. Used when VITE_API_URL is set (npm run dev and
+ * npm start set it to /api).
+ */
+export function serverBackend(apiUrl: string): Backend {
+  const api = apiUrl.replace(/\/$/, '');
+  const listeners = new Set<(user: User | null) => void>();
+  const session = () => read<{ token: string; user: User } | null>(SERVER_SESSION, null);
+  const setSession = (value: { token: string; user: User } | null) => {
+    if (value) write(SERVER_SESSION, value);
+    else localStorage.removeItem(SERVER_SESSION);
+    listeners.forEach((l) => l(value?.user ?? null));
+  };
+
+  async function call<T>(method: string, path: string, body?: unknown, raw?: Blob): Promise<T> {
+    const token = session()?.token;
+    let res: Response;
+    try {
+      res = await fetch(api + path, {
+        method,
+        headers: { ...(raw ? { 'content-type': 'application/json' } : body !== undefined ? { 'content-type': 'application/json' } : {}), ...(token ? { authorization: `Bearer ${token}` } : {}) },
+        body: raw ?? (body === undefined ? undefined : JSON.stringify(body)),
+      });
+    } catch {
+      throw new Error(friendlyError('Failed to fetch'));
+    }
+    const text = await res.text();
+    const data = text ? (JSON.parse(text) as unknown) : null;
+    if (!res.ok) {
+      if (res.status === 401 && token && !path.startsWith('/auth/sign')) setSession(null);
+      throw new Error(friendlyError((data as { message?: string } | null)?.message ?? `Server error ${res.status}`));
+    }
+    return data as T;
+  }
+
+  return {
+    mode: 'cloud',
+    async getUser() {
+      const current = session();
+      if (!current) return null;
+      try {
+        const { user } = await call<{ user: User }>('GET', '/auth/me');
+        return user;
+      } catch (error) {
+        // Offline: stay signed in with what we know; signed out on the server: forget it.
+        return session() ? current.user : null;
+      }
+    },
+    onAuthChange(callback) {
+      listeners.add(callback);
+      return () => listeners.delete(callback);
+    },
+    async signUp(email, password) {
+      setSession(await call('POST', '/auth/signup', { email, password }));
+      return false;
+    },
+    async signIn(email, password) {
+      setSession(await call('POST', '/auth/signin', { email, password }));
+    },
+    async signOut() {
+      setSession(null);
+    },
+    async resetPassword() {
+      throw new Error('Password reset by email is not set up on this server. Ask your SignSphere admin, or sign in and change it under Accounts.');
+    },
+    async changePassword(current, next) {
+      await call('POST', '/auth/password', { current, password: next });
+    },
+    async deleteUser() {
+      await call('POST', '/auth/delete');
+      setSession(null);
+    },
+    async listAccounts() {
+      return (await call<AccountRow[]>('GET', '/accounts')).map(fromAccountRow);
+    },
+    async createAccount(type, displayName, details) {
+      return fromAccountRow(await call<AccountRow>('POST', '/accounts', { type, display_name: displayName, details }));
+    },
+    async updateAccount(id, displayName, details) {
+      return fromAccountRow(await call<AccountRow>('PATCH', `/accounts/${id}`, { display_name: displayName, details }));
+    },
+    async deleteAccount(id) {
+      await call('DELETE', `/accounts/${id}`);
+    },
+    async listHistory(accountId, limit = 500) {
+      return (await call<HistoryRow[]>('GET', `/history?account=${encodeURIComponent(accountId)}&limit=${limit}`)).map(fromHistoryRow);
+    },
+    async putHistory(items) {
+      if (items.length === 0) return;
+      await call('PUT', '/history', items.map((i) => ({ id: i.id, account_id: i.accountId, kind: i.kind, input: i.input, output: i.output, created_at: i.createdAt })));
+    },
+    async deleteHistory(ids) {
+      if (ids.length) await call('POST', '/history/delete', { ids });
+    },
+    async clearHistory(accountId) {
+      await call('DELETE', `/history?account=${encodeURIComponent(accountId)}`);
+    },
+    async requestVerification(accountId) {
+      return fromAccountRow(await call<AccountRow>('POST', `/accounts/${accountId}/request-verification`));
+    },
+    async listSigns() {
+      return (await call<SignRow[]>('GET', '/signs')).map(fromSignRow);
+    },
+    async putSigns(signs) {
+      for (let i = 0; i < signs.length; i += 20) {
+        await call(
+          'PUT',
+          '/signs',
+          signs.slice(i, i + 20).map((x) => ({ id: x.id, account_id: x.accountId, gloss: x.gloss, feature_version: x.featureVersion, source_frames: x.sourceFrames, vector: x.vector, motion: x.motion, meta: x.meta, created_at: x.createdAt })),
+        );
+      }
+    },
+    async deleteSigns(ids) {
+      if (ids.length) await call('POST', '/signs/delete', { ids });
+    },
+    async deleteAllSigns() {
+      await call('DELETE', '/signs');
+    },
+    async sendFeedback(f) {
+      return fromFeedbackRow(await call<FeedbackRow>('POST', '/feedback', { account_id: f.accountId, kind: f.kind, gloss: f.gloss, message: f.message, page: f.page }));
+    },
+    async listMyFeedback() {
+      if (!session()) return [];
+      return (await call<FeedbackRow[]>('GET', '/feedback/mine')).map(fromFeedbackRow);
+    },
+    signPackUrl() {
+      return `${api}/sign-pack`;
+    },
+    subscribe(_userId, onChange) {
+      const token = session()?.token;
+      if (!token || typeof EventSource === 'undefined') return () => {};
+      const source = new EventSource(`${api}/events?token=${encodeURIComponent(token)}`);
+      source.onmessage = (event) => {
+        if (event.data === 'history' || event.data === 'signs') onChange(event.data);
+      };
+      return () => source.close();
+    },
+    async isAdmin() {
+      try {
+        return (await call<{ admin: boolean }>('GET', '/admin/me')).admin;
+      } catch {
+        return false;
+      }
+    },
+    async adminOverview() {
+      return call<AdminOverview>('GET', '/admin/overview');
+    },
+    async adminListOrganisations() {
+      return (await call<AccountRow[]>('GET', '/admin/organisations')).map(fromAccountRow);
+    },
+    async adminReview(accountId, verification, note) {
+      await call('POST', '/admin/review', { account_id: accountId, verification, note });
+    },
+    async adminListFeedback(status) {
+      return (await call<FeedbackRow[]>('GET', `/admin/feedback?status=${status}`)).map(fromFeedbackRow);
+    },
+    async adminResolveFeedback(id, status, note) {
+      await call('POST', `/admin/feedback/${id}`, { status, note });
+    },
+    async adminPublishSignPack(file) {
+      await call('PUT', '/sign-pack', undefined, file);
+      return `${api}/sign-pack`;
+    },
+  };
+}
+
 // ------------------------------------------------------------------------ choose
 
 let instance: Backend | null = null;
@@ -581,7 +764,13 @@ export function getBackend(): Backend {
   if (instance) return instance;
   const url = import.meta.env['VITE_SUPABASE_URL'] as string | undefined;
   const key = import.meta.env['VITE_SUPABASE_ANON_KEY'] as string | undefined;
-  instance = url && key ? cloudBackend(createClient(url, key, { auth: { persistSession: true, autoRefreshToken: true } }), url) : deviceBackend();
+  const api = import.meta.env['VITE_API_URL'] as string | undefined;
+  instance =
+    url && key
+      ? cloudBackend(createClient(url, key, { auth: { persistSession: true, autoRefreshToken: true } }), url)
+      : api
+        ? serverBackend(api)
+        : deviceBackend();
   return instance;
 }
 

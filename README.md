@@ -13,33 +13,36 @@ recognition and gloss-driven text-to-sign, running **entirely on-device** in the
 
 ---
 
-## Quick start
+## Quick start — the full app (app + backend) with one command
+
+Needs [Node.js 22+](https://nodejs.org). No accounts, keys or database install.
 
 ```bash
+git clone https://github.com/akhilabellam0108-ui/SighSphere.git
+cd SighSphere
 npm install
-npm run dev          # http://localhost:5173
+npm run dev          # app: http://localhost:5173  (backend server starts with it)
 ```
 
-Camera access requires a secure context. `localhost` counts, so `npm run dev` works.
-Any other host needs HTTPS.
+The **first login you create becomes the admin** (the Admin tab). Everything is saved by the
+built-in SignSphere server in `services/api/data/` (keep that folder; delete it to start over).
+
+Run it for real (one address for app + backend, other devices on your Wi-Fi can open it):
 
 ```bash
-npm test             # gloss engine + feature-layout tests (41 tests)
-npm run typecheck    # all workspaces
-npm run check        # typecheck + unit tests + database security tests
-npm run build        # production PWA build
+npm start            # builds, then serves everything at http://localhost:8787
 ```
 
-Feature parity between the browser and the training code is enforced by a test, not by
-convention. Run both halves after touching either features file:
+Other commands:
 
 ```bash
-npm test --workspace @signsphere/web        # regenerates services/ml/fixtures/parity.json
-cd services/ml && python check_parity.py    # asserts features.py matches features.ts
+npm run check        # typecheck + unit tests + database security tests + API tests
+npm run make-admin -- someone@example.com    # make another login an admin (server stopped)
+npm run dev:web      # the app alone, without the server (this-device mode)
 ```
 
-Currently passes with a maximum difference of exactly 0. `pip install numpy` is all you need
-for this; no torch, no MediaPipe.
+Camera access needs a secure context: `localhost` counts; other devices need HTTPS (or use
+the Android app).
 
 ## First 15 minutes — get a working demo
 
@@ -52,10 +55,21 @@ for this; no torch, no MediaPipe.
 That is a genuine working vertical slice with no server, no training run, and no model
 file. It is a *baseline*, not the final model — see "Model path" below.
 
-## Backend (Supabase)
+## Backend
 
-SignSphere's backend is [Supabase](https://supabase.com): Postgres with row-level security,
-email logins, file storage and live updates. Everything is in `supabase/migrations/`.
+SignSphere has **two interchangeable backends** with the same database design and security
+rules (`supabase/migrations/`):
+
+1. **Built-in server (default)** — `services/api`: Node.js + embedded Postgres (PGlite), no
+   installs or accounts. Logins with scrypt-hashed passwords and signed tokens, the same
+   row-level security as below, live updates, and it serves the app itself. `npm run dev` and
+   `npm start` use it. Host it anywhere Node runs (Render, Railway, a college server) and set
+   `VITE_API_URL` to its address for the web/Android builds. Tested by `npm run test:api`.
+2. **Supabase (optional, hosted)** — Postgres with row-level security, email logins (with
+   email password reset), file storage and live updates. Set `VITE_SUPABASE_URL` /
+   `VITE_SUPABASE_ANON_KEY` and it takes over. Setup below.
+
+With neither, the app runs in clearly labelled this-device mode.
 
 | What | Where |
 |---|---|
@@ -74,7 +88,7 @@ recordings); nobody can verify themselves. `npm run test:db` proves each rule on
 Postgres engine (36 checks), and `cloudBackend.test.ts` checks every table and column the app
 uses exists in the migrations.
 
-### Connect it (about 10 minutes)
+### Supabase instead (optional, about 10 minutes)
 
 1. Create a free project at [supabase.com](https://supabase.com) (region: Mumbai for India).
 2. **SQL editor** → run `supabase/migrations/0001_signsphere.sql`, then

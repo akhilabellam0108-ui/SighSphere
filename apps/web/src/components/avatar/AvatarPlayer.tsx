@@ -23,7 +23,7 @@ export interface AvatarPlayerProps {
 
 function sourceLabel(source: string | null): string {
   if (!source) return 'No motion yet';
-  if (source === 'recorded') return 'Recorded on this device';
+  if (source === 'recorded') return 'Your recording';
   if (source.startsWith('dataset:')) return 'Real signer · INCLUDE dataset';
   return source;
 }

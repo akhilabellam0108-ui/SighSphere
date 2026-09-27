@@ -1,0 +1,19 @@
+{
+  "name": "@signsphere/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "SignSphere backend server: logins, accounts, history, synced signs, reports, admin. Embedded Postgres (PGlite) with the same row-level security as supabase/migrations.",
+  "main": "src/server.mjs",
+  "scripts": {
+    "start": "node src/server.mjs",
+    "make-admin": "node src/make-admin.mjs",
+    "test": "node test/api.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.2.17"
+  }
+}

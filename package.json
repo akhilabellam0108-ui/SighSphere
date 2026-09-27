@@ -5,16 +5,22 @@
   "description": "ISL learning and communication platform \u2014 on-device sign recognition, gloss-based text-to-sign",
   "workspaces": [
     "packages/*",
-    "apps/*"
+    "apps/*",
+    "services/api"
   ],
   "scripts": {
-    "dev": "npm run dev --workspace @signsphere/web",
+    "dev": "node scripts/dev.mjs",
     "build": "npm run build --workspace @signsphere/web",
     "preview": "npm run preview --workspace @signsphere/web",
-    "test": "npm run test --workspaces --if-present",
+    "test": "npm run test --workspace @signsphere/gloss --workspace @signsphere/web",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "check": "npm run typecheck && npm test && npm run test:db",
-    "test:db": "node supabase/tests/rls.test.mjs"
+    "check": "npm run typecheck && npm test && npm run test:db && npm run test:api",
+    "test:db": "node supabase/tests/rls.test.mjs",
+    "dev:web": "npm run dev --workspace @signsphere/web",
+    "start": "node scripts/start.mjs",
+    "server": "node services/api/src/server.mjs",
+    "make-admin": "node services/api/src/make-admin.mjs",
+    "test:api": "node services/api/test/api.test.mjs"
   },
   "engines": {
     "node": ">=20"
