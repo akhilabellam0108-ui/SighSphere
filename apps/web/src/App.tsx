@@ -30,10 +30,10 @@ const NAV = [
   { to: '/voice-to-sign', label: 'Voice → Sign', icon: '🎤' },
   { to: '/sign-to-text', label: 'Sign → Text', icon: '👁' },
   { to: '/sign-to-voice', label: 'Sign → Voice', icon: '🔊' },
+  { to: '/record', label: 'Record', icon: '⏺' },
   { to: '/learn', label: 'Learn', icon: '★' },
   { to: '/history', label: 'History', icon: '🕘' },
   { to: '/emergency', label: 'Emergency', icon: '✚' },
-  { to: '/record', label: 'Record', icon: '⏺' },
   { to: '/settings', label: 'Settings', icon: '⚙' },
 ] as const;
 
@@ -141,9 +141,15 @@ function BundledPack() {
   );
 }
 
+/** Always visible in the phone's bottom bar; everything else is under "More". */
+const PRIMARY = new Set(['/', '/text-to-sign', '/sign-to-text', '/record']);
+
 function Shell() {
   const { isAdmin } = useSession();
   const nav = isAdmin ? [...NAV, { to: '/admin', label: 'Admin', icon: '🛡' } as const] : NAV;
+  const [moreOpen, setMoreOpen] = useState(false);
+  const location = useLocation();
+  useEffect(() => setMoreOpen(false), [location.pathname]);
   return (
     <div className="app">
       <header className="topbar">
@@ -154,9 +160,9 @@ function Shell() {
         <AccountMenu />
       </header>
 
-      <nav className="nav" aria-label="Main">
+      <nav className={`nav${moreOpen ? ' open' : ''}`} aria-label="Main">
         {nav.map((item) => (
-          <NavLink key={item.to} to={item.to} end={item.to === '/'}>
+          <NavLink key={item.to} to={item.to} end={item.to === '/'} data-primary={PRIMARY.has(item.to) ? '' : undefined}>
             {/* aria-hidden: the icon is decorative, the label is the accessible name */}
             <span className="nav-icon" aria-hidden="true">
               {item.icon}
@@ -164,6 +170,12 @@ function Shell() {
             <span>{item.label}</span>
           </NavLink>
         ))}
+        <button type="button" className="nav-more" aria-expanded={moreOpen} onClick={() => setMoreOpen((open) => !open)}>
+          <span className="nav-icon" aria-hidden="true">
+            {moreOpen ? '✕' : '☰'}
+          </span>
+          <span>{moreOpen ? 'Close' : 'More'}</span>
+        </button>
       </nav>
 
       <main id="main" tabIndex={-1}>

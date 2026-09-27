@@ -23,6 +23,7 @@ import {
   sampleCounts,
   type SampleMeta,
 } from '../lib/storage.js';
+import { useSearchParams } from 'react-router-dom';
 import { useSettings } from '../state/settings.js';
 import { useSession } from '../state/session.js';
 import { newId } from '../lib/backend.js';
@@ -49,8 +50,12 @@ export default function Recorder() {
   const cloud = backend.mode === 'cloud';
   const lexicon = buildIndex();
 
-  const [label, setLabel] = useState(lexicon.lexicon.entries[0]?.gloss ?? 'HELLO');
-  const [customLabel, setCustomLabel] = useState('');
+  // "Record this sign" links elsewhere in the app open Record with the sign already chosen.
+  const [params] = useSearchParams();
+  const wanted = (params.get('label') ?? '').trim().toUpperCase();
+  const known = wanted && lexicon.lexicon.entries.some((e) => e.gloss === wanted);
+  const [label, setLabel] = useState(known ? wanted : (lexicon.lexicon.entries[0]?.gloss ?? 'HELLO'));
+  const [customLabel, setCustomLabel] = useState(wanted && !known ? wanted : '');
   const [phase, setPhase] = useState<Phase>('idle');
   const [countdown, setCountdown] = useState(COUNTDOWN_FROM);
   const [counts, setCounts] = useState<Record<string, number>>({});

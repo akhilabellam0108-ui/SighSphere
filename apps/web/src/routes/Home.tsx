@@ -27,6 +27,11 @@ const FEATURES = [
     body: 'The same recognition, spoken aloud for a hearing person.',
   },
   {
+    to: '/record',
+    title: '⏺ Record a sign',
+    body: 'Sign it once to the camera: it is recognised in Sign → Text and the 3D avatar signs it back.',
+  },
+  {
     to: '/learn',
     title: 'Learning Hub',
     body: 'Lessons with camera practice and instant feedback. Streaks and spaced review.',

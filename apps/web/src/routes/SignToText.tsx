@@ -117,6 +117,11 @@ export default function SignToText({ speakOutput }: SignToTextProps) {
         Sign to the camera. Start moving to begin a sign, then hold still briefly to finish it.
         Video never leaves this device.
       </p>
+      <p style={{ marginTop: 0 }}>
+        <Link className="btn small" to="/record">
+          ⏺ Record a new sign
+        </Link>
+      </p>
 
       {untrained && (
         <p className="notice">

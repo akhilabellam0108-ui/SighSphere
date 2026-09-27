@@ -209,6 +209,11 @@ export default function AvatarPlayer({ plan, autoPlay = false }: AvatarPlayerPro
             Sign {Math.max(1, index + 1)} of {total}
           </span>
         )}
+        {current && !current.clip && (
+          <Link className="btn small primary" to={`/record?label=${encodeURIComponent(current.gloss)}`}>
+            ⏺ Record {current.gloss}
+          </Link>
+        )}
         {current?.clip && (
           <Link className="small" to={`/feedback?kind=wrong-sign&gloss=${encodeURIComponent(current.gloss)}&from=avatar`}>
             Report this sign
@@ -220,7 +225,12 @@ export default function AvatarPlayer({ plan, autoPlay = false }: AvatarPlayerPro
         <p className="hint">
           {missing.length > 0 && (
             <>
-              No signer motion yet for <strong>{missing.join(', ')}</strong> — import the ISL dataset or record it in Record.{' '}
+              No signer motion yet for <strong>{missing.join(', ')}</strong>. Record it once and the avatar signs it:{' '}
+              {missing.slice(0, 6).map((g) => (
+                <Link key={g} className="btn small" to={`/record?label=${encodeURIComponent(g)}`} style={{ margin: '0.15rem' }}>
+                  ⏺ Record {g}
+                </Link>
+              ))}{' '}
             </>
           )}
           {spelled.length > 0 && 'Fingerspelled words need letter recordings (A, B, C…) for the avatar to spell them.'}

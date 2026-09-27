@@ -204,6 +204,36 @@ main {
   line-height: 1;
 }
 
+/* Phones: Home, Text → Sign, Sign → Text, Record + More. "More" opens every screen. */
+.nav-more {
+  flex: 1 1 0;
+  min-width: 4.5rem;
+  min-height: var(--tap);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  padding: 0.35rem 0.25rem;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+@media (max-width: 47.99rem) {
+  .nav { overflow-x: visible; }
+  .nav:not(.open) a:not([data-primary]) { display: none; }
+  .nav.open {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.12);
+  }
+  .nav.open a,
+  .nav.open .nav-more { flex: 0 0 calc(25% - 0.25rem); }
+}
+
 /* --------------------------- building blocks --------------------------- */
 
 .card {
@@ -573,6 +603,7 @@ footer.disclaimer {
 }
 
 @media (min-width: 48rem) {
+  .nav-more { display: none; }
   .nav {
     position: static;
     justify-content: flex-start;
