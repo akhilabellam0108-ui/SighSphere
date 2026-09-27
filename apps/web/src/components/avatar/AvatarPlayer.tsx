@@ -9,6 +9,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { RenderToken } from '@signsphere/gloss';
+import { Link } from 'react-router-dom';
 import SignPlayer from '../SignPlayer.js';
 import { buildTimeline, startOf, stateAt, type SegmentInput, type Timeline } from '../../lib/avatarTimeline.js';
 import { MOTIONS_CHANGED, motionFor, motionSource } from '../../lib/motionLibrary.js';
@@ -207,6 +208,11 @@ export default function AvatarPlayer({ plan, autoPlay = false }: AvatarPlayerPro
           <span className="small muted">
             Sign {Math.max(1, index + 1)} of {total}
           </span>
+        )}
+        {current?.clip && (
+          <Link className="small" to={`/feedback?kind=wrong-sign&gloss=${encodeURIComponent(current.gloss)}&from=avatar`}>
+            Report this sign
+          </Link>
         )}
       </div>
 

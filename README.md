@@ -52,32 +52,72 @@ for this; no torch, no MediaPipe.
 That is a genuine working vertical slice with no server, no training run, and no model
 file. It is a *baseline*, not the final model — see "Model path" below.
 
-## Accounts, history and the cloud (Supabase)
+## Backend (Supabase)
 
-The app opens on a **Welcome** screen, then **Sign in as** Individual, Hospital or
-Organisation. One login can hold up to 10 accounts of any type (switch from the menu at
-the top right); each type asks for the details it needs (hospitals: registration number,
-address, PIN, contact person…; individuals under 18: a guardian). Everything signed,
-typed or spoken is saved to that account's **History**.
+SignSphere's backend is [Supabase](https://supabase.com): Postgres with row-level security,
+email logins, file storage and live updates. Everything is in `supabase/migrations/`.
 
-To turn on real logins and cloud sync:
+| What | Where |
+|---|---|
+| Logins (email + password, reset, delete my login) | Supabase Auth |
+| Individual / Hospital / Organisation accounts (up to 10 per login, every question compulsory) | `accounts` |
+| History of everything signed, typed or spoken, per account; works offline and syncs later | `history` |
+| Recorded signs synced across a login's devices (recognition + avatar motion) | `signs` |
+| Hospital / organisation verification, reviewed by the SignSphere team | `accounts.verification`, `admins` |
+| "Report a problem" (wrong sign, missing sign, bugs) with replies from the team | `feedback` |
+| ISL sign pack published once, downloaded by every device | Storage bucket `sign-packs` |
+| Live updates on your other devices | Realtime on `history`, `signs` |
 
-1. Create a free project at [supabase.com](https://supabase.com).
-2. Dashboard → **SQL editor** → paste `supabase/migrations/0001_signsphere.sql` → **Run**.
-   Row-level security means each login can only ever see its own accounts and history
-   (checked by `npm run test:db` on a real Postgres).
-3. Dashboard → **Project Settings → API**. Copy `.env.example` to `.env` at the repo root
-   and fill in `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (the *anon public* key —
-   **never** the `service_role` key). Optionally set `VITE_SUPPORT_EMAIL`.
-4. Authentication → URL configuration: set the Site URL to where you host the app.
+Security is enforced by the database, not the app: a login can only ever read or change its
+own data; admins can see hospitals and organisations (never individuals' accounts or anyone's
+recordings); nobody can verify themselves. `npm run test:db` proves each rule on a real
+Postgres engine (36 checks), and `cloudBackend.test.ts` checks every table and column the app
+uses exists in the migrations.
 
-Without these, the app runs in clearly labelled **device mode**: accounts and history are
-kept on that device only. History is local-first either way — it is cached on the device
-and uploaded when the connection comes back.
+### Connect it (about 10 minutes)
 
-Hospitals and organisations start as *unverified*. Only staff (the `service_role`, e.g.
-from the Supabase table editor) can mark an account verified; users cannot verify
-themselves.
+1. Create a free project at [supabase.com](https://supabase.com) (region: Mumbai for India).
+2. **SQL editor** → run `supabase/migrations/0001_signsphere.sql`, then
+   `supabase/migrations/0002_backend.sql`. Both are safe to run again.
+3. **Make yourself an admin**: sign up in the app once, then in the SQL editor run
+   ```sql
+   insert into public.admins (user_id)
+   select id from auth.users where email = 'you@example.com';
+   ```
+   The **Admin** tab appears in the app for that login.
+4. **Authentication → URL configuration**: Site URL
+   `https://akhilabellam0108-ui.github.io/SighSphere/`, and add `http://localhost:5173` to the
+   redirect URLs for development.
+5. **Project Settings → API**: copy the Project URL and the *anon public* key (**never** the
+   `service_role` key).
+   - Local: copy `.env.example` to `.env` at the repo root and fill in
+     `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
+   - Hosted: GitHub repo → Settings → Secrets and variables → Actions → **Variables** → add
+     `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`, then re-run "Deploy to GitHub Pages".
+
+Without these the app runs in clearly labelled **device mode**: accounts, history and reports
+stay on that device, and the admin panel is unavailable.
+
+### Using it
+
+- **Verification**: a hospital or organisation presses *Request verification* on the Accounts
+  screen; an admin checks the registration details under **Admin → Verification** and verifies
+  or declines with a note the account can see. Changing the registration number later sends
+  the account back for review.
+- **Reports**: *Report a problem* (footer, or *Report this sign* under the avatar). Admins
+  answer under **Admin → Reports**; the user sees the reply on their Report screen.
+- **Sign pack**: build `isl-include.json` on the **ISL dataset** screen, then publish it under
+  **Admin → Sign pack**. Every device installs it on its next start — no new release needed.
+- **Signs on every device**: anything recorded on **Record** is uploaded to the login and
+  installed on the user's other devices (offline recordings upload when back online). *Delete
+  all samples* removes them everywhere.
+
+## Run on any device (GitHub Pages + QR code)
+
+`.github/workflows/pages.yml` publishes the app to
+`https://akhilabellam0108-ui.github.io/SighSphere/` on every push to `main` (one-time: repo
+Settings → Pages → Source: **GitHub Actions**). The Welcome screen and Settings show a QR code
+for that address. It installs like an app and works offline after the first visit.
 
 ## The ISL dataset — no recording needed
 

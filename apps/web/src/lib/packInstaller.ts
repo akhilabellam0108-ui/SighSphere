@@ -4,6 +4,7 @@
  * anyone recording anything, and keep working offline.
  */
 
+import { getBackend } from './backend.js';
 import { invalidateMotions, removeMotionsFromSource } from './motionLibrary.js';
 import { BUNDLED_PACK_URL, dequantize, validatePack, type SignPack } from './signPack.js';
 import { addMotion, addSample, deleteSample, getSamples } from './storage.js';
@@ -96,6 +97,17 @@ export async function installPack(value: unknown, onProgress?: (done: number, to
   return record;
 }
 
+async function fetchPack(url: string | null): Promise<Response | 'offline' | null> {
+  if (!url) return null;
+  try {
+    const response = await fetch(url, { cache: 'no-cache' });
+    const type = response.headers.get('content-type') ?? '';
+    return response.ok && !type.includes('text/html') ? response : null;
+  } catch {
+    return 'offline';
+  }
+}
+
 export type BundledStatus = 'current' | 'installed' | 'updated' | 'none' | 'offline' | 'error';
 
 /**
@@ -103,14 +115,11 @@ export type BundledStatus = 'current' | 'installed' | 'updated' | 'none' | 'offl
  * version yet, install it. Safe to call on every start: it is a no-op when up to date.
  */
 export async function ensureBundledPack(onProgress?: (done: number, total: number) => void): Promise<BundledStatus> {
-  let response: Response;
-  try {
-    response = await fetch(BUNDLED_PACK_URL, { cache: 'no-cache' });
-  } catch {
-    return 'offline';
-  }
-  const type = response.headers.get('content-type') ?? '';
-  if (!response.ok || type.includes('text/html')) return 'none';
+  // The pack published to the server (admin panel) wins; the one shipped with the app is the
+  // fallback, so a fresh dataset reaches every device without releasing a new version.
+  const response = (await fetchPack(getBackend().signPackUrl())) ?? (await fetchPack(BUNDLED_PACK_URL));
+  if (response === 'offline') return 'offline';
+  if (!response) return 'none';
   try {
     const pack = validatePack(await response.json());
     const current = installedPacks().find((p) => p.id === pack.id);

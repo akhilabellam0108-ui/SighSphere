@@ -24,6 +24,9 @@ import {
   type SampleMeta,
 } from '../lib/storage.js';
 import { useSettings } from '../state/settings.js';
+import { useSession } from '../state/session.js';
+import { newId } from '../lib/backend.js';
+import { deleteAllSyncedSigns, queueSign } from '../lib/signSync.js';
 
 /*
  * Capture ends when a full model window of frames is collected, not after a fixed time.
@@ -42,6 +45,8 @@ type Phase = 'idle' | 'countdown' | 'recording' | 'saved';
 
 export default function Recorder() {
   const { settings, update } = useSettings();
+  const { backend, active } = useSession();
+  const cloud = backend.mode === 'cloud';
   const lexicon = buildIndex();
 
   const [label, setLabel] = useState(lexicon.lexicon.entries[0]?.gloss ?? 'HELLO');
@@ -109,7 +114,8 @@ export default function Recorder() {
     }
 
     try {
-      await addSample({
+      const cloudId = newId();
+      const sampleId = await addSample({
         label: activeLabel,
         featureVersion: FEATURE_VERSION,
         sourceFrames,
@@ -121,13 +127,17 @@ export default function Recorder() {
           lighting,
           createdAt: Date.now(),
           consentTrain: settings.consentTrain,
+          cloudId,
         },
       });
-      await saveMotion(activeLabel, cleanClip(motionRef.current));
+      const motionId = await saveMotion(activeLabel, cleanClip(motionRef.current));
+      // Sync to the login so the sign also works on the user's other devices.
+      queueSign(cloudId, { sampleId, motionId, accountId: active?.id ?? null });
+      const synced = cloud ? ' It will also be on your other devices.' : '';
       setMessage(
-        sourceFrames >= TARGET_FRAMES
+        (sourceFrames >= TARGET_FRAMES
           ? `Saved ${activeLabel} — ${sourceFrames} frames in ${seconds.toFixed(1)} s. The avatar can now sign it too.`
-          : `Saved ${activeLabel} with ${sourceFrames} frames in ${seconds.toFixed(1)} s (tracking at about ${fps} fps).`,
+          : `Saved ${activeLabel} with ${sourceFrames} frames in ${seconds.toFixed(1)} s (tracking at about ${fps} fps).`) + synced,
       );
       setPhase('saved');
       refreshCounts();
@@ -137,7 +147,7 @@ export default function Recorder() {
     } finally {
       window.clear();
     }
-  }, [activeLabel, lighting, refreshCounts, settings.consentTrain, settings.dominantHand, settings.signerId]);
+  }, [active, activeLabel, cloud, lighting, refreshCounts, settings.consentTrain, settings.dominantHand, settings.signerId]);
 
   useEffect(() => {
     saveRef.current = save;
@@ -372,8 +382,9 @@ export default function Recorder() {
           className="danger"
           disabled={total === 0}
           onClick={() => {
-            if (!confirm('Delete all recorded samples on this device? This cannot be undone.')) return;
-            void clearSamples().then(() => {
+            const where = cloud ? 'on this device and on all devices you sign in on' : 'on this device';
+            if (!confirm(`Delete all recorded samples ${where}? This cannot be undone.`)) return;
+            void Promise.all([clearSamples(), deleteAllSyncedSigns()]).then(() => {
               refreshCounts();
               setMessage('All recorded samples deleted.');
             });

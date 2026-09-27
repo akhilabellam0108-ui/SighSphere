@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ACCOUNT_TYPES, typeLabel } from '../lib/accountTypes.js';
 import { friendlyError } from '../lib/backend.js';
 import { useSession } from '../state/session.js';
+import Verification from '../components/Verification.js';
 
 /** Manage every account under this login: switch, add, edit, delete; delete the login. */
 export default function Accounts() {
@@ -31,9 +32,9 @@ export default function Accounts() {
                 <p className="account-name">{account.displayName}</p>
                 <p className="small muted">
                   {typeLabel(account.type)}
-                  {account.type !== 'individual' && ` · ${account.verification === 'verified' ? 'Verified' : 'Not yet verified'}`}
                   {isActive && ' · In use'}
                 </p>
+                <Verification account={account} />
               </div>
               <div className="row">
                 {!isActive && (

@@ -59,10 +59,19 @@ export async function motionSource(gloss: string): Promise<string | null> {
   return (await buildIndex()).get(gloss.toUpperCase())?.source ?? null;
 }
 
-export async function saveMotion(gloss: string, clip: MotionClip, source = 'recorded'): Promise<void> {
-  if (clip.frames.length < 4) return;
-  await addMotion({ gloss: gloss.toUpperCase(), source, createdAt: Date.now(), clip: encodeClip(clip) });
+/** Saves a motion; returns its id, or null when the clip is too short to use. */
+export async function saveMotion(gloss: string, clip: MotionClip, source = 'recorded'): Promise<number | null> {
+  if (clip.frames.length < 4) return null;
+  const id = await addMotion({ gloss: gloss.toUpperCase(), source, createdAt: Date.now(), clip: encodeClip(clip) });
   invalidateMotions();
+  return id;
+}
+
+/** Stores an already-encoded motion (e.g. one synced from another device). */
+export async function saveEncodedMotion(gloss: string, encoded: string, source = 'recorded'): Promise<number> {
+  const id = await addMotion({ gloss: gloss.toUpperCase(), source, createdAt: Date.now(), clip: encoded });
+  invalidateMotions();
+  return id;
 }
 
 export async function removeMotionsFromSource(source: string): Promise<number> {
@@ -71,4 +80,9 @@ export async function removeMotionsFromSource(source: string): Promise<number> {
   for (const motion of mine) await deleteMotion(motion.id as number);
   invalidateMotions();
   return mine.length;
+}
+
+export async function removeMotionById(id: number): Promise<void> {
+  await deleteMotion(id).catch(() => {});
+  invalidateMotions();
 }

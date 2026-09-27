@@ -5,7 +5,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { cleanDetails, displayNameFor, type AccountType } from '../lib/accountTypes.js';
 import { getBackend, type Account, type Backend, type User } from '../lib/backend.js';
-import { flush, forgetDevice } from '../lib/historyStore.js';
+import { flush, forgetDevice, refresh as refreshHistory } from '../lib/historyStore.js';
+import { flushSigns, forgetSignSync, pullSigns } from '../lib/signSync.js';
 
 const ACTIVE_KEY = 'signsphere.active-account.v1';
 /** Account type chosen on the login screen, so we land on the right account afterwards. */
@@ -17,6 +18,8 @@ interface SessionValue {
   user: User | null;
   accounts: Account[];
   active: Account | null;
+  /** SignSphere team member (sees the admin panel). */
+  isAdmin: boolean;
   switchAccount(id: string): void;
   createAccount(type: AccountType, values: Record<string, string>): Promise<Account>;
   updateAccount(account: Account, values: Record<string, string>): Promise<Account>;
@@ -42,6 +45,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const reloadAccounts = useCallback(async () => {
     const list = await backend.listAccounts();
@@ -55,6 +59,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       if (!next) {
         setAccounts([]);
         setActiveId(null);
+        setIsAdmin(false);
         setLoading(false);
         return;
       }
@@ -66,6 +71,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         const pick =
           list.find((a) => a.id === remembered) ?? list.find((a) => a.type === preferred) ?? list[0] ?? null;
         setActiveId(pick?.id ?? null);
+        void backend.isAdmin().then(setIsAdmin);
+        // Recordings made on this login's other devices.
+        void pullSigns();
       } catch {
         setAccounts([]);
       } finally {
@@ -78,7 +86,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     void backend.getUser().then(adopt);
     const unsubscribe = backend.onAuthChange((next) => void adopt(next));
-    const online = () => void flush();
+    const online = () => {
+      void flush();
+      void flushSigns();
+    };
     window.addEventListener('online', online);
     return () => {
       unsubscribe();
@@ -130,6 +141,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     await flush();
+    await forgetSignSync();
     await backend.signOut();
     forgetDevice(); // the next person on this device must not see this user's history
   }, [backend]);
@@ -141,9 +153,18 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const active = accounts.find((a) => a.id === activeId) ?? null;
 
+  // Live updates from this login's other devices.
+  useEffect(() => {
+    if (!user) return;
+    return backend.subscribe(user.id, (table) => {
+      if (table === 'signs') void pullSigns();
+      else if (activeId) void refreshHistory(activeId);
+    });
+  }, [backend, user, activeId]);
+
   const value = useMemo<SessionValue>(
-    () => ({ backend, loading, user, accounts, active, switchAccount, createAccount, updateAccount, deleteAccount, signOut, deleteLogin, reloadAccounts }),
-    [backend, loading, user, accounts, active, switchAccount, createAccount, updateAccount, deleteAccount, signOut, deleteLogin, reloadAccounts],
+    () => ({ backend, loading, user, accounts, active, isAdmin, switchAccount, createAccount, updateAccount, deleteAccount, signOut, deleteLogin, reloadAccounts }),
+    [backend, loading, user, accounts, active, isAdmin, switchAccount, createAccount, updateAccount, deleteAccount, signOut, deleteLogin, reloadAccounts],
   );
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }

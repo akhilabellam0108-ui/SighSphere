@@ -10,6 +10,8 @@ const AccountForm = lazy(() => import('./routes/AccountForm.js'));
 const Accounts = lazy(() => import('./routes/Accounts.js'));
 const DatasetImport = lazy(() => import('./routes/DatasetImport.js'));
 const Emergency = lazy(() => import('./routes/Emergency.js'));
+const Feedback = lazy(() => import('./routes/Feedback.js'));
+const Admin = lazy(() => import('./routes/Admin.js'));
 const History = lazy(() => import('./routes/History.js'));
 const Home = lazy(() => import('./routes/Home.js'));
 const Learn = lazy(() => import('./routes/Learn.js'));
@@ -140,6 +142,8 @@ function BundledPack() {
 }
 
 function Shell() {
+  const { isAdmin } = useSession();
+  const nav = isAdmin ? [...NAV, { to: '/admin', label: 'Admin', icon: '🛡' } as const] : NAV;
   return (
     <div className="app">
       <header className="topbar">
@@ -151,7 +155,7 @@ function Shell() {
       </header>
 
       <nav className="nav" aria-label="Main">
-        {NAV.map((item) => (
+        {nav.map((item) => (
           <NavLink key={item.to} to={item.to} end={item.to === '/'}>
             {/* aria-hidden: the icon is decorative, the label is the accessible name */}
             <span className="nav-icon" aria-hidden="true">
@@ -177,7 +181,8 @@ function Shell() {
       <footer className="disclaimer">
         SignSphere is a learning and communication aid, not a replacement for a qualified ISL
         interpreter. Do not rely on it for medical, legal, or emergency interpretation. Sign
-        recognition covers a limited vocabulary and makes mistakes. <Link to="/privacy">Privacy</Link>
+        recognition covers a limited vocabulary and makes mistakes. <Link to="/privacy">Privacy</Link> ·{' '}
+        <Link to="/feedback">Report a problem</Link>
       </footer>
     </div>
   );
@@ -211,6 +216,8 @@ export default function App() {
           <Route path="/dataset" element={<DatasetImport />} />
           <Route path="/accounts" element={<Accounts />} />
           <Route path="/accounts/:id" element={<AccountForm />} />
+          <Route path="/feedback" element={<Feedback />} />
+          <Route path="/admin" element={<Admin />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Route>

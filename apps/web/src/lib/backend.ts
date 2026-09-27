@@ -1,5 +1,5 @@
 /**
- * Backend: authentication, accounts and history.
+ * Backend: authentication, accounts, history, synced signs, feedback and the admin panel.
  *
  * Two implementations behind one interface:
  *   - cloud  (Supabase): real logins with email + password, data on the server, protected by
@@ -26,8 +26,52 @@ export interface Account {
   details: Record<string, string>;
   /** Organisations and hospitals are 'unverified' until SignSphere checks their registration. */
   verification: 'unverified' | 'pending' | 'verified';
+  /** Message from the SignSphere team after a review. */
+  verificationNote?: string | null;
+  verifiedAt?: string | null;
   createdAt: string;
 }
+
+/** A sign recorded on the Record screen, synced to the login so every device has it. */
+export interface CloudSign {
+  id: string;
+  accountId: string | null;
+  gloss: string;
+  featureVersion: number;
+  sourceFrames: number;
+  vector: number[];
+  /** Encoded motion clip (lib/motion.ts) for the 3D avatar; null if too short. */
+  motion: string | null;
+  meta: Record<string, unknown>;
+  createdAt: string;
+}
+
+export type FeedbackKind = 'wrong-sign' | 'missing-sign' | 'recognition' | 'bug' | 'idea' | 'other';
+
+export interface Feedback {
+  id: string;
+  accountId: string | null;
+  kind: FeedbackKind;
+  gloss: string | null;
+  message: string;
+  page: string | null;
+  status: 'open' | 'resolved';
+  adminNote: string | null;
+  createdAt: string;
+  resolvedAt: string | null;
+}
+
+export interface AdminOverview {
+  logins: number;
+  accounts: Record<string, number>;
+  pendingReviews: number;
+  verified: number;
+  historyLast7Days: number;
+  signsRecorded: number;
+  openFeedback: number;
+}
+
+export type RealtimeTable = 'history' | 'signs';
 
 export type HistoryKind = 'text-to-sign' | 'voice-to-sign' | 'sign-to-text' | 'sign-to-voice';
 
@@ -59,6 +103,43 @@ export interface Backend {
   putHistory(items: HistoryItem[]): Promise<void>;
   deleteHistory(ids: string[]): Promise<void>;
   clearHistory(accountId: string): Promise<void>;
+
+  /** Hospital / organisation owner asks the SignSphere team to check their registration. */
+  requestVerification(accountId: string): Promise<Account>;
+
+  // Recorded signs, synced across the login's devices.
+  listSigns(): Promise<CloudSign[]>;
+  /** Idempotent: signs already uploaded are skipped. */
+  putSigns(signs: CloudSign[]): Promise<void>;
+  deleteSigns(ids: string[]): Promise<void>;
+  deleteAllSigns(): Promise<void>;
+
+  // Reports and suggestions.
+  sendFeedback(feedback: Pick<Feedback, 'accountId' | 'kind' | 'gloss' | 'message' | 'page'>): Promise<Feedback>;
+  listMyFeedback(): Promise<Feedback[]>;
+
+  /** Public address of the cloud ISL sign pack, if there is a server. */
+  signPackUrl(): string | null;
+  /** Calls back when this user's history or signs change on another device. */
+  subscribe(userId: string, onChange: (table: RealtimeTable) => void): () => void;
+
+  // SignSphere team.
+  isAdmin(): Promise<boolean>;
+  adminOverview(): Promise<AdminOverview>;
+  adminListOrganisations(): Promise<Account[]>;
+  adminReview(accountId: string, verification: Account['verification'], note: string): Promise<void>;
+  adminListFeedback(status: 'open' | 'resolved'): Promise<Feedback[]>;
+  adminResolveFeedback(id: string, status: 'open' | 'resolved', note: string): Promise<void>;
+  adminPublishSignPack(file: Blob): Promise<string>;
+}
+
+export const SIGN_PACK_FILE = 'isl-include.json';
+
+/** For screens that need a server (the admin panel). */
+export class NeedsServerError extends Error {
+  constructor() {
+    super('This needs the SignSphere server. It is not connected on this copy of the app.');
+  }
 }
 
 export function newId(): string {
@@ -92,8 +173,60 @@ interface AccountRow {
   display_name: string;
   details: Record<string, string>;
   verification: Account['verification'];
+  verification_note?: string | null;
+  verified_at?: string | null;
   created_at: string;
 }
+
+interface SignRow {
+  id: string;
+  account_id: string | null;
+  gloss: string;
+  feature_version: number;
+  source_frames: number;
+  vector: number[];
+  motion: string | null;
+  meta: Record<string, unknown> | null;
+  created_at: string;
+}
+
+interface FeedbackRow {
+  id: string;
+  account_id: string | null;
+  kind: FeedbackKind;
+  gloss: string | null;
+  message: string;
+  page: string | null;
+  status: Feedback['status'];
+  admin_note: string | null;
+  created_at: string;
+  resolved_at: string | null;
+}
+
+const fromSignRow = (r: SignRow): CloudSign => ({
+  id: r.id,
+  accountId: r.account_id,
+  gloss: r.gloss,
+  featureVersion: r.feature_version,
+  sourceFrames: r.source_frames,
+  vector: r.vector,
+  motion: r.motion,
+  meta: r.meta ?? {},
+  createdAt: r.created_at,
+});
+
+const fromFeedbackRow = (r: FeedbackRow): Feedback => ({
+  id: r.id,
+  accountId: r.account_id,
+  kind: r.kind,
+  gloss: r.gloss,
+  message: r.message,
+  page: r.page,
+  status: r.status,
+  adminNote: r.admin_note,
+  createdAt: r.created_at,
+  resolvedAt: r.resolved_at,
+});
 
 interface HistoryRow {
   id: string;
@@ -111,6 +244,8 @@ const fromAccountRow = (r: AccountRow): Account => ({
   displayName: r.display_name,
   details: r.details ?? {},
   verification: r.verification,
+  verificationNote: r.verification_note ?? null,
+  verifiedAt: r.verified_at ?? null,
   createdAt: r.created_at,
 });
 
@@ -128,7 +263,7 @@ function check<T>(result: { data: T; error: unknown }): T {
   return result.data;
 }
 
-export function cloudBackend(client: SupabaseClient): Backend {
+export function cloudBackend(client: SupabaseClient, projectUrl = ''): Backend {
   const toUser = (u: { id: string; email?: string | null } | null | undefined): User | null => (u ? { id: u.id, email: u.email ?? null } : null);
   return {
     mode: 'cloud',
@@ -195,6 +330,100 @@ export function cloudBackend(client: SupabaseClient): Backend {
     async clearHistory(accountId) {
       check(await client.from('history').delete().eq('account_id', accountId));
     },
+    async requestVerification(accountId) {
+      const row = check(await client.from('accounts').update({ verification: 'pending' }).eq('id', accountId).select().single());
+      return fromAccountRow(row as AccountRow);
+    },
+    async listSigns() {
+      const out: CloudSign[] = [];
+      // Page through: a signer may have hundreds of recordings.
+      for (let from = 0; ; from += 200) {
+        const rows = check(await client.from('signs').select('*').order('created_at').range(from, from + 199)) as SignRow[];
+        out.push(...rows.map(fromSignRow));
+        if (rows.length < 200) return out;
+      }
+    },
+    async putSigns(signs) {
+      for (let i = 0; i < signs.length; i += 20) {
+        const batch = signs.slice(i, i + 20).map((x) => ({
+          id: x.id,
+          account_id: x.accountId,
+          gloss: x.gloss,
+          feature_version: x.featureVersion,
+          source_frames: x.sourceFrames,
+          vector: x.vector,
+          motion: x.motion,
+          meta: x.meta,
+          created_at: x.createdAt,
+        }));
+        check(await client.from('signs').upsert(batch, { onConflict: 'id', ignoreDuplicates: true }));
+      }
+    },
+    async deleteSigns(ids) {
+      if (ids.length === 0) return;
+      check(await client.from('signs').delete().in('id', ids));
+    },
+    async deleteAllSigns() {
+      const { data } = await client.auth.getSession();
+      const uid = data.session?.user.id;
+      if (uid) check(await client.from('signs').delete().eq('user_id', uid));
+    },
+    async sendFeedback(f) {
+      const row = check(
+        await client.from('feedback').insert({ account_id: f.accountId, kind: f.kind, gloss: f.gloss, message: f.message, page: f.page }).select().single(),
+      );
+      return fromFeedbackRow(row as FeedbackRow);
+    },
+    async listMyFeedback() {
+      const { data } = await client.auth.getSession();
+      const uid = data.session?.user.id;
+      if (!uid) return [];
+      const rows = check(await client.from('feedback').select('*').eq('user_id', uid).order('created_at', { ascending: false }).limit(100));
+      return (rows as FeedbackRow[]).map(fromFeedbackRow);
+    },
+    signPackUrl() {
+      return projectUrl ? `${projectUrl.replace(/\/$/, '')}/storage/v1/object/public/sign-packs/${SIGN_PACK_FILE}` : null;
+    },
+    subscribe(userId, onChange) {
+      const channel = client
+        .channel(`user-${userId}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'history', filter: `user_id=eq.${userId}` }, () => onChange('history'))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'signs', filter: `user_id=eq.${userId}` }, () => onChange('signs'))
+        .subscribe();
+      return () => {
+        void client.removeChannel(channel);
+      };
+    },
+    async isAdmin() {
+      const { data, error } = await client.rpc('is_admin');
+      return !error && data === true;
+    },
+    async adminOverview() {
+      return check(await client.rpc('admin_overview')) as AdminOverview;
+    },
+    async adminListOrganisations() {
+      const { data } = await client.auth.getSession();
+      const uid = data.session?.user.id ?? '';
+      const rows = check(
+        await client.from('accounts').select('*').in('type', ['hospital', 'organisation']).neq('user_id', uid).order('created_at', { ascending: false }).limit(500),
+      );
+      return (rows as AccountRow[]).map(fromAccountRow);
+    },
+    async adminReview(accountId, verification, note) {
+      check(await client.from('accounts').update({ verification, verification_note: note || null }).eq('id', accountId));
+    },
+    async adminListFeedback(status) {
+      const rows = check(await client.from('feedback').select('*').eq('status', status).order('created_at', { ascending: false }).limit(300));
+      return (rows as FeedbackRow[]).map(fromFeedbackRow);
+    },
+    async adminResolveFeedback(id, status, note) {
+      check(await client.from('feedback').update({ status, admin_note: note || null }).eq('id', id));
+    },
+    async adminPublishSignPack(file) {
+      const { error } = await client.storage.from('sign-packs').upload(SIGN_PACK_FILE, file, { upsert: true, contentType: 'application/json', cacheControl: '300' });
+      if (error) throw new Error(friendlyError(error));
+      return this.signPackUrl() ?? '';
+    },
   };
 }
 
@@ -203,6 +432,7 @@ export function cloudBackend(client: SupabaseClient): Backend {
 const DEVICE_SESSION = 'signsphere.device-session.v1';
 const DEVICE_ACCOUNTS = 'signsphere.accounts.v1';
 const DEVICE_HISTORY = 'signsphere.history-server.v1';
+const DEVICE_FEEDBACK = 'signsphere.feedback.v1';
 const DEVICE_USER: User = { id: 'device', email: null };
 
 function read<T>(key: string, fallback: T): T {
@@ -295,6 +525,51 @@ export function deviceBackend(): Backend {
     async clearHistory(accountId) {
       write(DEVICE_HISTORY, read<HistoryItem[]>(DEVICE_HISTORY, []).filter((h) => h.accountId !== accountId));
     },
+    async requestVerification() {
+      throw new Error('Verification needs the SignSphere server, which is not connected on this copy of the app.');
+    },
+    // Recordings already live on this device; there is nothing to sync to.
+    async listSigns() {
+      return [];
+    },
+    async putSigns() {},
+    async deleteSigns() {},
+    async deleteAllSigns() {},
+    async sendFeedback(f) {
+      const item: Feedback = { ...f, id: newId(), status: 'open', adminNote: null, createdAt: new Date().toISOString(), resolvedAt: null };
+      write(DEVICE_FEEDBACK, [item, ...read<Feedback[]>(DEVICE_FEEDBACK, [])].slice(0, 100));
+      return item;
+    },
+    async listMyFeedback() {
+      return read<Feedback[]>(DEVICE_FEEDBACK, []);
+    },
+    signPackUrl() {
+      return null;
+    },
+    subscribe() {
+      return () => {};
+    },
+    async isAdmin() {
+      return false;
+    },
+    async adminOverview() {
+      throw new NeedsServerError();
+    },
+    async adminListOrganisations() {
+      throw new NeedsServerError();
+    },
+    async adminReview() {
+      throw new NeedsServerError();
+    },
+    async adminListFeedback() {
+      throw new NeedsServerError();
+    },
+    async adminResolveFeedback() {
+      throw new NeedsServerError();
+    },
+    async adminPublishSignPack() {
+      throw new NeedsServerError();
+    },
   };
 }
 
@@ -306,7 +581,7 @@ export function getBackend(): Backend {
   if (instance) return instance;
   const url = import.meta.env['VITE_SUPABASE_URL'] as string | undefined;
   const key = import.meta.env['VITE_SUPABASE_ANON_KEY'] as string | undefined;
-  instance = url && key ? cloudBackend(createClient(url, key, { auth: { persistSession: true, autoRefreshToken: true } })) : deviceBackend();
+  instance = url && key ? cloudBackend(createClient(url, key, { auth: { persistSession: true, autoRefreshToken: true } }), url) : deviceBackend();
   return instance;
 }
 

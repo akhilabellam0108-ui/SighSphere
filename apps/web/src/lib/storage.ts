@@ -31,6 +31,8 @@ export interface SampleMeta {
    */
   consentTrain: boolean;
   notes?: string;
+  /** Id of the synced copy on the server (recorded signs only). */
+  cloudId?: string;
 }
 
 export interface StoredSample {
@@ -94,6 +96,10 @@ export async function addSample(sample: Omit<StoredSample, 'id'>): Promise<numbe
   return Number(key);
 }
 
+export async function getSample(id: number): Promise<StoredSample | undefined> {
+  return tx<StoredSample | undefined>('readonly', (store) => store.get(id));
+}
+
 export async function getSamples(): Promise<StoredSample[]> {
   return tx<StoredSample[]>('readonly', (store) => store.getAll());
 }
@@ -123,6 +129,10 @@ export interface StoredMotion {
 export async function addMotion(motion: Omit<StoredMotion, 'id'>): Promise<number> {
   const key = await tx<IDBValidKey>('readwrite', (store) => store.add(motion), MOTION_STORE);
   return Number(key);
+}
+
+export async function getMotion(id: number): Promise<StoredMotion | undefined> {
+  return tx<StoredMotion | undefined>('readonly', (store) => store.get(id), MOTION_STORE);
 }
 
 export async function getMotions(): Promise<StoredMotion[]> {
