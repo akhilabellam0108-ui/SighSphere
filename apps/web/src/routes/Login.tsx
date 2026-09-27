@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import BackButton from '../components/BackButton.js';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ACCOUNT_TYPES, validators, type AccountType } from '../lib/accountTypes.js';
 import { friendlyError } from '../lib/backend.js';
@@ -77,10 +78,13 @@ export default function Login() {
   return (
     <div className="entry">
       <main id="main" tabIndex={-1} className="login">
-        <Link className="brand" to="/welcome">
-          <img src={asset('icon.svg')} alt="" width={30} height={30} />
-          SignSphere
-        </Link>
+        <div className="entry-bar">
+          <BackButton fallback="/welcome" onBack={type ? () => setType(null) : undefined} />
+          <Link className="brand" to="/welcome">
+            <img src={asset('icon.svg')} alt="" width={30} height={30} />
+            SignSphere
+          </Link>
+        </div>
 
         {!type ? (
           <section aria-labelledby="as-heading">

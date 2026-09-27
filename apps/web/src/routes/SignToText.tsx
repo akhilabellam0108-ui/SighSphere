@@ -139,7 +139,7 @@ export default function SignToText({ speakOutput }: SignToTextProps) {
         </p>
       )}
 
-      <div className="grid" style={{ gridTemplateColumns: 'minmax(18rem, 1fr) minmax(16rem, 1fr)' }}>
+      <div className="split">
         <section aria-label="Camera">
           <CameraView
             onFrame={handleFrame}

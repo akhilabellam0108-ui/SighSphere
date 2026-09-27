@@ -269,7 +269,7 @@ export default function Learn() {
         {target && ` · ${target.gloss}`}
       </p>
 
-      <div className="grid" style={{ gridTemplateColumns: 'minmax(18rem, 1fr) minmax(18rem, 1fr)' }}>
+      <div className="split">
         <section className="card stack" aria-label="Reference sign">
           <h2 className="small">Watch</h2>
           <Suspense fallback={<SignPlayer plan={referencePlan} />}>

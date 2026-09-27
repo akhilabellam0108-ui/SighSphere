@@ -98,7 +98,7 @@ export default function TextToSign({ mode }: TextToSignProps) {
         </p>
       )}
 
-      <div className="grid" style={{ gridTemplateColumns: 'minmax(18rem, 1fr) minmax(18rem, 1fr)' }}>
+      <div className="split">
         <section className="card stack" aria-label="Input">
           {mode === 'voice' && (
             <div className="stack">
