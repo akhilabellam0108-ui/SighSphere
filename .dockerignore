@@ -1,0 +1,14 @@
+node_modules
+**/node_modules
+apps/web/dist
+apps/web/public/mediapipe
+services/api/data
+data
+models/*.onnx
+.git
+.github
+*.local
+.env
+.env.*
+android/app/build
+apps/web/android

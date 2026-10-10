@@ -1,0 +1,19 @@
+# Render Blueprint: one click deploys SignSphere (app + backend server) with a persistent disk.
+# Render dashboard → New → Blueprint → pick this repository. See docs/DEPLOY.md.
+services:
+  - type: web
+    name: signsphere
+    runtime: docker
+    plan: starter            # a persistent disk needs a paid instance (~US$7/month)
+    region: singapore        # closest Render region to India
+    healthCheckPath: /api/health
+    autoDeploy: true
+    disk:
+      name: signsphere-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: SIGNSPHERE_SECRET
+        generateValue: true  # signs login tokens; keep it stable
+      - key: SIGNSPHERE_ADMINS
+        sync: false          # your email, so you're admin from the first login

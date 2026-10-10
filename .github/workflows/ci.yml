@@ -70,3 +70,17 @@ jobs:
           python train.py --data /tmp/synthetic.jsonl --model cnn --epochs 3 --out /tmp/models
           python check_model.py /tmp/models/sign-linear-v1.onnx
           python check_model.py /tmp/models/sign-cnn-v1.onnx
+
+  docker:
+    name: Server image builds and answers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t signsphere .
+      - name: Run it and check the health endpoint and the app
+        run: |
+          docker run -d --name ss -p 8787:8787 signsphere
+          for i in $(seq 1 30); do curl -fsS localhost:8787/api/health && break; sleep 2; done
+          curl -fsS localhost:8787/api/health
+          curl -fsS -o /dev/null -w "%{http_code} %{content_type}\n" localhost:8787/emergency | grep -q "200 text/html"
+          docker logs ss | tail -5
