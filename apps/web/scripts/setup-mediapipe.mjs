@@ -24,13 +24,6 @@ function findPackage(name) {
   }
 }
 const pkgDir = findPackage('@mediapipe/tasks-vision');
-function findPackageWith(name, sub) {
-  for (let dir = here; ; dir = dirname(dir)) {
-    const candidate = join(dir, 'node_modules', name);
-    if (existsSync(join(candidate, sub))) return candidate;
-    if (dirname(dir) === dir) throw new Error(`${name} not installed — run npm install`);
-  }
-}
 
 const MODELS = [
   {
@@ -50,18 +43,6 @@ for (const file of readdirSync(join(pkgDir, 'wasm'))) {
 }
 console.log('mediapipe: WASM runtime copied');
 
-// onnxruntime-web runs a trained sign model (lib/classifier.ts). Serve its WASM ourselves too,
-// so a trained model works offline. Single-threaded build: no cross-origin isolation needed.
-try {
-  const ortDir = join(findPackageWith('onnxruntime-web', 'dist'), 'dist');
-  mkdirSync(join(here, '..', 'public', 'ort'), { recursive: true });
-  for (const file of ['ort-wasm-simd-threaded.wasm', 'ort-wasm-simd-threaded.mjs']) {
-    copyFileSync(join(ortDir, file), join(here, '..', 'public', 'ort', file));
-  }
-  console.log('onnxruntime: WASM runtime copied');
-} catch (error) {
-  console.warn(`onnxruntime: not copied (${error.message}); trained models will be unavailable.`);
-}
 
 function download(url, dest) {
   return new Promise((resolve, reject) => {

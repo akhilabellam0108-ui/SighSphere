@@ -23,7 +23,7 @@ import {
   sampleCounts,
   type SampleMeta,
 } from '../lib/storage.js';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useSettings } from '../state/settings.js';
 import { useSession } from '../state/session.js';
 import { newId } from '../lib/backend.js';
@@ -53,6 +53,8 @@ export default function Recorder() {
   // "Record this sign" links elsewhere in the app open Record with the sign already chosen.
   const [params] = useSearchParams();
   const wanted = (params.get('label') ?? '').trim().toUpperCase();
+  // Opened from another screen (e.g. SOS setup): offer a way back. Only paths inside the app.
+  const returnTo = (params.get('return') ?? '').startsWith('/') && !(params.get('return') ?? '').startsWith('//') ? params.get('return')! : null;
   const known = wanted && lexicon.lexicon.entries.some((e) => e.gloss === wanted);
   const [label, setLabel] = useState(known ? wanted : (lexicon.lexicon.entries[0]?.gloss ?? 'HELLO'));
   const [customLabel, setCustomLabel] = useState(wanted && !known ? wanted : '');
@@ -219,6 +221,11 @@ export default function Recorder() {
 
   return (
     <>
+      {returnTo && (
+        <p style={{ marginTop: 0 }}>
+          <Link className="btn small" to={returnTo}>← Back{returnTo.startsWith('/emergency') ? ' to SOS setup' : ''}{counts[activeLabel] ? ` (${activeLabel}: ${counts[activeLabel]} recorded)` : ''}</Link>
+        </p>
+      )}
       <h1>Record signs</h1>
       <p className="lede">
         Record examples to teach recognition on this device, and to export training data. Nothing

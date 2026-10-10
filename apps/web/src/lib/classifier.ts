@@ -169,10 +169,12 @@ export interface OnnxRuntime {
 
 let runtimePromise: Promise<OnnxRuntime> | null = null;
 
-/** Loads onnxruntime-web (wasm only, single thread) from this app's own files — works offline. */
+/**
+ * Loads onnxruntime-web (WASM only, single thread). Vite bundles its WASM file with the app,
+ * so it is served — and cached for offline use — like any other app file.
+ */
 function loadRuntime(): Promise<OnnxRuntime> {
   runtimePromise ??= import('onnxruntime-web/wasm').then((ort) => {
-    ort.env.wasm.wasmPaths = asset('ort/');
     ort.env.wasm.numThreads = 1;
     return {
       async createSession(model: ArrayBuffer) {

@@ -1,7 +1,7 @@
 /* SignSphere service worker: lets the app, the hand-tracking models and the ISL sign pack
  * keep working with poor or no network after the first visit.
  * - Pages: network first, falling back to the cached app shell.
- * - Built assets, MediaPipe and onnxruntime files, sign packs: cache first (versioned or large).
+ * - Built assets (including the onnxruntime WASM), MediaPipe files, sign packs: cache first.
  * - The trained sign model: from the cache, refreshed in the background.
  * Supabase and other cross-origin requests are never cached.
  * Paths are relative to the scope, so this works at / and at /SighSphere/ alike. */
@@ -10,7 +10,7 @@ const SHELL = `signsphere-shell-${VERSION}`;
 const ASSETS = `signsphere-assets-${VERSION}`;
 const SCOPE = new URL(self.registration.scope).pathname; // e.g. "/" or "/SighSphere/"
 const at = (path) => SCOPE + path;
-const cacheFirst = (pathname) => ['assets/', 'mediapipe/', 'datasets/', 'ort/'].some((dir) => pathname.startsWith(at(dir)));
+const cacheFirst = (pathname) => ['assets/', 'mediapipe/', 'datasets/'].some((dir) => pathname.startsWith(at(dir)));
 // The trained sign model keeps its file name between versions: answer from the cache (works
 // offline, starts fast) and fetch a newer copy in the background for next time.
 const refreshInBackground = (pathname) => pathname.startsWith(at('models/'));
@@ -25,7 +25,10 @@ self.addEventListener('install', (event) => {
       try {
         const list = await (await fetch(at('precache.json'), { cache: 'no-store' })).json();
         const assets = await caches.open(ASSETS);
+        // The model runtime (~12 MB) is only worth downloading up front when a trained model ships.
+        const hasModel = list.includes('models/sign-model.onnx');
         for (const rel of list) {
+          if (!hasModel && /ort-wasm|ort\.wasm/.test(rel)) continue;
           const path = at(rel);
           if (!(cacheFirst(path) || refreshInBackground(path)) || (await assets.match(path, { ignoreVary: true }))) continue;
           try {
