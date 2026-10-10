@@ -26,9 +26,14 @@ async function importInclude(items: Item[], processor: 'auto' | 'gpu' | 'cpu' = 
     for (const item of items.filter((i) => i.label === label)) {
       n += 1;
       let r: VideoResult = { window: null, sourceFrames: 0, motion: [] };
+      const started = performance.now();
       try {
         const blob = await (await fetch(item.url)).blob();
-        r = await trackVideo(new File([blob], item.name, { type: blob.type || 'video/webm' }), tracker, clock);
+        // One unreadable video must never stall the whole import.
+        r = await Promise.race([
+          trackVideo(new File([blob], item.name, { type: blob.type || 'video/webm' }), tracker, clock),
+          new Promise<never>((_, reject) => setTimeout(() => reject(new Error('took over 3 minutes')), 180_000)),
+        ]);
       } catch (e) {
         console.log(`skip ${item.name}: ${(e as Error).message}`);
       }
@@ -39,7 +44,7 @@ async function importInclude(items: Item[], processor: 'auto' | 'gpu' | 'cpu' = 
           source: 'INCLUDE', video: item.name, vector: Array.from(r.window, (v) => Math.round(v * 1e5) / 1e5),
         });
       }
-      console.log(`[${n}/${items.length}] ${entry.gloss} ${item.name}: ${r.window ? `ok (${r.sourceFrames} frames)` : 'no hands tracked'}`);
+      console.log(`[${n}/${items.length}] ${entry.gloss} ${item.name}: ${r.window ? `ok (${r.sourceFrames} frames)` : 'no hands tracked'} in ${Math.round((performance.now() - started) / 1000)} s`);
     }
     const summary = summariseSign(entry, perVideo);
     results.push(summary);

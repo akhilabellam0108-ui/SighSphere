@@ -24,6 +24,7 @@ class HttpRangeFile(io.RawIOBase):
         self.pos = 0
         self.fetched = 0
         self._buf_start, self._buf = -1, b""
+        self._run = block
         head = self._request("bytes=0-0")
         rng = head.headers.get("Content-Range", "")
         if head.status != 206 or "/" not in rng:
@@ -76,7 +77,11 @@ class HttpRangeFile(io.RawIOBase):
         n = min(n, self.size - self.pos)
         # Serve from the buffer when we can; otherwise fetch at least one block.
         if not (self._buf_start <= self.pos and self.pos + n <= self._buf_start + len(self._buf)):
-            end = min(self.size, self.pos + max(n, self.block)) - 1
+            # Reading straight on from the last fetch (a video being extracted): fetch bigger
+            # pieces, up to 32 MB, so a 15 MB video is one or two requests instead of fifteen.
+            sequential = self._buf_start >= 0 and self.pos == self._buf_start + len(self._buf)
+            self._run = min(self._run * 4, 32 << 20) if sequential else self.block
+            end = min(self.size, self.pos + max(n, self._run)) - 1
             self._buf_start, self._buf = self.pos, self._get(self.pos, end)
         off = self.pos - self._buf_start
         data = self._buf[off:off + n]

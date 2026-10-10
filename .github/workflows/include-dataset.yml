@@ -103,6 +103,8 @@ jobs:
           path: /tmp/include-raw
           key: ${{ steps.raw.outputs.cache-primary-key }}
       - name: Hand tracking with the app's own importer (headless browser)
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           node scripts/include/import.mjs --plan /tmp/plan.json --raw /tmp/include-raw \
             --pack apps/web/public/datasets/isl-include.json --jsonl /tmp/include.jsonl --stats /tmp/include-stats.json

@@ -119,7 +119,8 @@ def main() -> None:
         report(f"{f['key']}: {n} videos (full download) in {time.time() - t:.0f} s", force=True)
         return n
 
-    with ThreadPoolExecutor(max_workers=4) as pool:
+    # Zenodo limits each connection (~0.2 MB/s), so read several zips at once.
+    with ThreadPoolExecutor(max_workers=8) as pool:
         found = sum(pool.map(process, chosen))
     finish(f"download done: {found} videos for {len(wanted_dirs)} signs")
     if found == 0:

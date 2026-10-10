@@ -12,6 +12,7 @@ import { spawn, execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { finish, report } from './progress.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const arg = (name, fallback) => {
@@ -45,7 +46,7 @@ for (const sign of plan.signs) {
     items.push({ label: sign.label, split, name, url: `/_include/${outName}` });
   }
 }
-console.log(`transcoded ${items.length} videos`);
+await report(`transcoded ${items.length} videos; starting hand tracking`, true);
 if (!items.length) process.exit(1);
 
 // 2. The app's dev server serves the harness page and the videos.
@@ -64,7 +65,11 @@ let result;
 try {
   const page = await browser.newPage();
   // Lines starting with "::" are GitHub workflow commands (progress notices): print them as they are.
-  page.on('console', (m) => console.log(m.text().startsWith('::') ? m.text() : `  ${m.text()}`));
+  page.on('console', (m) => {
+    const text = m.text();
+    if (/^\[\d+\/\d+\]/.test(text) || text.startsWith('::notice')) void report(text.replace(/^::notice title=[^:]+::/, ''), text.startsWith('::'));
+    else console.log(`  ${text}`);
+  });
   page.on('pageerror', (e) => console.log(`  page error: ${e.message}`));
   await page.goto(`http://127.0.0.1:${port}/tools/include-import.html`);
   await page.waitForFunction(() => window.importReady === true, null, { timeout: 120000 });
@@ -84,4 +89,5 @@ const stats = { videos: items.length, usable: result.rows.length, bySplit, signs
 writeFileSync(statsOut, JSON.stringify(stats, null, 2));
 rmSync(served, { recursive: true, force: true });
 console.log(JSON.stringify(stats, null, 2));
+await finish(`done: hands tracked in ${result.rows.length} of ${items.length} videos`);
 console.log(`pack → ${relative(root, packOut)} (${Math.round(JSON.stringify(result.pack).length / 1024)} KB), training rows → ${jsonlOut}`);
