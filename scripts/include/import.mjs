@@ -63,7 +63,8 @@ const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PAT
 let result;
 try {
   const page = await browser.newPage();
-  page.on('console', (m) => console.log(`  ${m.text()}`));
+  // Lines starting with "::" are GitHub workflow commands (progress notices): print them as they are.
+  page.on('console', (m) => console.log(m.text().startsWith('::') ? m.text() : `  ${m.text()}`));
   page.on('pageerror', (e) => console.log(`  page error: ${e.message}`));
   await page.goto(`http://127.0.0.1:${port}/tools/include-import.html`);
   await page.waitForFunction(() => window.importReady === true, null, { timeout: 120000 });

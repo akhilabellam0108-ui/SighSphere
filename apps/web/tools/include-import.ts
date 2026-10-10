@@ -41,7 +41,9 @@ async function importInclude(items: Item[], processor: 'auto' | 'gpu' | 'cpu' = 
       }
       console.log(`[${n}/${items.length}] ${entry.gloss} ${item.name}: ${r.window ? `ok (${r.sourceFrames} frames)` : 'no hands tracked'}`);
     }
-    results.push(summariseSign(entry, perVideo));
+    const summary = summariseSign(entry, perVideo);
+    results.push(summary);
+    console.log(`::notice title=INCLUDE tracking::${entry.gloss}: hands tracked in ${summary.usable} of ${summary.videos} videos`);
   }
   const pack = buildPack(results);
   return {

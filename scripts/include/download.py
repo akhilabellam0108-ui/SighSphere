@@ -15,8 +15,10 @@ import json
 import os
 import subprocess
 import sys
+import time
 import urllib.request
 import zipfile
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 RECORD = "4010759"
@@ -49,6 +51,10 @@ def main() -> None:
     plan = json.loads(Path(args.plan).read_text())
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
+    have = sum(1 for _ in out.rglob("*") if _.is_file())
+    if have:
+        print(f"{have} videos already here (cached) — skipping the download")
+        return
     Path(args.work).mkdir(parents=True, exist_ok=True)
     wanted_dirs = {f"{s['category']}/{s['folder']}/": s["gloss"] for s in plan["signs"]}
     wanted_folders = {norm(s["folder"]): s for s in plan["signs"]}
@@ -63,11 +69,19 @@ def main() -> None:
         sys.exit("No zip matched the needed categories — the file names above show what Zenodo has.")
     print(f"downloading {len(chosen)} file(s), {sum(f['size'] for f in chosen) / 1e9:.1f} GB in total")
 
-    found = 0
-    for f in chosen:
+    def fetch(f: dict) -> Path:
         zpath = Path(args.work) / f["key"]
-        print(f"→ {f['key']}", flush=True)
-        subprocess.run(["curl", "-fL", "--retry", "5", "--retry-delay", "10", "-sS", "-o", str(zpath), f["url"]], check=True)
+        t = time.time()
+        # Abort and retry a transfer that stalls (Zenodo sometimes does).
+        subprocess.run(["curl", "-fL", "--retry", "8", "--retry-delay", "15", "--retry-all-errors",
+                        "--speed-limit", "50000", "--speed-time", "90", "-sS", "-o", str(zpath), f["url"]], check=True)
+        mb = zpath.stat().st_size / 1e6
+        # A workflow "notice" shows up in the run's annotations while it is still going.
+        print(f"::notice title=INCLUDE download::{f['key']} {mb:.0f} MB in {time.time() - t:.0f} s", flush=True)
+        return zpath
+
+    def extract(zpath: Path) -> int:
+        n = 0
         with zipfile.ZipFile(zpath) as z:
             for info in z.infolist():
                 if info.is_dir():
@@ -75,18 +89,24 @@ def main() -> None:
                 parts = info.filename.replace("\\", "/").split("/")
                 if len(parts) < 2:
                     continue
-                folder = parts[-2]
-                sign = wanted_folders.get(norm(folder))
-                # The folder name alone is ambiguous across categories ("7. Deaf" vs another "7. ..."), so check both.
+                sign = wanted_folders.get(norm(parts[-2]))
+                # The folder name alone is ambiguous across categories, so check the category too.
                 if not sign or norm(parts[-3] if len(parts) >= 3 else sign["category"]) != norm(sign["category"]):
                     continue
                 dest = out / sign["category"] / sign["folder"] / parts[-1]
                 dest.parent.mkdir(parents=True, exist_ok=True)
                 with z.open(info) as src, open(dest, "wb") as dst:
                     dst.write(src.read())
-                found += 1
+                n += 1
         os.remove(zpath)
-        print(f"   videos so far: {found}", flush=True)
+        return n
+
+    found = 0
+    # Two downloads at a time; extract each as soon as it lands, then delete it.
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        for zpath in pool.map(fetch, chosen):
+            found += extract(zpath)
+            print(f"::notice title=INCLUDE extract::{zpath.name}: {found} videos so far", flush=True)
     print(f"done: {found} videos for {len(wanted_dirs)} signs in {out}")
     if found == 0:
         sys.exit("No videos extracted.")

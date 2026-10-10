@@ -83,13 +83,25 @@ jobs:
         run: |
           git clone -q --depth 1 https://github.com/AI4Bharat/INCLUDE.git /tmp/INCLUDE
           node scripts/include/plan.mjs --signs "$SIGNS" --max-per-sign "$MAX_PER_SIGN" --include-repo /tmp/INCLUDE --out /tmp/plan.json
+      # Downloaded videos are kept between runs (GitHub cache), so a re-run skips Zenodo.
+      - name: Restore downloaded videos
+        id: raw
+        uses: actions/cache/restore@v4
+        with:
+          path: /tmp/include-raw
+          key: include-raw-${{ hashFiles('scripts/include/plan.mjs', 'apps/web/src/data/include-vocabulary.json') }}-${{ env.SIGNS }}-${{ env.MAX_PER_SIGN }}
       - name: Download from Zenodo (only the needed folders)
         run: python scripts/include/download.py --plan /tmp/plan.json --out /tmp/include-raw
+      - name: Save downloaded videos for next time
+        if: steps.raw.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: /tmp/include-raw
+          key: ${{ steps.raw.outputs.cache-primary-key }}
       - name: Hand tracking with the app's own importer (headless browser)
         run: |
           node scripts/include/import.mjs --plan /tmp/plan.json --raw /tmp/include-raw \
             --pack apps/web/public/datasets/isl-include.json --jsonl /tmp/include.jsonl --stats /tmp/include-stats.json
-          rm -rf /tmp/include-raw
       - uses: actions/upload-artifact@v4
         with:
           name: include-${{ github.run_number }}
