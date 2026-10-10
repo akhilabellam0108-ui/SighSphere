@@ -21,6 +21,9 @@ import zipfile
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).parent))
+from remote_zip import HttpRangeFile, RangeNotSupported  # noqa: E402
+
 RECORD = "4010759"
 
 
@@ -69,44 +72,52 @@ def main() -> None:
         sys.exit("No zip matched the needed categories — the file names above show what Zenodo has.")
     print(f"downloading {len(chosen)} file(s), {sum(f['size'] for f in chosen) / 1e9:.1f} GB in total")
 
-    def fetch(f: dict) -> Path:
-        zpath = Path(args.work) / f["key"]
-        t = time.time()
-        # Abort and retry a transfer that stalls (Zenodo sometimes does).
-        subprocess.run(["curl", "-fL", "--retry", "8", "--retry-delay", "15", "--retry-all-errors",
-                        "--speed-limit", "50000", "--speed-time", "90", "-sS", "-o", str(zpath), f["url"]], check=True)
-        mb = zpath.stat().st_size / 1e6
-        # A workflow "notice" shows up in the run's annotations while it is still going.
-        print(f"::notice title=INCLUDE download::{f['key']} {mb:.0f} MB in {time.time() - t:.0f} s", flush=True)
-        return zpath
+    def wanted(name: str) -> dict | None:
+        parts = name.replace("\\", "/").split("/")
+        if len(parts) < 2 or name.endswith("/"):
+            return None
+        sign = wanted_folders.get(norm(parts[-2]))
+        # The folder name alone is ambiguous across categories, so check the category too.
+        if not sign or norm(parts[-3] if len(parts) >= 3 else sign["category"]) != norm(sign["category"]):
+            return None
+        return sign
 
-    def extract(zpath: Path) -> int:
+    def extract_from(z: zipfile.ZipFile) -> int:
         n = 0
-        with zipfile.ZipFile(zpath) as z:
-            for info in z.infolist():
-                if info.is_dir():
-                    continue
-                parts = info.filename.replace("\\", "/").split("/")
-                if len(parts) < 2:
-                    continue
-                sign = wanted_folders.get(norm(parts[-2]))
-                # The folder name alone is ambiguous across categories, so check the category too.
-                if not sign or norm(parts[-3] if len(parts) >= 3 else sign["category"]) != norm(sign["category"]):
-                    continue
-                dest = out / sign["category"] / sign["folder"] / parts[-1]
-                dest.parent.mkdir(parents=True, exist_ok=True)
-                with z.open(info) as src, open(dest, "wb") as dst:
-                    dst.write(src.read())
-                n += 1
-        os.remove(zpath)
+        for info in z.infolist():
+            sign = wanted(info.filename)
+            if not sign:
+                continue
+            dest = out / sign["category"] / sign["folder"] / info.filename.replace("\\", "/").split("/")[-1]
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            with z.open(info) as src, open(dest, "wb") as dst:
+                while chunk := src.read(1 << 20):
+                    dst.write(chunk)
+            n += 1
         return n
 
-    found = 0
-    # Two downloads at a time; extract each as soon as it lands, then delete it.
-    with ThreadPoolExecutor(max_workers=2) as pool:
-        for zpath in pool.map(fetch, chosen):
-            found += extract(zpath)
-            print(f"::notice title=INCLUDE extract::{zpath.name}: {found} videos so far", flush=True)
+    def process(f: dict) -> int:
+        t = time.time()
+        # Preferred: read only the zip's table of contents and the wanted videos (HTTP Range).
+        try:
+            remote = HttpRangeFile(f["url"])
+            with zipfile.ZipFile(remote) as z:
+                n = extract_from(z)
+            print(f"::notice title=INCLUDE {f['key']}::{n} videos, fetched {remote.fetched / 1e6:.0f} of {remote.size / 1e6:.0f} MB in {time.time() - t:.0f} s", flush=True)
+            return n
+        except RangeNotSupported:
+            print(f"{f['key']}: server doesn't allow partial downloads — fetching the whole file", flush=True)
+        zpath = Path(args.work) / f["key"]
+        subprocess.run(["curl", "-fL", "--retry", "8", "--retry-delay", "15", "--retry-all-errors",
+                        "--speed-limit", "50000", "--speed-time", "90", "-sS", "-o", str(zpath), f["url"]], check=True)
+        with zipfile.ZipFile(zpath) as z:
+            n = extract_from(z)
+        os.remove(zpath)
+        print(f"::notice title=INCLUDE {f['key']}::{n} videos (full download) in {time.time() - t:.0f} s", flush=True)
+        return n
+
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        found = sum(pool.map(process, chosen))
     print(f"done: {found} videos for {len(wanted_dirs)} signs in {out}")
     if found == 0:
         sys.exit("No videos extracted.")
