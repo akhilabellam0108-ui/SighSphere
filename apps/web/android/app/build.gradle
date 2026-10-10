@@ -1,5 +1,14 @@
 apply plugin: 'com.android.application'
 
+// Release signing for the Play Store. Values come from apps/web/android/keystore.properties
+// (on your computer, never committed) or from environment variables (CI):
+//   SIGNSPHERE_KEYSTORE_FILE, SIGNSPHERE_KEYSTORE_PASSWORD, SIGNSPHERE_KEY_ALIAS, SIGNSPHERE_KEY_PASSWORD
+def keystoreProps = new Properties()
+def keystorePropsFile = rootProject.file('keystore.properties')
+if (keystorePropsFile.exists()) keystorePropsFile.withInputStream { keystoreProps.load(it) }
+def signing = { String key, String env -> keystoreProps.getProperty(key) ?: System.getenv(env) }
+def releaseStore = signing('storeFile', 'SIGNSPHERE_KEYSTORE_FILE')
+
 android {
     namespace = "in.signsphere.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,8 +16,9 @@ android {
         applicationId "in.signsphere.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        // CI sets these per build: versionCode must go up with every Play upload.
+        versionCode((System.getenv('SIGNSPHERE_VERSION_CODE') ?: '1') as int)
+        versionName(System.getenv('SIGNSPHERE_VERSION_NAME') ?: '1.0')
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,8 +26,19 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            if (releaseStore) {
+                storeFile file(releaseStore)
+                storePassword signing('storePassword', 'SIGNSPHERE_KEYSTORE_PASSWORD')
+                keyAlias signing('keyAlias', 'SIGNSPHERE_KEY_ALIAS')
+                keyPassword signing('keyPassword', 'SIGNSPHERE_KEY_PASSWORD')
+            }
+        }
+    }
     buildTypes {
         release {
+            if (releaseStore) signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
