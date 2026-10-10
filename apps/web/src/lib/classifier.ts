@@ -266,15 +266,31 @@ async function availableModelUrl(): Promise<string | null> {
  * recordings always work.
  */
 export async function createClassifier(options: { only?: readonly string[] } = {}): Promise<SignClassifier> {
+  const samples = await getSamples();
   const url = await availableModelUrl();
   if (url) {
     try {
       const model = await OnnxClassifier.load(url);
-      if (!options.only) return model;
-      if (options.only.every((l) => model.info.labels.includes(l))) return model.restrictTo(options.only);
+      return chooseClassifier(model, samples, options.only);
     } catch (error) {
       console.warn('[signsphere] trained model unavailable, using recorded examples', error);
     }
   }
-  return TemplateClassifier.fromLocalSamples(options.only);
+  return TemplateClassifier.fromSamples(samples, options.only);
+}
+
+/**
+ * The trained model only knows the signs it was trained on. Use it only when it covers every
+ * sign this phone knows (the ones asked for, or every sign with examples here); otherwise use
+ * all the examples — so signs a person recorded themselves never stop working.
+ */
+export function chooseClassifier(
+  model: OnnxClassifier,
+  samples: { label: string; featureVersion: number; vector: number[] }[],
+  only?: readonly string[],
+): SignClassifier {
+  const known = new Set(model.info.labels);
+  const wanted = only ?? [...new Set(samples.filter((s) => s.featureVersion === FEATURE_VERSION).map((s) => s.label))];
+  if (wanted.every((l) => known.has(l))) return only ? model.restrictTo(only) : model;
+  return TemplateClassifier.fromSamples(samples, only);
 }

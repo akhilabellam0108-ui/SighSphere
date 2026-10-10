@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { FEATURE_VERSION, FRAME_DIM, WINDOW_DIM, WINDOW_FRAMES } from './features.js';
 import {
-  OnnxClassifier, TemplateClassifier, labelsUrlFor, maskedSoftmax, validateModelInfo, type OnnxRuntime,
+  OnnxClassifier, TemplateClassifier, chooseClassifier, labelsUrlFor, maskedSoftmax, validateModelInfo, type OnnxRuntime,
 } from './classifier.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -115,5 +115,27 @@ describe('template classifier', () => {
     expect(c.labels).toEqual(['HELP', 'WATER']);
     const labels = (await c.predict(windowFor(3), 5)).map((p) => p.label);
     expect(labels).not.toContain('THANK-YOU');
+  });
+});
+
+describe('choosing between the trained model and recorded examples', () => {
+  const sample = (label: string, k: number) => ({ label, featureVersion: FEATURE_VERSION, vector: Array.from(windowFor(k)) });
+
+  it('uses the trained model when it knows every sign on the phone', async () => {
+    const model = await OnnxClassifier.load('/models/tiny-model.onnx', await realRuntime(), fakeFetch);
+    expect(chooseClassifier(model, [sample('HELP', 0), sample('WATER', 1)]).kind).toBe('onnx');
+  });
+
+  it('keeps signs a person recorded themselves working', async () => {
+    const model = await OnnxClassifier.load('/models/tiny-model.onnx', await realRuntime(), fakeFetch);
+    const c = chooseClassifier(model, [sample('HELP', 0), sample('MY-NAME', 5)]);
+    expect(c.kind).toBe('template');
+    expect(c.labels).toContain('MY-NAME');
+  });
+
+  it('SOS: model when it covers the requested signs, examples otherwise', async () => {
+    const model = await OnnxClassifier.load('/models/tiny-model.onnx', await realRuntime(), fakeFetch);
+    expect(chooseClassifier(model, [], ['HELP', 'DOCTOR']).labels).toEqual(['HELP', 'DOCTOR']);
+    expect(chooseClassifier(model, [sample('PAIN', 4), sample('HELP', 0)], ['HELP', 'PAIN']).kind).toBe('template');
   });
 });
