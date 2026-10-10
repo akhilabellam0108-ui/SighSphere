@@ -43,6 +43,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  checks: write          # live "INCLUDE progress" check while it runs
 
 concurrency:
   group: include-dataset-${{ github.ref }}
@@ -91,6 +92,9 @@ jobs:
           path: /tmp/include-raw
           key: include-raw-${{ hashFiles('scripts/include/plan.mjs', 'apps/web/src/data/include-vocabulary.json') }}-${{ env.SIGNS }}-${{ env.MAX_PER_SIGN }}
       - name: Download from Zenodo (only the needed folders)
+        timeout-minutes: 90
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: python scripts/include/download.py --plan /tmp/plan.json --out /tmp/include-raw
       - name: Save downloaded videos for next time
         if: steps.raw.outputs.cache-hit != 'true'

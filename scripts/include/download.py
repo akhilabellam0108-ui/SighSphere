@@ -23,6 +23,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from remote_zip import HttpRangeFile, RangeNotSupported  # noqa: E402
+from progress import finish, report  # noqa: E402
 
 RECORD = "4010759"
 
@@ -70,7 +71,7 @@ def main() -> None:
     chosen = [f for f in files if f["key"].lower().endswith(".zip") and any(norm(f["key"]).startswith(c) for c in cats)]
     if not chosen:
         sys.exit("No zip matched the needed categories — the file names above show what Zenodo has.")
-    print(f"downloading {len(chosen)} file(s), {sum(f['size'] for f in chosen) / 1e9:.1f} GB in total")
+    report(f"Zenodo has {len(files)} files; reading {len(chosen)}: {', '.join(f['key'] for f in chosen)}", force=True)
 
     def wanted(name: str) -> dict | None:
         parts = name.replace("\\", "/").split("/")
@@ -94,6 +95,7 @@ def main() -> None:
                 while chunk := src.read(1 << 20):
                     dst.write(chunk)
             n += 1
+            report(f"  {sign['gloss']}: {dest.name} ({info.file_size / 1e6:.1f} MB)")
         return n
 
     def process(f: dict) -> int:
@@ -101,24 +103,25 @@ def main() -> None:
         # Preferred: read only the zip's table of contents and the wanted videos (HTTP Range).
         try:
             remote = HttpRangeFile(f["url"])
+            report(f"{f['key']}: partial download OK, reading its table of contents ({remote.size / 1e9:.1f} GB zip)", force=True)
             with zipfile.ZipFile(remote) as z:
                 n = extract_from(z)
-            print(f"::notice title=INCLUDE {f['key']}::{n} videos, fetched {remote.fetched / 1e6:.0f} of {remote.size / 1e6:.0f} MB in {time.time() - t:.0f} s", flush=True)
+            report(f"{f['key']}: {n} videos, fetched {remote.fetched / 1e6:.0f} of {remote.size / 1e6:.0f} MB in {time.time() - t:.0f} s", force=True)
             return n
         except RangeNotSupported:
-            print(f"{f['key']}: server doesn't allow partial downloads — fetching the whole file", flush=True)
+            report(f"{f['key']}: server doesn't allow partial downloads — fetching the whole file ({f['size'] / 1e9:.1f} GB)", force=True)
         zpath = Path(args.work) / f["key"]
         subprocess.run(["curl", "-fL", "--retry", "8", "--retry-delay", "15", "--retry-all-errors",
                         "--speed-limit", "50000", "--speed-time", "90", "-sS", "-o", str(zpath), f["url"]], check=True)
         with zipfile.ZipFile(zpath) as z:
             n = extract_from(z)
         os.remove(zpath)
-        print(f"::notice title=INCLUDE {f['key']}::{n} videos (full download) in {time.time() - t:.0f} s", flush=True)
+        report(f"{f['key']}: {n} videos (full download) in {time.time() - t:.0f} s", force=True)
         return n
 
     with ThreadPoolExecutor(max_workers=4) as pool:
         found = sum(pool.map(process, chosen))
-    print(f"done: {found} videos for {len(wanted_dirs)} signs in {out}")
+    finish(f"download done: {found} videos for {len(wanted_dirs)} signs")
     if found == 0:
         sys.exit("No videos extracted.")
 
