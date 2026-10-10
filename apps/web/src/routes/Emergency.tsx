@@ -21,6 +21,7 @@ import { translate } from '@signsphere/gloss';
 import { loadContacts, saveContacts, type EmergencyContact } from '../lib/storage.js';
 import { speak } from '../lib/speech.js';
 import { useSettings } from '../state/settings.js';
+import SosSigner from '../components/SosSigner.js';
 
 interface ServiceNumber {
   label: string;
@@ -93,9 +94,9 @@ export default function Emergency() {
     );
   }
 
-  function smsLink(contact: EmergencyContact): string {
+  function smsLink(contact: EmergencyContact, message = 'I need help. I am deaf and cannot use a voice call.'): string {
     const body = [
-      'I need help. I am deaf and cannot use a voice call.',
+      message,
       location ? `My location: ${location}` : null,
       '(Sent from SignSphere)',
     ]
@@ -112,6 +113,8 @@ export default function Emergency() {
       <p className="lede">
         Show these cards to anyone who can help. Works offline, always free, no account needed.
       </p>
+
+      <SosSigner textLink={(message) => (contacts[0] ? smsLink(contacts[0], `${message} I am deaf and cannot use a voice call.`) : null)} />
 
       <p className="notice warn">
         <strong>Not an interpreting service</strong>

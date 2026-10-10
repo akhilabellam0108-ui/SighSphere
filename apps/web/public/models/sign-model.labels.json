@@ -1,0 +1,18 @@
+{
+  "featureVersion": 1,
+  "windowFrames": 32,
+  "frameDim": 213,
+  "labels": [
+    "DEAF",
+    "DOCTOR",
+    "HOSPITAL",
+    "MEDICINE",
+    "POLICE",
+    "SICK"
+  ],
+  "top1": 1.0,
+  "top3": 1.0,
+  "model": "cnn",
+  "source": "INCLUDE (AI4Bharat, CC BY 4.0)",
+  "trainedAt": "2026-10-10"
+}

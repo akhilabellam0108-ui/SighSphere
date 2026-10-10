@@ -170,6 +170,24 @@ def leave_signers_out(
     return train_mask, val_mask, test_mask
 
 
+def split_by_named_signers(
+    dataset: Dataset, test: list[str], val: list[str]
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Use a split decided in advance, e.g. a public dataset's official train/val/test lists
+    (INCLUDE rows carry signerId = "train" / "val" / "test"). Returns (train, val, test) masks.
+    """
+    signer_array = np.asarray([str(s) for s in dataset.signers])
+    test_mask = np.isin(signer_array, test)
+    val_mask = np.isin(signer_array, val)
+    train_mask = ~(test_mask | val_mask)
+    if not test_mask.any():
+        raise ValueError(f"No samples from test signers {test}.")
+    print(f"  fixed split: test={test} val={val}")
+    print(f"  sizes: train={int(train_mask.sum())} val={int(val_mask.sum())} test={int(test_mask.sum())}")
+    return train_mask, val_mask, test_mask
+
+
 # ---------------------------------------------------------------------------
 # Augmentation
 # ---------------------------------------------------------------------------

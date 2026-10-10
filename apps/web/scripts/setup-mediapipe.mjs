@@ -43,6 +43,7 @@ for (const file of readdirSync(join(pkgDir, 'wasm'))) {
 }
 console.log('mediapipe: WASM runtime copied');
 
+
 function download(url, dest) {
   return new Promise((resolve, reject) => {
     get(url, (response) => {

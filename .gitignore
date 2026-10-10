@@ -40,3 +40,6 @@ apps/web/public/mediapipe/
 
 # local AI-assistant settings
 .claude/
+
+# INCLUDE automation: transcoded videos (never committed)
+apps/web/public/_include/

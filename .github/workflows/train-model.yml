@@ -1,0 +1,112 @@
+name: Train sign model
+
+# Trains the sign recognition model on GitHub's computers (no Colab needed) from a JSONL
+# export of consented recordings, reports held-out-signer accuracy, and opens a pull request
+# that ships the model inside the app — where it works offline.
+#
+# Run: Actions → "Train sign model" → Run workflow, and give a link to the data.
+#
+# PRIVACY: this repository is public, and so are its logs and artifacts. Never commit or
+# upload the training data here. Give a link that expires (e.g. a Supabase Storage signed
+# URL, or a private file host), optionally protected by the TRAINING_DATA_TOKEN secret.
+# Only consented samples are in the export (the Record screen enforces it). The model and
+# its accuracy report contain no recordings.
+
+on:
+  workflow_dispatch:
+    inputs:
+      data_url:
+        description: 'Link to the samples JSONL (from Record → Export). Use a link that expires.'
+        required: true
+      model:
+        description: 'Model to train'
+        type: choice
+        options: [cnn, gru, linear]
+        default: cnn
+      epochs:
+        description: 'Training epochs'
+        default: '60'
+      min_top1:
+        description: 'Only ship if held-out-signer top-1 accuracy is at least this (0–1)'
+        default: '0.6'
+      publish:
+        description: 'Open a pull request that ships the model in the app'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install CPU PyTorch and ONNX tools
+        run: |
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install numpy onnx onnxscript onnxruntime
+      - name: Download the data (never saved to the repository or artifacts)
+        env:
+          URL: ${{ inputs.data_url }}
+          TOKEN: ${{ secrets.TRAINING_DATA_TOKEN }}
+        run: |
+          echo "::add-mask::$URL"
+          if [ -n "$TOKEN" ]; then curl -fsSL -H "Authorization: Bearer $TOKEN" "$URL" -o "$RUNNER_TEMP/samples.jsonl"
+          else curl -fsSL "$URL" -o "$RUNNER_TEMP/samples.jsonl"; fi
+          echo "rows: $(wc -l < "$RUNNER_TEMP/samples.jsonl")"
+      - name: Baseline (linear) — the number the real model must beat
+        working-directory: services/ml
+        run: python train.py --data "$RUNNER_TEMP/samples.jsonl" --model linear --epochs 40 --out "$RUNNER_TEMP/models"
+      - name: Train ${{ inputs.model }}
+        working-directory: services/ml
+        run: python train.py --data "$RUNNER_TEMP/samples.jsonl" --model ${{ inputs.model }} --epochs ${{ inputs.epochs }} --out "$RUNNER_TEMP/models"
+      - name: Check the model loads like it will in the app
+        working-directory: services/ml
+        run: python check_model.py "$RUNNER_TEMP/models/sign-${{ inputs.model }}-v1.onnx"
+      - name: Report
+        id: report
+        run: |
+          M="$RUNNER_TEMP/models"
+          read top1 top3 classes signers < <(python -c "import json;m=json.load(open('$M/sign-${{ inputs.model }}-v1.metrics.json'));print(m['top1'],m['top3'],m['classes'],len(m['signers']))")
+          base=$(python -c "import json;print(json.load(open('$M/sign-linear-v1.metrics.json'))['top1'])")
+          {
+            echo "## Sign model: ${{ inputs.model }}"
+            echo "| | Held-out signers |"; echo "|---|---|"
+            echo "| ${{ inputs.model }} top-1 | $top1 |"; echo "| ${{ inputs.model }} top-3 | $top3 |"
+            echo "| linear baseline top-1 | $base |"
+            echo "| signs | $classes |"; echo "| signers | $signers |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "top1=$top1" >> "$GITHUB_OUTPUT"
+          ok=$(python -c "print(1 if $top1 >= ${{ inputs.min_top1 }} and $top1 > $base else 0)")
+          echo "ok=$ok" >> "$GITHUB_OUTPUT"
+          if [ "$ok" != 1 ]; then echo "::warning::Not shipping: top-1 $top1 must be ≥ ${{ inputs.min_top1 }} and beat the linear baseline ($base). Record more signers."; fi
+      - name: Put the model in the app
+        if: ${{ inputs.publish && steps.report.outputs.ok == '1' }}
+        run: |
+          M="$RUNNER_TEMP/models"; D=apps/web/public/models; mkdir -p "$D"
+          cp "$M/sign-${{ inputs.model }}-v1.onnx" "$D/sign-model.onnx"
+          python - <<PY
+          import json
+          info = json.load(open("$M/sign-${{ inputs.model }}-v1.labels.json"))
+          m = json.load(open("$M/sign-${{ inputs.model }}-v1.metrics.json"))
+          info.update(top1=m["top1"], top3=m["top3"], model="${{ inputs.model }}", trainedAt="$(date -u +%F)")
+          json.dump(info, open("$D/sign-model.labels.json", "w"), indent=2)
+          json.dump(m, open("$D/sign-model.metrics.json", "w"), indent=2)
+          PY
+      - name: Open a pull request
+        if: ${{ inputs.publish && steps.report.outputs.ok == '1' }}
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: model/sign-${{ inputs.model }}-${{ github.run_number }}
+          title: 'Sign model: ${{ inputs.model }} (held-out top-1 ${{ steps.report.outputs.top1 }})'
+          commit-message: 'Ship sign model ${{ inputs.model }} (top-1 ${{ steps.report.outputs.top1 }})'
+          add-paths: apps/web/public/models/*
+          body: |
+            Trained by the "Train sign model" workflow (run ${{ github.run_number }}).
+            Held-out-signer top-1: **${{ steps.report.outputs.top1 }}** — see `apps/web/public/models/sign-model.metrics.json`.
+            Merging ships it in the app (and offline). Fill in the model card in `models/README.md`.

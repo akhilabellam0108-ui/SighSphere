@@ -126,6 +126,21 @@ stay on that device, and the admin panel is unavailable.
   installed on the user's other devices (offline recordings upload when back online). *Delete
   all samples* removes them everywhere.
 
+## Sign for help (offline SOS)
+
+The Emergency screen has **Sign for help**: record each SOS sign (HELP, EMERGENCY, AMBULANCE,
+DOCTOR, HOSPITAL, PAIN, MEDICINE, POLICE, FIRE, WATER, DEAF) 3–5 times, and from then on
+signing it shows a big message, speaks it, and offers one-tap call or text — **with no
+internet**. It answers only among signs set up on that phone, needs a clear margin over the
+runner-up, and never calls or texts on its own. A trained model that knows the SOS signs
+makes them work without recording. Code: `apps/web/src/lib/sos.ts`, `components/SosSigner.tsx`.
+
+## Put it online
+
+`render.yaml` deploys the app + server to Render in one click; `Dockerfile` runs it anywhere.
+See [docs/DEPLOY.md](docs/DEPLOY.md). Set `VITE_API_URL` so the website and Android app use it.
+Play Store: [docs/STORE_RELEASE.md](docs/STORE_RELEASE.md).
+
 ## Android app (APK)
 
 `.github/workflows/android.yml` wraps the same app with [Capacitor](https://capacitorjs.com)
@@ -215,7 +230,7 @@ models/                    trained artifacts; metrics.json files are committed a
 | --- | --- | --- |
 | **Now** | On-device template classifier over your recorded samples. Zero setup. | Week 3 |
 | Next | Rung-0 logistic regression trained in Colab on INCLUDE-50 | Week 4 |
-| Ship | Rung-1 1D-CNN, exported to ONNX, loaded via `VITE_MODEL_URL` | Week 8+ |
+| Ship | Rung-1 1D-CNN, exported to ONNX, bundled at `apps/web/public/models/sign-model.onnx` (or `VITE_MODEL_URL`) | Loader ✅ · needs real multi-signer data |
 
 `apps/web/src/lib/features.ts` and `services/ml/features.py` must stay in sync — they are
 the same normalization, and a mismatch between them is the single most common cause of
