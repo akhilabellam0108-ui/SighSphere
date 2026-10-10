@@ -11,6 +11,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import CameraView from '../components/CameraView.js';
 import {
+  OnnxClassifier,
   REJECTION_THRESHOLD,
   createClassifier,
   type Prediction,
@@ -206,8 +207,13 @@ export default function SignToText({ speakOutput }: SignToTextProps) {
           {classifier && classifier.labels.length > 0 && (
             <div>
               <h2 className="small">
-                Vocabulary ({classifier.labels.length} signs, {classifier.kind} model)
+                Vocabulary ({classifier.labels.length} signs, {classifier.kind === 'onnx' ? 'trained model' : 'your examples'})
               </h2>
+              {classifier instanceof OnnxClassifier && classifier.info.top1 !== undefined && (
+                <p className="hint">
+                  Tested on people it never saw: right {Math.round(classifier.info.top1 * 100)}% of the time.
+                </p>
+              )}
               <div className="gloss-row">
                 {classifier.labels.map((label) => (
                   <span key={label} className="chip">

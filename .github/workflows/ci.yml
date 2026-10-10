@@ -47,3 +47,26 @@ jobs:
       - run: npm test --workspace @signsphere/web
       - run: python check_parity.py
         working-directory: services/ml
+
+  ml:
+    name: Training pipeline (synthetic data)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install CPU PyTorch and ONNX tools
+        run: |
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install numpy onnx onnxscript onnxruntime
+      # Made-up data, only to prove train.py runs end to end and exports a model the app can
+      # load. It says nothing about real ISL accuracy.
+      - name: Train on synthetic data and check the exported model
+        working-directory: services/ml
+        run: |
+          python synthetic.py --out /tmp/synthetic.jsonl
+          python train.py --data /tmp/synthetic.jsonl --model linear --epochs 3 --out /tmp/models
+          python train.py --data /tmp/synthetic.jsonl --model cnn --epochs 3 --out /tmp/models
+          python check_model.py /tmp/models/sign-linear-v1.onnx
+          python check_model.py /tmp/models/sign-cnn-v1.onnx

@@ -1,15 +1,19 @@
 /* SignSphere service worker: lets the app, the hand-tracking models and the ISL sign pack
  * keep working with poor or no network after the first visit.
  * - Pages: network first, falling back to the cached app shell.
- * - Built assets, MediaPipe files, sign packs: cache first (they are versioned or large).
+ * - Built assets, MediaPipe and onnxruntime files, sign packs: cache first (versioned or large).
+ * - The trained sign model: from the cache, refreshed in the background.
  * Supabase and other cross-origin requests are never cached.
  * Paths are relative to the scope, so this works at / and at /SighSphere/ alike. */
-const VERSION = 'v2';
+const VERSION = 'v3';
 const SHELL = `signsphere-shell-${VERSION}`;
 const ASSETS = `signsphere-assets-${VERSION}`;
 const SCOPE = new URL(self.registration.scope).pathname; // e.g. "/" or "/SighSphere/"
 const at = (path) => SCOPE + path;
-const cacheFirst = (pathname) => ['assets/', 'mediapipe/', 'datasets/'].some((dir) => pathname.startsWith(at(dir)));
+const cacheFirst = (pathname) => ['assets/', 'mediapipe/', 'datasets/', 'ort/'].some((dir) => pathname.startsWith(at(dir)));
+// The trained sign model keeps its file name between versions: answer from the cache (works
+// offline, starts fast) and fetch a newer copy in the background for next time.
+const refreshInBackground = (pathname) => pathname.startsWith(at('models/'));
 const htmlLike = (res) => (res.headers.get('content-type') || '').includes('text/html');
 
 self.addEventListener('install', (event) => {
@@ -23,7 +27,7 @@ self.addEventListener('install', (event) => {
         const assets = await caches.open(ASSETS);
         for (const rel of list) {
           const path = at(rel);
-          if (!cacheFirst(path) || (await assets.match(path, { ignoreVary: true }))) continue;
+          if (!(cacheFirst(path) || refreshInBackground(path)) || (await assets.match(path, { ignoreVary: true }))) continue;
           try {
             const res = await fetch(path);
             if (res.ok && !htmlLike(res)) await assets.put(path, res);
@@ -77,6 +81,24 @@ self.addEventListener('fetch', (event) => {
         // Never cache the SPA fallback page served for a missing file.
         if (res.ok && !htmlLike(res)) cache.put(req, res.clone());
         return res;
+      }),
+    );
+    return;
+  }
+
+  if (refreshInBackground(url.pathname)) {
+    event.respondWith(
+      caches.open(ASSETS).then(async (cache) => {
+        const hit = await cache.match(req, { ignoreVary: true });
+        const fresh = fetch(req).then((res) => {
+          if (res.ok && !htmlLike(res)) cache.put(req, res.clone());
+          return res;
+        });
+        if (hit) {
+          event.waitUntil(fresh.catch(() => undefined));
+          return hit;
+        }
+        return fresh;
       }),
     );
     return;
