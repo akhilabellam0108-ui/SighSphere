@@ -201,6 +201,15 @@ def export_onnx(model: nn.Module, labels: list[str], out_dir: Path, name: str) -
         dynamic_axes={"input": {0: "batch"}, "logits": {0: "batch"}},
         opset_version=17,
     )
+    # Newer PyTorch exporters put the weights in a separate "<name>.onnx.data" file. The app
+    # downloads a single file, so fold the weights back into the .onnx.
+    import onnx
+
+    proto = onnx.load(str(path), load_external_data=True)
+    onnx.save_model(proto, str(path), save_as_external_data=False)
+    side = path.with_name(path.name + ".data")
+    if side.exists():
+        side.unlink()
 
     (out_dir / f"{name}.labels.json").write_text(
         json.dumps(

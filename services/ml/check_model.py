@@ -23,6 +23,11 @@ def main(path: str) -> None:
     info = json.loads(labels_file.read_text())
     assert info["featureVersion"] == F.FEATURE_VERSION, "feature version mismatch"
     assert info["windowFrames"] == F.WINDOW_FRAMES and info["frameDim"] == F.FRAME_DIM, "window shape mismatch"
+    import onnx
+
+    proto = onnx.load(str(model), load_external_data=False)
+    external = [t.name for t in proto.graph.initializer if t.data_location == onnx.TensorProto.EXTERNAL]
+    assert not external, f"weights are in a separate file ({len(external)} tensors); the app needs one self-contained .onnx"
     session = ort.InferenceSession(str(model), providers=["CPUExecutionProvider"])
     inp = session.get_inputs()[0]
     assert inp.name == "input", f"input is called {inp.name!r}, the app expects 'input'"

@@ -158,8 +158,12 @@ jobs:
           print('## Sign pack'); print(); print(f\"{s['usable']} of {s['videos']} videos had hands tracked · split {s['bySplit']}\"); print()
           print('| Sign | Videos | Usable |'); print('|---|---|---|')
           [print(f\"| {x['gloss']} | {x['videos']} | {x['usable']} |\") for x in s['signs']]" >> "$GITHUB_STEP_SUMMARY"
+      # If the repository doesn't let Actions open pull requests (Settings → Actions → General →
+      # "Allow GitHub Actions to create and approve pull requests"), the results are still pushed
+      # to the branch below; open the PR from it by hand.
       - name: Open a pull request
         if: env.PUBLISH == 'true'
+        continue-on-error: true
         uses: peter-evans/create-pull-request@v7
         with:
           branch: include/${{ env.SIGNS }}-${{ github.run_number }}
