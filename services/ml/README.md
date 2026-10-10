@@ -72,10 +72,16 @@ models/sign-cnn-v1.labels.json    # class order — the app needs this
 models/sign-cnn-v1.metrics.json   # commit this; it is your evidence
 ```
 
-Then set `VITE_MODEL_URL=/models/sign-cnn-v1.onnx` and implement `OnnxClassifier` in
-`apps/web/src/lib/classifier.ts` (the Week 8 checklist is in that file). It deliberately
-throws today rather than returning fake predictions — a stub that silently returns nonsense
-is indistinguishable from a working model in a demo.
+To ship it, copy it to `apps/web/public/models/sign-model.onnx` and its labels file to
+`sign-model.labels.json`. The app finds it automatically (`OnnxClassifier` in
+`apps/web/src/lib/classifier.ts`, run on the phone with onnxruntime-web, offline once cached).
+`VITE_MODEL_URL` can point somewhere else. Check a model with `python check_model.py <file>.onnx`.
+
+**Or train on GitHub instead of Colab:** Actions → **Train sign model** → give a link (one that
+expires) to your exported JSONL. It trains the linear baseline and your model, reports
+held-out-signer accuracy, and — only if it beats the baseline and your minimum — opens a pull
+request that ships the model. The repository is public: never commit the data or upload it as
+an artifact; the workflow never does.
 
 ## Rules that are not negotiable
 
