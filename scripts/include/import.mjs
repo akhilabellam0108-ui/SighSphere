@@ -50,13 +50,15 @@ await report(`transcoded ${items.length} videos; starting hand tracking`, true);
 if (!items.length) process.exit(1);
 
 // 2. The app's dev server serves the harness page and the videos.
-const vite = spawn('npx', ['vite', '--port', String(port), '--strictPort', '--host', '127.0.0.1'], { cwd: join(root, 'apps/web'), stdio: ['ignore', 'pipe', 'inherit'] });
+// Own process group, so stopping it also stops the vite process npx starts.
+const vite = spawn('npx', ['vite', '--port', String(port), '--strictPort', '--host', '127.0.0.1'], { cwd: join(root, 'apps/web'), stdio: ['ignore', 'pipe', 'inherit'], detached: true });
+const stopVite = () => { try { process.kill(-vite.pid, 'SIGTERM'); } catch { /* already gone */ } };
 await new Promise((resolve, reject) => {
   const t = setTimeout(() => reject(new Error('vite did not start')), 60000);
   vite.stdout.on('data', (d) => { if (String(d).includes('Local')) { clearTimeout(t); resolve(); } });
   vite.on('exit', (code) => { clearTimeout(t); reject(new Error(`vite exited (${code})`)); });
 });
-process.on('exit', () => vite.kill());
+process.on('exit', stopVite);
 
 // 3. Run the importer in Chromium (software WebGL is fine; tracking runs on the CPU here).
 const { chromium } = await import('playwright');
@@ -76,7 +78,7 @@ try {
   result = await page.evaluate((list) => window.importInclude(list, 'cpu'), items);
 } finally {
   await browser.close();
-  vite.kill();
+  stopVite();
 }
 
 // 4. Outputs: the sign pack every user installs automatically, and JSONL for training.
@@ -91,3 +93,5 @@ rmSync(served, { recursive: true, force: true });
 console.log(JSON.stringify(stats, null, 2));
 await finish(`done: hands tracked in ${result.rows.length} of ${items.length} videos`);
 console.log(`pack → ${relative(root, packOut)} (${Math.round(JSON.stringify(result.pack).length / 1024)} KB), training rows → ${jsonlOut}`);
+// Nothing left to wait for: exit even if a child process still holds a pipe open.
+process.exit(0);
