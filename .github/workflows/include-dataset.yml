@@ -1,0 +1,158 @@
+name: INCLUDE dataset → signs + model
+
+# Builds ISL recognition from the public INCLUDE dataset (AI4Bharat, CC BY 4.0) on GitHub's
+# computers — no downloads on your laptop:
+#   1. downloads only the needed sign folders from Zenodo (zips are deleted as it goes)
+#   2. runs the app's own importer in a headless browser — the same hand tracking as the
+#      live camera — to build the sign pack every user installs automatically (and offline)
+#   3. trains a model on INCLUDE's official train/val/test split, and ships it only if it
+#      beats the linear baseline and the minimum accuracy
+#   4. opens a pull request with the pack (and the model, if good enough)
+#
+# Run: Actions → "INCLUDE dataset → signs + model" → Run workflow.
+# Only hand landmarks are kept (numbers), never video.
+
+on:
+  workflow_dispatch:
+    inputs:
+      signs:
+        description: 'Which signs: sos (DOCTOR, HOSPITAL, POLICE, MEDICINE, DEAF, SICK), include50, or glosses like DOCTOR,HELLO'
+        default: sos
+      max_per_sign:
+        description: 'Videos per sign (INCLUDE has ~14–21)'
+        default: '40'
+      train:
+        description: 'Train a model too'
+        type: boolean
+        default: true
+      min_top1:
+        description: 'Ship the model only if test top-1 accuracy is at least this'
+        default: '0.6'
+      publish:
+        description: 'Open a pull request with the results'
+        type: boolean
+        default: true
+  # Trying the pipeline out on its branch.
+  push:
+    branches: [feature/offline-sos-and-release]
+    paths:
+      - .github/workflows/include-dataset.yml
+      - scripts/include/**
+      - apps/web/tools/**
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: include-dataset-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    env:
+      SIGNS: ${{ inputs.signs || 'sos' }}
+      MAX_PER_SIGN: ${{ inputs.max_per_sign || '40' }}
+      TRAIN: ${{ github.event_name == 'push' || inputs.train }}
+      MIN_TOP1: ${{ inputs.min_top1 || '0.6' }}
+      PUBLISH: ${{ github.event_name == 'push' || inputs.publish }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Make room (the dataset zips are large)
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/local/lib/android /opt/hostedtoolcache/CodeQL
+          df -h /
+      - name: Tools
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+          npm ci
+          npm i --no-save playwright@1
+          npx playwright install --with-deps chromium
+          npm run setup:mediapipe --workspace @signsphere/web
+          ls -la apps/web/public/mediapipe/models
+      - name: Plan — which signs and videos
+        run: |
+          git clone -q --depth 1 https://github.com/AI4Bharat/INCLUDE.git /tmp/INCLUDE
+          node scripts/include/plan.mjs --signs "$SIGNS" --max-per-sign "$MAX_PER_SIGN" --include-repo /tmp/INCLUDE --out /tmp/plan.json
+      - name: Download from Zenodo (only the needed folders)
+        run: python scripts/include/download.py --plan /tmp/plan.json --out /tmp/include-raw
+      - name: Hand tracking with the app's own importer (headless browser)
+        run: |
+          node scripts/include/import.mjs --plan /tmp/plan.json --raw /tmp/include-raw \
+            --pack apps/web/public/datasets/isl-include.json --jsonl /tmp/include.jsonl --stats /tmp/include-stats.json
+          rm -rf /tmp/include-raw
+      - uses: actions/upload-artifact@v4
+        with:
+          name: include-${{ github.run_number }}
+          path: |
+            apps/web/public/datasets/isl-include.json
+            /tmp/include.jsonl
+            /tmp/include-stats.json
+
+      - name: Train (INCLUDE's official split)
+        id: train
+        if: env.TRAIN == 'true'
+        run: |
+          pip install -q torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -q numpy onnx onnxscript onnxruntime
+          cd services/ml
+          python train.py --data /tmp/include.jsonl --model linear --epochs 60 --out /tmp/models --test-signer-ids test --val-signer-ids val
+          python train.py --data /tmp/include.jsonl --model cnn --epochs 80 --out /tmp/models --test-signer-ids test --val-signer-ids val
+          python check_model.py /tmp/models/sign-cnn-v1.onnx
+          read top1 top3 classes < <(python -c "import json;m=json.load(open('/tmp/models/sign-cnn-v1.metrics.json'));print(m['top1'],m['top3'],m['classes'])")
+          base=$(python -c "import json;print(json.load(open('/tmp/models/sign-linear-v1.metrics.json'))['top1'])")
+          ok=$(python -c "print(1 if $top1 >= $MIN_TOP1 and $top1 >= $base else 0)")
+          echo "top1=$top1" >> "$GITHUB_OUTPUT"; echo "ok=$ok" >> "$GITHUB_OUTPUT"
+          {
+            echo "## INCLUDE model ($classes signs)"
+            echo "| | Test top-1 | Test top-3 |"; echo "|---|---|---|"
+            echo "| 1D-CNN | $top1 | $top3 |"
+            echo "| linear baseline | $base | |"
+            echo; echo "Split: INCLUDE's official train/val/test lists (not guaranteed signer-independent)."
+            echo; echo "Ship: $([ "$ok" = 1 ] && echo yes || echo "no — below $MIN_TOP1 or the baseline")"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Put the model in the app
+        if: env.TRAIN == 'true' && steps.train.outputs.ok == '1'
+        run: |
+          D=apps/web/public/models; mkdir -p $D
+          cp /tmp/models/sign-cnn-v1.onnx $D/sign-model.onnx
+          python - <<PY
+          import json, datetime
+          info = json.load(open("/tmp/models/sign-cnn-v1.labels.json"))
+          m = json.load(open("/tmp/models/sign-cnn-v1.metrics.json"))
+          info.update(top1=m["top1"], top3=m["top3"], model="cnn", source="INCLUDE (AI4Bharat, CC BY 4.0)", trainedAt=datetime.date.today().isoformat())
+          json.dump(info, open("$D/sign-model.labels.json", "w"), indent=2)
+          json.dump(m, open("$D/sign-model.metrics.json", "w"), indent=2)
+          PY
+      - name: Summary
+        run: |
+          python -c "
+          import json; s=json.load(open('/tmp/include-stats.json'))
+          print('## Sign pack'); print(); print(f\"{s['usable']} of {s['videos']} videos had hands tracked · split {s['bySplit']}\"); print()
+          print('| Sign | Videos | Usable |'); print('|---|---|---|')
+          [print(f\"| {x['gloss']} | {x['videos']} | {x['usable']} |\") for x in s['signs']]" >> "$GITHUB_STEP_SUMMARY"
+      - name: Open a pull request
+        if: env.PUBLISH == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: include/${{ env.SIGNS }}-${{ github.run_number }}
+          base: ${{ github.ref_name }}
+          title: 'ISL from INCLUDE: ${{ env.SIGNS }} signs${{ steps.train.outputs.ok == ''1'' && format('' + model (top-1 {0})'', steps.train.outputs.top1) || '''' }}'
+          commit-message: 'Add INCLUDE sign pack (${{ env.SIGNS }})'
+          add-paths: |
+            apps/web/public/datasets/isl-include.json
+            apps/web/public/models/*
+          body: |
+            Built by the "INCLUDE dataset → signs + model" workflow (run ${{ github.run_number }}) from the INCLUDE dataset by AI4Bharat (CC BY 4.0). Only hand landmarks, no video.
+            - `isl-include.json`: sign pack every user installs automatically — recognition, the avatar and SOS work for these signs without recording.
+            - Model: ${{ steps.train.outputs.ok == '1' && format('included, test top-1 {0}', steps.train.outputs.top1) || 'not included (below the bar, or not trained)' }}.
+            See the run's summary for per-sign results.

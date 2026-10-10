@@ -231,6 +231,8 @@ def main() -> None:
     parser.add_argument("--test-signers", type=int, default=4)
     parser.add_argument("--val-signers", type=int, default=2)
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--test-signer-ids", default="", help="fixed split: comma-separated signer IDs to test on (e.g. INCLUDE's 'test')")
+    parser.add_argument("--val-signer-ids", default="", help="fixed split: signer IDs for validation (e.g. 'val')")
     parser.add_argument("--out", default="../../models")
     args = parser.parse_args()
 
@@ -244,10 +246,16 @@ def main() -> None:
     data = D.build_dataset(samples)
     print(data.summary())
 
-    print("\nsplitting by signer (never randomly)")
-    train_mask, val_mask, test_mask = D.leave_signers_out(
-        data, n_test_signers=args.test_signers, n_val_signers=args.val_signers, seed=args.seed
-    )
+    if args.test_signer_ids:
+        print("\nusing the fixed split given")
+        train_mask, val_mask, test_mask = D.split_by_named_signers(
+            data, [s for s in args.test_signer_ids.split(",") if s], [s for s in args.val_signer_ids.split(",") if s]
+        )
+    else:
+        print("\nsplitting by signer (never randomly)")
+        train_mask, val_mask, test_mask = D.leave_signers_out(
+            data, n_test_signers=args.test_signers, n_val_signers=args.val_signers, seed=args.seed
+        )
 
     x_train, y_train = data.x[train_mask], data.y[train_mask]
     x_val, y_val = data.x[val_mask], data.y[val_mask]
