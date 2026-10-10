@@ -1,0 +1,47 @@
+{
+  "model": "cnn",
+  "parameters": 158982,
+  "featureVersion": 1,
+  "classes": 6,
+  "labels": [
+    "DEAF",
+    "DOCTOR",
+    "HOSPITAL",
+    "MEDICINE",
+    "POLICE",
+    "SICK"
+  ],
+  "signers": [
+    "test",
+    "train",
+    "val"
+  ],
+  "test_signers": [
+    "test"
+  ],
+  "split": "leave-signers-out",
+  "top1": 1.0,
+  "top3": 1.0,
+  "per_class": {
+    "DEAF": 1.0,
+    "DOCTOR": 1.0,
+    "HOSPITAL": 1.0,
+    "MEDICINE": 1.0,
+    "POLICE": 1.0,
+    "SICK": 1.0
+  },
+  "args": {
+    "data": "/tmp/include.jsonl",
+    "model": "cnn",
+    "epochs": 80,
+    "batch_size": 32,
+    "lr": 0.002,
+    "augment": 4,
+    "test_signers": 4,
+    "val_signers": 2,
+    "seed": 0,
+    "test_signer_ids": "test",
+    "val_signer_ids": "val",
+    "out": "/tmp/models"
+  }
+}
