@@ -16,7 +16,7 @@ on:
   workflow_dispatch:
     inputs:
       signs:
-        description: 'Which signs: sos (DOCTOR, HOSPITAL, POLICE, MEDICINE, DEAF, SICK), include50, or glosses like DOCTOR,HELLO'
+        description: 'Which signs: sos (DOCTOR, HOSPITAL, POLICE, MEDICINE, DEAF, SICK), include50, glosses like DOCTOR,HELLO, or combined with + (include50+sos)'
         default: sos
       max_per_sign:
         description: 'Videos per sign (INCLUDE has ~14–21)'
@@ -93,8 +93,10 @@ jobs:
           # Each run saves what it downloaded (even if it ran out of time) under a new key;
           # the next run starts from the newest one and only fetches what is still missing.
           key: include-raw-${{ env.SIGNS }}-${{ env.MAX_PER_SIGN }}-${{ github.run_id }}-${{ github.run_attempt }}
+          # Same signs first; otherwise any earlier download (videos not in this plan are ignored).
           restore-keys: |
             include-raw-${{ env.SIGNS }}-${{ env.MAX_PER_SIGN }}-
+            include-raw-
       - name: Download from Zenodo (only the needed folders)
         id: download
         timeout-minutes: 220
