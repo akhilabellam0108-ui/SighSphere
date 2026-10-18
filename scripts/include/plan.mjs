@@ -22,16 +22,18 @@ const vocab = JSON.parse(readFileSync(new URL('../../apps/web/src/data/include-v
 // The SOS signs (apps/web/src/lib/sos.ts) that INCLUDE has, plus a few that help in a hospital.
 const SOS = ['DOCTOR', 'HOSPITAL', 'POLICE', 'MEDICINE', 'DEAF', 'SICK'];
 
-let wanted;
-if (signsArg === 'sos') wanted = vocab.filter((s) => SOS.includes(s.gloss));
-else if (signsArg === 'include50') {
-  const map = JSON.parse(readFileSync(join(repo, 'label_maps/label_map_include50.json'), 'utf8'));
-  const labels = new Set(Object.keys(map).map((k) => k.replace(/[^A-Za-z]/g, '').toLowerCase()));
-  wanted = vocab.filter((s) => labels.has(s.label));
-} else {
-  const list = signsArg.split(',').map((s) => s.trim().toUpperCase()).filter(Boolean);
-  wanted = vocab.filter((s) => list.includes(s.gloss) || list.includes(s.label.toUpperCase()));
+// Sets can be combined with "+", e.g. "include50+sos" or "include50+WATER,PAIN".
+function pick(part) {
+  if (part === 'sos') return vocab.filter((s) => SOS.includes(s.gloss));
+  if (part === 'include50') {
+    const map = JSON.parse(readFileSync(join(repo, 'label_maps/label_map_include50.json'), 'utf8'));
+    const labels = new Set(Object.keys(map).map((k) => k.replace(/[^A-Za-z]/g, '').toLowerCase()));
+    return vocab.filter((s) => labels.has(s.label));
+  }
+  const list = part.split(',').map((s) => s.trim().toUpperCase()).filter(Boolean);
+  return vocab.filter((s) => list.includes(s.gloss) || list.includes(s.label.toUpperCase()));
 }
+const wanted = [...new Map(signsArg.split('+').map((p) => p.trim()).filter(Boolean).flatMap(pick).map((s) => [s.gloss, s])).values()];
 if (!wanted.length) throw new Error(`No INCLUDE signs matched "${signsArg}"`);
 
 const splitOf = new Map();
