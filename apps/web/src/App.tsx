@@ -25,6 +25,7 @@ const SettingsPage = lazy(() => import('./routes/Settings.js'));
 const SignToText = lazy(() => import('./routes/SignToText.js'));
 const TextToSign = lazy(() => import('./routes/TextToSign.js'));
 const Welcome = lazy(() => import('./routes/Welcome.js'));
+const Conversation = lazy(() => import('./routes/Conversation.js'));
 
 const NAV = [
   { to: '/', label: 'Home', icon: '⌂' },
@@ -32,6 +33,7 @@ const NAV = [
   { to: '/voice-to-sign', label: 'Voice → Sign', icon: '🎤' },
   { to: '/sign-to-text', label: 'Sign → Text', icon: '👁' },
   { to: '/sign-to-voice', label: 'Sign → Voice', icon: '🔊' },
+  { to: '/conversation', label: 'Conversation', icon: '💬' },
   { to: '/record', label: 'Record', icon: '⏺' },
   { to: '/learn', label: 'Learn', icon: '★' },
   { to: '/history', label: 'History', icon: '🕘' },
@@ -298,6 +300,7 @@ export default function App() {
           <Route path="/voice-to-sign" element={<TextToSign mode="voice" />} />
           <Route path="/sign-to-text" element={<SignToText speakOutput={false} />} />
           <Route path="/sign-to-voice" element={<SignToText speakOutput />} />
+          <Route path="/conversation" element={<Conversation />} />
           <Route path="/learn" element={<Learn />} />
           <Route path="/history" element={<History />} />
           <Route path="/record" element={<Recorder />} />

@@ -28,6 +28,11 @@ const FEATURES = [
     body: 'The same recognition, spoken aloud for a hearing person.',
   },
   {
+    to: '/conversation',
+    title: '💬 Live Conversation',
+    body: 'A deaf and a hearing person take turns on one phone: signs become speech, speech becomes ISL.',
+  },
+  {
     to: '/record',
     title: '⏺ Record a sign',
     body: 'Sign it once to the camera: it is recognised in Sign → Text and the 3D avatar signs it back.',
