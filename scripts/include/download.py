@@ -15,6 +15,7 @@ import json
 import os
 import subprocess
 import sys
+import threading
 import time
 import urllib.request
 import zipfile
@@ -55,10 +56,9 @@ def main() -> None:
     plan = json.loads(Path(args.plan).read_text())
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    have = sum(1 for _ in out.rglob("*") if _.is_file())
+    have = sum(1 for p in out.rglob("*") if p.is_file() and not p.name.endswith(".part"))
     if have:
-        print(f"{have} videos already here (cached) — skipping the download")
-        return
+        print(f"{have} videos already here from an earlier run — only the missing ones will be downloaded")
     Path(args.work).mkdir(parents=True, exist_ok=True)
     wanted_dirs = {f"{s['category']}/{s['folder']}/": s["gloss"] for s in plan["signs"]}
     wanted_folders = {norm(s["folder"]): s for s in plan["signs"]}
@@ -83,48 +83,94 @@ def main() -> None:
             return None
         return sign
 
-    def extract_from(z: zipfile.ZipFile) -> int:
-        n = 0
+    def dest_for(sign: dict, name: str) -> Path:
+        return out / sign["category"] / sign["folder"] / name.replace("\\", "/").split("/")[-1]
+
+    def copy_member(z: zipfile.ZipFile, info: zipfile.ZipInfo, sign: dict) -> int:
+        dest = dest_for(sign, info.filename)
+        if dest.exists() and dest.stat().st_size == info.file_size:
+            return 1  # already downloaded on an earlier run
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        part = dest.with_name(dest.name + ".part")
+        with z.open(info) as src, open(part, "wb") as dst:
+            while chunk := src.read(1 << 20):
+                dst.write(chunk)
+        part.replace(dest)  # only complete files count, so a stopped run resumes cleanly
+        report(f"  {sign['gloss']}: {dest.name} ({info.file_size / 1e6:.1f} MB)")
+        return 1
+
+    # Each thread keeps its own open copy of each remote zip (zipfile objects are not thread-safe).
+    local = threading.local()
+
+    def zip_for(f: dict) -> zipfile.ZipFile:
+        zips = getattr(local, "zips", None)
+        if zips is None:
+            zips = local.zips = {}
+        if f["key"] not in zips:
+            zips[f["key"]] = zipfile.ZipFile(HttpRangeFile(f["url"]))
+        return zips[f["key"]]
+
+    def list_members(f: dict) -> list[tuple[dict, zipfile.ZipInfo, dict]]:
+        """Reads only the zip's table of contents; returns the wanted videos still missing."""
+        z = zipfile.ZipFile(HttpRangeFile(f["url"]))
+        jobs = []
         for info in z.infolist():
             sign = wanted(info.filename)
-            if not sign:
-                continue
-            dest = out / sign["category"] / sign["folder"] / info.filename.replace("\\", "/").split("/")[-1]
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            with z.open(info) as src, open(dest, "wb") as dst:
-                while chunk := src.read(1 << 20):
-                    dst.write(chunk)
-            n += 1
-            report(f"  {sign['gloss']}: {dest.name} ({info.file_size / 1e6:.1f} MB)")
-        return n
+            if sign:
+                jobs.append((f, info, sign))
+        report(f"{f['key']}: {len(jobs)} wanted videos", force=True)
+        return jobs
 
-    def process(f: dict) -> int:
+    def fetch(job: tuple[dict, zipfile.ZipInfo, dict]) -> int:
+        f, info, sign = job
+        dest = dest_for(sign, info.filename)
+        if dest.exists() and dest.stat().st_size == info.file_size:
+            return 1
+        return copy_member(zip_for(f), info, sign)
+
+    def full_download(f: dict) -> int:
         t = time.time()
-        # Preferred: read only the zip's table of contents and the wanted videos (HTTP Range).
-        try:
-            remote = HttpRangeFile(f["url"])
-            report(f"{f['key']}: partial download OK, reading its table of contents ({remote.size / 1e9:.1f} GB zip)", force=True)
-            with zipfile.ZipFile(remote) as z:
-                n = extract_from(z)
-            report(f"{f['key']}: {n} videos, fetched {remote.fetched / 1e6:.0f} of {remote.size / 1e6:.0f} MB in {time.time() - t:.0f} s", force=True)
-            return n
-        except RangeNotSupported:
-            report(f"{f['key']}: server doesn't allow partial downloads — fetching the whole file ({f['size'] / 1e9:.1f} GB)", force=True)
+        report(f"{f['key']}: server doesn't allow partial downloads — fetching the whole file ({f['size'] / 1e9:.1f} GB)", force=True)
         zpath = Path(args.work) / f["key"]
-        subprocess.run(["curl", "-fL", "--retry", "8", "--retry-delay", "15", "--retry-all-errors",
+        subprocess.run(["curl", "-fL", "--retry", "8", "--retry-delay", "15", "--retry-all-errors", "-C", "-",
                         "--speed-limit", "50000", "--speed-time", "90", "-sS", "-o", str(zpath), f["url"]], check=True)
+        n = 0
         with zipfile.ZipFile(zpath) as z:
-            n = extract_from(z)
+            for info in z.infolist():
+                sign = wanted(info.filename)
+                if sign:
+                    n += copy_member(z, info, sign)
         os.remove(zpath)
         report(f"{f['key']}: {n} videos (full download) in {time.time() - t:.0f} s", force=True)
         return n
 
-    # Zenodo limits each connection (~0.2 MB/s), so read several zips at once.
+    # 1) Tables of contents (small). 2) Videos, many at once: Zenodo limits each connection
+    #    (~0.2 MB/s), so parallel requests are what make this finish in time.
+    jobs: list = []
+    whole: list[dict] = []
     with ThreadPoolExecutor(max_workers=8) as pool:
-        found = sum(pool.map(process, chosen))
+        for f, result in zip(chosen, pool.map(lambda f: _try(list_members, f), chosen)):
+            if result is None:
+                whole.append(f)
+            else:
+                jobs.extend(result)
+    jobs.sort(key=lambda j: (j[2]["gloss"], j[1].filename))
+    todo = [j for j in jobs if not (dest_for(j[2], j[1].filename).exists() and dest_for(j[2], j[1].filename).stat().st_size == j[1].file_size)]
+    report(f"{len(jobs)} videos wanted, {len(jobs) - len(todo)} already here, downloading {len(todo)}", force=True)
+    with ThreadPoolExecutor(max_workers=int(os.environ.get("INCLUDE_PARALLEL", "16"))) as pool:
+        found = (len(jobs) - len(todo)) + sum(pool.map(fetch, todo))
+    for f in whole:
+        found += full_download(f)
     finish(f"download done: {found} videos for {len(wanted_dirs)} signs")
     if found == 0:
         sys.exit("No videos extracted.")
+
+
+def _try(fn, f):
+    try:
+        return fn(f)
+    except RangeNotSupported:
+        return None
 
 
 if __name__ == "__main__":
