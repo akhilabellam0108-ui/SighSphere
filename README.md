@@ -92,7 +92,8 @@ uses exists in the migrations.
 
 1. Create a free project at [supabase.com](https://supabase.com) (region: Mumbai for India).
 2. **SQL editor** → run `supabase/migrations/0001_signsphere.sql`, then
-   `supabase/migrations/0002_backend.sql`, then `supabase/migrations/0003_admin_tools.sql`.
+   `supabase/migrations/0002_backend.sql`, `supabase/migrations/0003_admin_tools.sql`, then
+   `supabase/migrations/0004_error_reports.sql`.
    All are safe to run again.
 3. **Make yourself an admin**: sign up in the app once, then in the SQL editor run
    ```sql
@@ -125,6 +126,7 @@ stay on that device, and the admin panel is unavailable.
 | Team | Add or remove admins by email (they must have signed up); the last admin cannot be removed |
 | Announcements | Post a message shown at the top of everyone's app; hide or delete it |
 | Vocabulary | Add words, correct or hide wrong ones, and record which fluent ISL signer reviewed each one — no new release needed |
+| Errors | Problems the app hit on people's devices, grouped by cause, with screen, platform and version — never anyone's words or identity. Mark fixed; it reopens if it happens again |
 | Analytics | Translations per day, new logins, how people use it, the signs users ask for most. Counts only |
 | Sign pack | Preview a pack (signs, examples, avatar motion, weak signs) and publish it to every device |
 

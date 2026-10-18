@@ -38,6 +38,7 @@ jobs:
           # Your deployed SignSphere server, e.g. https://signsphere.onrender.com/api (docs/DEPLOY.md)
           VITE_API_URL: ${{ vars.VITE_API_URL }}
           VITE_SUPPORT_EMAIL: ${{ vars.VITE_SUPPORT_EMAIL }}
+          VITE_APP_VERSION: ${{ github.sha }}
         run: npm run build
       # GitHub Pages has no SPA routing: serve the app for any deep link.
       - run: cp apps/web/dist/index.html apps/web/dist/404.html && touch apps/web/dist/.nojekyll

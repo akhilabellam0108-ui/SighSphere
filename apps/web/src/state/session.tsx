@@ -8,6 +8,7 @@ import { getBackend, type Account, type Backend, type MyStatus, type User } from
 import { flush, forgetDevice, refresh as refreshHistory } from '../lib/historyStore.js';
 import { flushSigns, forgetSignSync, pullSigns } from '../lib/signSync.js';
 import { refreshVocabulary } from '../lib/vocabulary.js';
+import { installErrorReporting } from '../lib/errorReporting.js';
 
 const ACTIVE_KEY = 'signsphere.active-account.v1';
 /** Account type chosen on the login screen, so we land on the right account afterwards. */
@@ -56,8 +57,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [adminAlerts, setAdminAlerts] = useState(0);
 
   const refreshAlerts = useCallback(() => {
-    backend.adminOverview().then(
-      (o) => setAdminAlerts(o.pendingReviews + o.openFeedback),
+    Promise.all([backend.adminOverview(), backend.adminOpenErrors().catch(() => 0)]).then(
+      ([o, errors]) => setAdminAlerts(o.pendingReviews + o.openFeedback + errors),
       () => setAdminAlerts(0),
     );
   }, [backend]);
@@ -107,6 +108,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Words the team added or corrected (cached for offline use).
     void refreshVocabulary(backend);
+    installErrorReporting(backend);
   }, [backend]);
 
   // Admins: keep the alert count fresh while the app is open.

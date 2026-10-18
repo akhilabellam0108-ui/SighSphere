@@ -150,6 +150,18 @@ try {
   assert.ok(stats.daily.at(-1).signups >= 3);
   ok('admin tools: team, users, blocking, announcements, vocabulary and statistics over HTTP');
 
+  // Error reports: anyone can send, only admins read
+  assert.equal((await call(null, 'POST', '/rpc/report_error', { message: 'TypeError: boom', stack: 'TypeError\n at x (a.js:1:1)', page: '/learn', app_version: 'abc', platform: 'web' })).status, 200);
+  await call(TA, 'POST', '/rpc/report_error', { message: 'TypeError: boom', stack: 'TypeError\n at x (a.js:1:1)', page: '/learn', app_version: 'abc', platform: 'web' });
+  assert.equal((await call(TA, 'POST', '/rpc/admin_list_errors', { include_resolved: false })).status, 403);
+  const errs = (await call(T0, 'POST', '/rpc/admin_list_errors', { include_resolved: false })).body;
+  assert.equal(errs.length, 1);
+  assert.equal(errs[0].count, 2);
+  assert.equal((await call(T0, 'POST', '/rpc/admin_open_errors', {})).body, 1);
+  await call(T0, 'POST', '/rpc/admin_resolve_error', { id: errs[0].id, resolved: true });
+  assert.equal((await call(T0, 'POST', '/rpc/admin_open_errors', {})).body, 0);
+  ok('error reports: sent by anyone, grouped, read and resolved by admins only');
+
   // Delete login
   await call(TA, 'POST', '/auth/delete');
   assert.equal((await call(TA, 'GET', '/auth/me')).status, 401);

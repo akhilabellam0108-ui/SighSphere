@@ -15,6 +15,7 @@ import { deleteAllLocalData } from '../lib/storage.js';
 import { isSpeechRecognitionSupported, isSpeechSynthesisSupported, speak } from '../lib/speech.js';
 import { useSettings } from '../state/settings.js';
 import ShareApp from '../components/ShareApp.js';
+import LanguagePicker from '../components/LanguagePicker.js';
 
 const LANGS = [
   { code: 'en-IN', label: 'English (India)' },
@@ -37,6 +38,14 @@ export default function SettingsPage() {
       <h1>Settings</h1>
       <p className="lede">Everything here is stored on this device only.</p>
 
+      <section className="card stack" aria-labelledby="lang-heading" style={{ marginBottom: '1rem' }}>
+        <h2 id="lang-heading">Language · भाषा · భాష</h2>
+        <LanguagePicker />
+        <p className="hint" style={{ margin: 0 }}>
+          Changes the app's words and the voice that reads things aloud. Typing and speaking for Text → Sign stay in English,
+          because the sign translation works from English.
+        </p>
+      </section>
       <section className="card stack" aria-labelledby="a11y-heading">
         <h2 id="a11y-heading">Accessibility</h2>
 

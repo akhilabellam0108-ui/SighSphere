@@ -147,6 +147,18 @@ export async function clearMotions(): Promise<void> {
   await tx('readwrite', (store) => store.clear(), MOTION_STORE);
 }
 
+/** Your own recordings vs. signs installed from a dataset pack (whose signerId starts with "pack:"). */
+export async function sampleSummary(): Promise<{ signs: number; mine: number; installed: number }> {
+  const samples = await getSamples();
+  const labels = new Set(samples.map((s) => s.label));
+  const installed = samples.filter((s) => isPackSigner(s.meta.signerId)).length;
+  return { signs: labels.size, mine: samples.length - installed, installed };
+}
+
+export function isPackSigner(signerId: string | undefined): boolean {
+  return Boolean(signerId && /^(pack|dataset):/.test(signerId));
+}
+
 export async function sampleCounts(): Promise<Record<string, number>> {
   const samples = await getSamples();
   const counts: Record<string, number> = {};
@@ -220,6 +232,8 @@ export interface Settings {
   handsOnly: boolean;
   /** Where hand tracking runs: 'auto' (graphics chip, falling back), 'gpu' or 'cpu'. */
   processor: 'auto' | 'gpu' | 'cpu';
+  /** Interface language (lib/i18n.ts). */
+  uiLang: 'en' | 'hi' | 'te';
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -235,6 +249,7 @@ export const DEFAULT_SETTINGS: Settings = {
   consentTrain: false,
   handsOnly: false,
   processor: 'auto',
+  uiLang: 'en',
 };
 
 const SETTINGS_KEY = 'signsphere.settings.v1';
