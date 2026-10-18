@@ -52,7 +52,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 240
+    timeout-minutes: 350
     env:
       SIGNS: ${{ inputs.signs || 'sos' }}
       MAX_PER_SIGN: ${{ inputs.max_per_sign || '40' }}
@@ -90,18 +90,28 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: /tmp/include-raw
-          key: include-raw-${{ hashFiles('scripts/include/plan.mjs', 'apps/web/src/data/include-vocabulary.json') }}-${{ env.SIGNS }}-${{ env.MAX_PER_SIGN }}
+          # Each run saves what it downloaded (even if it ran out of time) under a new key;
+          # the next run starts from the newest one and only fetches what is still missing.
+          key: include-raw-${{ env.SIGNS }}-${{ env.MAX_PER_SIGN }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            include-raw-${{ env.SIGNS }}-${{ env.MAX_PER_SIGN }}-
       - name: Download from Zenodo (only the needed folders)
-        timeout-minutes: 90
+        id: download
+        timeout-minutes: 220
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: python scripts/include/download.py --plan /tmp/plan.json --out /tmp/include-raw
-      - name: Save downloaded videos for next time
-        if: steps.raw.outputs.cache-hit != 'true'
+      - name: Save downloaded videos for next time (also when the download ran out of time)
+        if: always() && steps.raw.outcome == 'success'
         uses: actions/cache/save@v4
         with:
           path: /tmp/include-raw
           key: ${{ steps.raw.outputs.cache-primary-key }}
+      - name: If the download ran out of time
+        if: failure() && steps.download.outcome == 'failure'
+        run: |
+          echo "### Download not finished" >> "$GITHUB_STEP_SUMMARY"
+          echo "Zenodo is slow. Everything downloaded so far was saved — run this workflow again with the same settings and it continues where it stopped." >> "$GITHUB_STEP_SUMMARY"
       - name: Hand tracking with the app's own importer (headless browser)
         env:
           GITHUB_TOKEN: ${{ github.token }}
