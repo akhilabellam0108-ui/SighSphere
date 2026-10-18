@@ -11,6 +11,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { buildIndex } from '@signsphere/gloss';
+import { useLexicon } from '../lib/vocabulary.js';
 import CameraView, { type FrameMeta } from '../components/CameraView.js';
 import { FEATURE_VERSION, FRAME_DIM, FeatureWindow, WINDOW_FRAMES, encodeFrame } from '../lib/features.js';
 import { captureFrame, cleanClip, type MotionFrame } from '../lib/motion.js';
@@ -48,7 +49,7 @@ export default function Recorder() {
   const { settings, update } = useSettings();
   const { backend, active } = useSession();
   const cloud = backend.mode === 'cloud';
-  const lexicon = buildIndex();
+  const lexicon = buildIndex(useLexicon());
 
   // "Record this sign" links elsewhere in the app open Record with the sign already chosen.
   const [params] = useSearchParams();

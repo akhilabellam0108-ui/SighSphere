@@ -23,6 +23,13 @@ function columnsOf(table: string): Set<string> {
   return cols;
 }
 const functions = new Set([...sql.matchAll(/create or replace function public\.([a-z_]+)\(/g)].map((m) => m[1]));
+/** Parameter names of each function, so the app cannot call one with a misspelt argument. */
+const functionParams = new Map(
+  [...sql.matchAll(/create or replace function public\.([a-z_]+)\(([^)]*)\)/g)].map((m) => [
+    m[1] as string,
+    new Set((m[2] as string).split(',').map((p) => p.trim().split(/\s+/)[0] as string).filter(Boolean)),
+  ]),
+);
 
 interface Seen { table: string; kind: 'rest' | 'rpc' | 'storage'; keys: string[]; params: string[] }
 const seen: Seen[] = [];
@@ -64,6 +71,21 @@ describe('app ↔ database contract', () => {
     await b.adminResolveFeedback('f', 'resolved', 'ok');
     await b.adminReview('x', 'verified', 'checked');
     await b.adminPublishSignPack(new Blob(['{}']));
+    await b.myStatus();
+    await b.announcements();
+    await b.vocabulary();
+    await b.adminListAdmins();
+    await b.adminAddAdmin('a@example.com');
+    await b.adminRemoveAdmin('u');
+    await b.adminListUsers('a');
+    await b.adminSetBlocked('u', true, 'spam');
+    await b.adminListAnnouncements();
+    await b.adminPostAnnouncement('t', 'b');
+    await b.adminSetAnnouncement('i', false);
+    await b.adminDeleteAnnouncement('i');
+    await b.adminSaveWord({ gloss: 'PAIN', english: ['pain'], pos: 'noun', category: null, notes: null, twoHanded: false, reviewed: false, reviewedBy: null, hidden: false });
+    await b.adminDeleteWord('PAIN');
+    await b.adminStats(30);
 
     const tables = new Set(['accounts', 'history', 'signs', 'feedback', 'admins']);
     for (const s of seen) {
@@ -73,6 +95,7 @@ describe('app ↔ database contract', () => {
       }
       if (s.kind === 'rpc') {
         expect(functions.has(s.table), `function ${s.table}`).toBe(true);
+        for (const k of s.keys) expect(functionParams.get(s.table)?.has(k), `${s.table}(${k})`).toBe(true);
         continue;
       }
       expect(tables.has(s.table), `table ${s.table}`).toBe(true);

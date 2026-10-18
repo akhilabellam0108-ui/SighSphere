@@ -71,6 +71,64 @@ export interface AdminOverview {
   openFeedback: number;
 }
 
+export interface TeamMember {
+  userId: string;
+  email: string;
+  since: string;
+}
+
+/** A login as the admin sees it: no account details, history or recordings. */
+export interface UserSummary {
+  userId: string;
+  email: string;
+  joined: string | null;
+  lastSignIn: string | null;
+  accounts: number;
+  admin: boolean;
+  blocked: boolean;
+  blockedReason: string | null;
+}
+
+export interface Announcement {
+  id: string;
+  title: string;
+  body: string;
+  active?: boolean;
+  createdAt: string;
+}
+
+/** A word added or corrected by the team; merged over the built-in vocabulary. */
+export interface VocabWord {
+  gloss: string;
+  english: string[];
+  pos: 'noun' | 'verb' | 'adj' | 'adv' | 'pron' | 'num' | 'wh' | 'neg' | 'time' | 'quant' | 'other';
+  category: string | null;
+  notes: string | null;
+  twoHanded: boolean;
+  reviewed: boolean;
+  reviewedBy: string | null;
+  /** Hides a built-in word with the same gloss. */
+  hidden: boolean;
+  updatedAt?: string;
+}
+
+/** Counts only — never anyone's text or recordings. */
+export interface AdminStats {
+  days: number;
+  daily: Array<{ day: string; translations: number; signups: number; reports: number }>;
+  byKind: Record<string, number>;
+  topRecorded: Array<{ gloss: string; count: number }>;
+  missingRequested: Array<{ gloss: string; count: number }>;
+  reportsByKind: Record<string, number>;
+  blocked: number;
+  admins: number;
+}
+
+export interface MyStatus {
+  blocked: boolean;
+  reason: string | null;
+}
+
 export type RealtimeTable = 'history' | 'signs';
 
 export type HistoryKind = 'text-to-sign' | 'voice-to-sign' | 'sign-to-text' | 'sign-to-voice';
@@ -132,6 +190,77 @@ export interface Backend {
   adminListFeedback(status: 'open' | 'resolved'): Promise<Feedback[]>;
   adminResolveFeedback(id: string, status: 'open' | 'resolved', note: string): Promise<void>;
   adminPublishSignPack(file: Blob): Promise<string>;
+
+  // Everyone.
+  /** Whether this login has been suspended by the team. */
+  myStatus(): Promise<MyStatus>;
+  announcements(): Promise<Announcement[]>;
+  /** Words added or corrected by the team (merged over the built-in vocabulary). */
+  vocabulary(): Promise<VocabWord[]>;
+
+  // SignSphere team: admin tools.
+  adminListAdmins(): Promise<TeamMember[]>;
+  adminAddAdmin(email: string): Promise<TeamMember[]>;
+  adminRemoveAdmin(userId: string): Promise<TeamMember[]>;
+  adminListUsers(search: string): Promise<UserSummary[]>;
+  adminSetBlocked(userId: string, blocked: boolean, reason: string): Promise<void>;
+  adminListAnnouncements(): Promise<Announcement[]>;
+  adminPostAnnouncement(title: string, body: string): Promise<Announcement[]>;
+  adminSetAnnouncement(id: string, active: boolean): Promise<Announcement[]>;
+  adminDeleteAnnouncement(id: string): Promise<Announcement[]>;
+  adminSaveWord(word: VocabWord): Promise<VocabWord[]>;
+  adminDeleteWord(gloss: string): Promise<VocabWord[]>;
+  adminStats(days: number): Promise<AdminStats>;
+}
+
+/** Admin tools are database functions; both servers call them by name with the same arguments. */
+interface ToolCalls {
+  rpc<T>(name: string, args?: Record<string, unknown>): Promise<T>;
+}
+
+function adminTools(t: ToolCalls): Pick<
+  Backend,
+  | 'myStatus' | 'announcements' | 'vocabulary' | 'adminListAdmins' | 'adminAddAdmin' | 'adminRemoveAdmin' | 'adminListUsers'
+  | 'adminSetBlocked' | 'adminListAnnouncements' | 'adminPostAnnouncement' | 'adminSetAnnouncement' | 'adminDeleteAnnouncement'
+  | 'adminSaveWord' | 'adminDeleteWord' | 'adminStats'
+> {
+  return {
+    async myStatus() {
+      try {
+        return (await t.rpc<MyStatus | null>('my_status')) ?? { blocked: false, reason: null };
+      } catch {
+        return { blocked: false, reason: null };
+      }
+    },
+    async announcements() {
+      try {
+        return (await t.rpc<Announcement[] | null>('active_announcements')) ?? [];
+      } catch {
+        return [];
+      }
+    },
+    async vocabulary() {
+      return (await t.rpc<VocabWord[] | null>('vocabulary_entries')) ?? [];
+    },
+    adminListAdmins: () => t.rpc('admin_list_admins'),
+    adminAddAdmin: (email) => t.rpc('admin_add_admin', { target_email: email }),
+    adminRemoveAdmin: (userId) => t.rpc('admin_remove_admin', { target: userId }),
+    adminListUsers: (search) => t.rpc('admin_list_users', { search }),
+    async adminSetBlocked(userId, blocked, reason) {
+      await t.rpc('admin_set_blocked', { target: userId, blocked, reason: reason || null });
+    },
+    adminListAnnouncements: () => t.rpc('admin_list_announcements'),
+    adminPostAnnouncement: (title, body) => t.rpc('admin_post_announcement', { title, body }),
+    adminSetAnnouncement: (id, active) => t.rpc('admin_set_announcement', { id, active }),
+    adminDeleteAnnouncement: (id) => t.rpc('admin_delete_announcement', { id }),
+    adminSaveWord: (w) =>
+      t.rpc('admin_save_word', {
+        gloss: w.gloss, english: w.english, pos: w.pos, category: w.category, notes: w.notes,
+        two_handed: w.twoHanded, reviewed: w.reviewed, reviewed_by: w.reviewedBy, hidden: w.hidden,
+      }),
+    adminDeleteWord: (gloss) => t.rpc('admin_delete_word', { gloss }),
+    adminStats: (days) => t.rpc('admin_stats', { days }),
+  };
 }
 
 export const SIGN_PACK_FILE = 'isl-include.json';
@@ -162,6 +291,15 @@ export function friendlyError(error: unknown): string {
   if (/rate limit/i.test(message)) return 'Too many attempts. Please wait a minute and try again.';
   if (/failed to fetch|network/i.test(message)) return 'No connection to the server. Check your internet and try again.';
   if (/too many accounts/i.test(message)) return 'You have reached the limit of 10 accounts for one login.';
+  if (/no login with that email/i.test(message)) return 'There is no login with that email. Ask them to sign up in SignSphere first, then add them.';
+  if (/cannot remove the last admin/i.test(message)) return 'You are the only admin. Add someone else to the team before removing yourself.';
+  if (/remove them from the team/i.test(message)) return 'This person is on the team. Remove them as an admin before blocking them.';
+  if (/cannot block yourself/i.test(message)) return 'You cannot block yourself.';
+  if (/vocabulary_check/i.test(message)) return 'To mark a word as reviewed, write the name of the fluent signer who checked it.';
+  if (/vocabulary_gloss_check/i.test(message)) return 'The sign name must be capital letters or numbers, for example PAIN or THANK-YOU.';
+  if (/vocabulary_english_check/i.test(message)) return 'Add at least one English word for this sign.';
+  if (/admins only|^not allowed\.?$/i.test(message)) return 'Only the SignSphere team can do that.';
+  if (/row-level security/i.test(message)) return 'Your login is not allowed to make this change.';
   return message || 'Something went wrong. Please try again.';
 }
 
@@ -432,6 +570,11 @@ export function cloudBackend(client: SupabaseClient, projectUrl = ''): Backend {
       if (error) throw new Error(friendlyError(error));
       return this.signPackUrl() ?? '';
     },
+    ...adminTools({
+      async rpc<T>(name: string, args?: Record<string, unknown>) {
+        return check(await client.rpc(name, args ?? {})) as T;
+      },
+    }),
   };
 }
 
@@ -581,6 +724,13 @@ export function deviceBackend(): Backend {
     async adminPublishSignPack() {
       throw new NeedsServerError();
     },
+    ...adminTools({
+      async rpc<T>(name: string) {
+        if (name === 'my_status') return { blocked: false, reason: null } as T;
+        if (name === 'active_announcements' || name === 'vocabulary_entries') return [] as T;
+        throw new NeedsServerError();
+      },
+    }),
   };
 }
 
@@ -753,6 +903,9 @@ export function serverBackend(apiUrl: string): Backend {
       await call('PUT', '/sign-pack', undefined, file);
       return `${api}/sign-pack`;
     },
+    ...adminTools({
+      rpc: <T,>(name: string, args?: Record<string, unknown>) => call<T>('POST', `/rpc/${name}`, args ?? {}),
+    }),
   };
 }
 

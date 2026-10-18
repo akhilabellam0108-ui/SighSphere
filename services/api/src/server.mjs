@@ -42,6 +42,8 @@ function explain(error) {
   const msg = String(error?.message ?? error);
   if (/too many accounts/.test(msg)) return new HttpError(400, 'too many accounts for one login (max 10)');
   if (/sign limit/.test(msg)) return new HttpError(400, msg);
+  const plain = /(no login with that email[^"]*|cannot remove the last admin|you cannot block yourself|remove them from the team before blocking them)/.exec(msg);
+  if (plain) return new HttpError(400, plain[1]);
   if (/row-level security|permission denied|admins only/.test(msg)) return new HttpError(403, 'Not allowed.');
   if (/violates check constraint|invalid input|out of range|violates foreign key|value too long/.test(msg)) return new HttpError(400, 'Some of the details are not valid.');
   if (/duplicate key/.test(msg)) return new HttpError(409, 'That already exists.');
@@ -279,6 +281,37 @@ export async function startServer({
       q(`update public.feedback set status = $2, admin_note = $3 where id = $1`, [params.id, body.status === 'resolved' ? 'resolved' : 'open', body.note || null]));
     return { ok: true };
   });
+
+  // ───────────────────────────────────────── admin tools + public lists (0003_admin_tools.sql)
+  // Each is a database function that checks permissions itself; the server only passes
+  // arguments through, as the signed-in user.
+  const RPC = {
+    my_status: [],
+    active_announcements: { args: [], open: true },
+    vocabulary_entries: { args: [], open: true },
+    admin_list_admins: [],
+    admin_add_admin: ['target_email:text'],
+    admin_remove_admin: ['target:uuid'],
+    admin_list_users: ['search:text'],
+    admin_set_blocked: ['target:uuid', 'blocked:boolean', 'reason:text'],
+    admin_list_announcements: [],
+    admin_post_announcement: ['title:text', 'body:text'],
+    admin_set_announcement: ['id:uuid', 'active:boolean'],
+    admin_delete_announcement: ['id:uuid'],
+    admin_save_word: ['gloss:text', 'english:text[]', 'pos:text', 'category:text', 'notes:text', 'two_handed:boolean', 'reviewed:boolean', 'reviewed_by:text', 'hidden:boolean'],
+    admin_delete_word: ['gloss:text'],
+    admin_stats: ['days:int'],
+  };
+  for (const [name, spec] of Object.entries(RPC)) {
+    const { args, open } = Array.isArray(spec) ? { args: spec, open: false } : spec;
+    const sql = `select public.${name}(${args.map((a, i) => `${a.split(':')[0]} => $${i + 1}::${a.split(':')[1]}`).join(', ')}) as r`;
+    route('POST', `/api/rpc/${name}`, async ({ user, body }) => {
+      const values = args.map((a) => body?.[a.split(':')[0]] ?? null);
+      const run = (q) => q(sql, values);
+      const rows = user ? await db.asUser(user.id, run) : await db.asSystem(run);
+      return rows[0]?.r ?? null;
+    }, { auth: !open });
+  }
 
   // ─────────────────────────────────────────────────────────── sign pack
   const packFile = packDir ? join(packDir, 'isl-include.json') : null;

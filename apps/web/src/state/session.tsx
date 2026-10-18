@@ -4,9 +4,10 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { cleanDetails, displayNameFor, type AccountType } from '../lib/accountTypes.js';
-import { getBackend, type Account, type Backend, type User } from '../lib/backend.js';
+import { getBackend, type Account, type Backend, type MyStatus, type User } from '../lib/backend.js';
 import { flush, forgetDevice, refresh as refreshHistory } from '../lib/historyStore.js';
 import { flushSigns, forgetSignSync, pullSigns } from '../lib/signSync.js';
+import { refreshVocabulary } from '../lib/vocabulary.js';
 
 const ACTIVE_KEY = 'signsphere.active-account.v1';
 /** Account type chosen on the login screen, so we land on the right account afterwards. */
@@ -20,6 +21,11 @@ interface SessionValue {
   active: Account | null;
   /** SignSphere team member (sees the admin panel). */
   isAdmin: boolean;
+  /** Set when the team has suspended this login. */
+  status: MyStatus;
+  /** Admins: hospitals waiting for review + open reports. */
+  adminAlerts: number;
+  refreshAlerts(): void;
   switchAccount(id: string): void;
   createAccount(type: AccountType, values: Record<string, string>): Promise<Account>;
   updateAccount(account: Account, values: Record<string, string>): Promise<Account>;
@@ -46,6 +52,15 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [status, setStatus] = useState<MyStatus>({ blocked: false, reason: null });
+  const [adminAlerts, setAdminAlerts] = useState(0);
+
+  const refreshAlerts = useCallback(() => {
+    backend.adminOverview().then(
+      (o) => setAdminAlerts(o.pendingReviews + o.openFeedback),
+      () => setAdminAlerts(0),
+    );
+  }, [backend]);
 
   const reloadAccounts = useCallback(async () => {
     const list = await backend.listAccounts();
@@ -60,6 +75,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         setAccounts([]);
         setActiveId(null);
         setIsAdmin(false);
+        setStatus({ blocked: false, reason: null });
+        setAdminAlerts(0);
         setLoading(false);
         return;
       }
@@ -71,7 +88,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         const pick =
           list.find((a) => a.id === remembered) ?? list.find((a) => a.type === preferred) ?? list[0] ?? null;
         setActiveId(pick?.id ?? null);
-        void backend.isAdmin().then(setIsAdmin);
+        void backend.isAdmin().then((admin) => {
+          setIsAdmin(admin);
+          if (admin) refreshAlerts();
+        });
+        void backend.myStatus().then(setStatus);
         // Recordings made on this login's other devices.
         void pullSigns();
       } catch {
@@ -80,8 +101,20 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         setLoading(false);
       }
     },
-    [backend],
+    [backend, refreshAlerts],
   );
+
+  useEffect(() => {
+    // Words the team added or corrected (cached for offline use).
+    void refreshVocabulary(backend);
+  }, [backend]);
+
+  // Admins: keep the alert count fresh while the app is open.
+  useEffect(() => {
+    if (!isAdmin) return;
+    const timer = window.setInterval(refreshAlerts, 120_000);
+    return () => window.clearInterval(timer);
+  }, [isAdmin, refreshAlerts]);
 
   useEffect(() => {
     void backend.getUser().then(adopt);
@@ -163,8 +196,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, [backend, user, activeId]);
 
   const value = useMemo<SessionValue>(
-    () => ({ backend, loading, user, accounts, active, isAdmin, switchAccount, createAccount, updateAccount, deleteAccount, signOut, deleteLogin, reloadAccounts }),
-    [backend, loading, user, accounts, active, isAdmin, switchAccount, createAccount, updateAccount, deleteAccount, signOut, deleteLogin, reloadAccounts],
+    () => ({ backend, loading, user, accounts, active, isAdmin, status, adminAlerts, refreshAlerts, switchAccount, createAccount, updateAccount, deleteAccount, signOut, deleteLogin, reloadAccounts }),
+    [backend, loading, user, accounts, active, isAdmin, status, adminAlerts, refreshAlerts, switchAccount, createAccount, updateAccount, deleteAccount, signOut, deleteLogin, reloadAccounts],
   );
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }

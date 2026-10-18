@@ -9,6 +9,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { buildIndex, validateLexicon } from '@signsphere/gloss';
+import { useLexicon } from '../lib/vocabulary.js';
 import { FEATURE_VERSION, FRAME_DIM, WINDOW_FRAMES } from '../lib/features.js';
 import { deleteAllLocalData } from '../lib/storage.js';
 import { isSpeechRecognitionSupported, isSpeechSynthesisSupported, speak } from '../lib/speech.js';
@@ -28,7 +29,7 @@ const LANGS = [
 export default function SettingsPage() {
   const { settings, update, resetAll } = useSettings();
   const [message, setMessage] = useState<string | null>(null);
-  const lexicon = buildIndex();
+  const lexicon = buildIndex(useLexicon());
   const problems = validateLexicon();
 
   return (

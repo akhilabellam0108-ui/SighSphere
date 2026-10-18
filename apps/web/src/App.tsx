@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Navigate, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { ACCOUNT_TYPES, typeLabel } from './lib/accountTypes.js';
+import type { Announcement } from './lib/backend.js';
 import { ensureBundledPack } from './lib/packInstaller.js';
 import { useSession } from './state/session.js';
 import { asset } from './lib/base.js';
@@ -142,11 +143,68 @@ function BundledPack() {
   );
 }
 
+/** Shown when the SignSphere team has suspended this login. */
+function SuspendedNotice() {
+  const { status } = useSession();
+  if (!status.blocked) return null;
+  return (
+    <p className="notice error" role="alert">
+      <strong>Your login has been suspended by the SignSphere team.</strong>
+      {status.reason ? ` Reason: ${status.reason}.` : ''} You can still view and delete your data, and Emergency still works. To ask
+      about it, use <Link to="/feedback">Report a problem</Link> from another login or contact the team.
+    </p>
+  );
+}
+
+const DISMISSED_KEY = 'signsphere.announcements-dismissed.v1';
+
+/** Messages from the SignSphere team (Admin → Announcements). Each can be dismissed. */
+function Announcements() {
+  const { backend } = useSession();
+  const [items, setItems] = useState<Announcement[]>([]);
+  const [dismissed, setDismissed] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(DISMISSED_KEY) ?? '[]') as string[];
+    } catch {
+      return [];
+    }
+  });
+  useEffect(() => {
+    void backend.announcements().then(setItems);
+  }, [backend]);
+  const shown = items.filter((a) => !dismissed.includes(a.id));
+  if (!shown.length) return null;
+  const dismiss = (id: string) => {
+    const next = [...dismissed, id].slice(-50);
+    setDismissed(next);
+    try {
+      localStorage.setItem(DISMISSED_KEY, JSON.stringify(next));
+    } catch {
+      /* ignore */
+    }
+  };
+  return (
+    <>
+      {shown.map((a) => (
+        <div key={a.id} className="notice announcement" role="status">
+          <div>
+            <strong>📢 {a.title}</strong>
+            {a.body && <p style={{ margin: '0.25rem 0 0' }}>{a.body}</p>}
+          </div>
+          <button type="button" className="small" onClick={() => dismiss(a.id)} aria-label={`Dismiss: ${a.title}`}>
+            ✕
+          </button>
+        </div>
+      ))}
+    </>
+  );
+}
+
 /** Always visible in the phone's bottom bar; everything else is under "More". */
 const PRIMARY = new Set(['/', '/text-to-sign', '/sign-to-text', '/record']);
 
 function Shell() {
-  const { isAdmin } = useSession();
+  const { isAdmin, adminAlerts } = useSession();
   const nav = isAdmin ? [...NAV, { to: '/admin', label: 'Admin', icon: '🛡' } as const] : NAV;
   const [moreOpen, setMoreOpen] = useState(false);
   const location = useLocation();
@@ -170,6 +228,11 @@ function Shell() {
               {item.icon}
             </span>
             <span>{item.label}</span>
+            {item.to === '/admin' && adminAlerts > 0 && (
+              <span className="nav-badge" aria-label={`${adminAlerts} waiting`}>
+                {adminAlerts > 99 ? '99+' : adminAlerts}
+              </span>
+            )}
           </NavLink>
         ))}
         <button type="button" className="nav-more" aria-expanded={moreOpen} onClick={() => setMoreOpen((open) => !open)}>
@@ -177,10 +240,17 @@ function Shell() {
             {moreOpen ? '✕' : '☰'}
           </span>
           <span>{moreOpen ? 'Close' : 'More'}</span>
+          {!moreOpen && adminAlerts > 0 && (
+            <span className="nav-badge" aria-label={`${adminAlerts} waiting in Admin`}>
+              {adminAlerts > 99 ? '99+' : adminAlerts}
+            </span>
+          )}
         </button>
       </nav>
 
       <main id="main" tabIndex={-1}>
+        <SuspendedNotice />
+        <Announcements />
         <BundledPack />
         <Suspense fallback={<p className="muted">Loading…</p>}>
           <Outlet />
