@@ -189,6 +189,84 @@ const pub = (await q(`select tablename from pg_publication_tables where pubname 
 assert.deepEqual(pub, ['history', 'signs']);
 ok('sign-pack bucket is public-read/admin-write; history and signs stream live');
 
+// ───────────────────────── part 3: admin tools (team, blocking, announcements, vocabulary, stats)
+const rpc = (user, sql, params) => as(user, () => q(sql, params)).then((rows) => Object.values(rows[0] ?? {})[0]);
+
+// The team
+for (const fn of [
+  `select public.admin_list_admins()`, `select public.admin_add_admin('a@example.com')`, `select public.admin_list_users('')`,
+  `select public.admin_stats(30)`, `select public.admin_list_announcements()`, `select public.admin_post_announcement('x', 'y')`,
+  `select public.admin_save_word('HACK', array['hack'], 'noun')`, `select public.admin_set_blocked('${B}', true, 'x')`,
+]) {
+  await fails(as(A, () => q(fn)), `non-admins refused: ${fn.slice(14, fn.indexOf('('))}`);
+}
+await fails(as(null, () => q(`select public.admin_list_users('')`)), 'signed-out visitors cannot list users');
+let team = await rpc(ADMIN, `select public.admin_add_admin('B@Example.com ')`);
+assert.deepEqual(team.map((t) => t.email).sort(), ['b@example.com', 'staff@example.com']);
+await fails(as(ADMIN, () => q(`select public.admin_add_admin('nobody@example.com')`)), 'adding an unknown email explains they must sign up first');
+team = await rpc(B, `select public.admin_remove_admin('${B}')`);
+assert.deepEqual(team.map((t) => t.email), ['staff@example.com']);
+await fails(as(ADMIN, () => q(`select public.admin_remove_admin('${ADMIN}')`)), 'the last admin cannot be removed');
+ok('admins add and remove team members by email; the last admin stays');
+
+// Blocking
+const users = await rpc(ADMIN, `select public.admin_list_users('example')`);
+assert.equal(users.length, 3);
+assert.ok(users.every((u) => !('details' in u) && !('history' in u)));
+await fails(as(ADMIN, () => q(`select public.admin_set_blocked('${ADMIN}', true, 'x')`)), 'admins cannot block themselves');
+await rpc(ADMIN, `select public.admin_set_blocked('${B}', true, 'Spam reports')`);
+assert.deepEqual(await rpc(B, `select public.my_status()`), { blocked: true, reason: 'Spam reports' });
+assert.deepEqual(await rpc(A, `select public.my_status()`), { blocked: false, reason: null });
+await fails(as(B, () => q(`insert into public.accounts (type, display_name) values ('individual', 'Again')`)), 'blocked login cannot create accounts');
+await fails(as(B, () => q(`insert into public.feedback (kind, message) values ('bug', 'spam spam')`)), 'blocked login cannot send reports');
+assert.equal((await as(B, () => q(`update public.accounts set display_name = 'Changed' where user_id = $1 returning id`, [B]))).length, 0);
+assert.equal((await as(B, () => q(`select id from public.accounts`))).length, 1);
+await fails(as(B, () => q(`select * from public.blocked_users`)), 'nobody reads the block list directly');
+await fails(as(ADMIN, () => q(`select public.admin_add_admin('b@example.com')`)).then(async () => {
+  // Making a blocked login an admin unblocks them; blocking an admin is refused.
+  assert.equal((await rpc(B, `select public.my_status()`)).blocked, false);
+  await fails(as(ADMIN, () => q(`select public.admin_set_blocked('${B}', true, 'x')`)), 'admins cannot be blocked');
+  await rpc(ADMIN, `select public.admin_remove_admin('${B}')`);
+  throw new Error('done');
+}), 'promoting a blocked login unblocks it');
+await rpc(ADMIN, `select public.admin_set_blocked('${B}', true, null)`);
+await rpc(ADMIN, `select public.admin_set_blocked('${B}', false, null)`);
+await as(B, () => q(`update public.accounts set display_name = 'Bee' where user_id = $1`, [B]));
+ok('blocked logins can read and delete their data but not add or change anything; unblocking restores them');
+
+// Announcements
+await rpc(ADMIN, `select public.admin_post_announcement('New signs', '50 new ISL signs added')`);
+const [news] = await rpc(null, `select public.active_announcements()`);
+assert.equal(news.title, 'New signs');
+await rpc(ADMIN, `select public.admin_set_announcement('${news.id}', false)`);
+assert.equal((await rpc(A, `select public.active_announcements()`)).length, 0);
+assert.equal((await rpc(ADMIN, `select public.admin_list_announcements()`)).length, 1);
+await fails(as(A, () => q(`insert into public.announcements (title) values ('fake')`)), 'users cannot write announcements directly');
+await rpc(ADMIN, `select public.admin_delete_announcement('${news.id}')`);
+ok('announcements: admins post, hide and delete; everyone (even signed out) reads the active ones');
+
+// Vocabulary
+let vocab = await rpc(ADMIN, `select public.admin_save_word('pain', array['Pain', 'hurts', ' pain '], 'noun', 'medical', null, false, false, null, false)`);
+assert.deepEqual(vocab.map((w) => [w.gloss, w.english.sort()]), [['PAIN', ['hurts', 'pain']]]);
+await fails(as(ADMIN, () => q(`select public.admin_save_word('PAIN', array['pain'], 'noun', null, null, false, true, '', false)`)), 'a word cannot be marked reviewed without naming the signer');
+await fails(as(ADMIN, () => q(`select public.admin_save_word('PAIN', array['pain'], 'thing')`)), 'unknown part of speech rejected');
+vocab = await rpc(ADMIN, `select public.admin_save_word('PAIN', array['pain'], 'noun', 'medical', null, false, true, 'R. Kumar (ISL interpreter)', false)`);
+assert.equal(vocab[0].reviewedBy, 'R. Kumar (ISL interpreter)');
+assert.equal((await rpc(null, `select public.vocabulary_entries()`)).length, 1);
+await fails(as(A, () => q(`insert into public.vocabulary (gloss, english, pos) values ('X', array['x'], 'noun')`)), 'users cannot edit the vocabulary directly');
+assert.equal((await rpc(ADMIN, `select public.admin_delete_word('pain')`)).length, 0);
+ok('vocabulary: admins add, review (with the signer named) and delete words; everyone reads them');
+
+// Statistics
+await as(A, () => q(`insert into public.feedback (kind, gloss, message) values ('missing-sign', 'water', 'please add water')`));
+const stats = await rpc(ADMIN, `select public.admin_stats(7)`);
+assert.equal(stats.days, 7);
+assert.equal(stats.daily.length, 7);
+assert.ok(stats.missingRequested.some((m) => m.gloss === 'WATER' && m.count === 1));
+assert.ok(!JSON.stringify(stats).includes('please add water'));
+assert.ok(!JSON.stringify(stats).includes(A));
+ok('statistics are counts only: no user ids, no messages, no history text');
+
 // Migrations are safe to re-run.
 for (const file of readdirSync(new URL('../migrations/', import.meta.url)).sort()) {
   await db.exec(readFileSync(new URL(`../migrations/${file}`, import.meta.url), 'utf8'));

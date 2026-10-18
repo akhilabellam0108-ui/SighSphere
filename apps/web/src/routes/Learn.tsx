@@ -10,6 +10,7 @@
 
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { buildIndex, translate, type LexEntry } from '@signsphere/gloss';
+import { useLexicon } from '../lib/vocabulary.js';
 import CameraView from '../components/CameraView.js';
 import SignPlayer from '../components/SignPlayer.js';
 
@@ -84,7 +85,8 @@ function titleCase(value: string): string {
 
 export default function Learn() {
   const { settings, progress, setProgress } = useSettings();
-  const lexicon = useMemo(() => buildIndex(), []);
+  const vocabulary = useLexicon();
+  const lexicon = useMemo(() => buildIndex(vocabulary), [vocabulary]);
   const lessons = useMemo(() => buildLessons(lexicon.lexicon.entries), [lexicon]);
 
   const [lessonId, setLessonId] = useState<string | null>(null);
@@ -185,8 +187,8 @@ export default function Learn() {
   }, [step, grade]);
 
   const referencePlan = useMemo(
-    () => (target ? translate(target.english[0] ?? target.gloss, { speed: settings.playbackSpeed }).plan : []),
-    [target, settings.playbackSpeed],
+    () => (target ? translate(target.english[0] ?? target.gloss, { speed: settings.playbackSpeed, lexicon: vocabulary }).plan : []),
+    [target, settings.playbackSpeed, vocabulary],
   );
 
   // ---------------------------------------------------------------- lesson list

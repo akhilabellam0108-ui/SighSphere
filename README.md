@@ -92,7 +92,8 @@ uses exists in the migrations.
 
 1. Create a free project at [supabase.com](https://supabase.com) (region: Mumbai for India).
 2. **SQL editor** → run `supabase/migrations/0001_signsphere.sql`, then
-   `supabase/migrations/0002_backend.sql`. Both are safe to run again.
+   `supabase/migrations/0002_backend.sql`, then `supabase/migrations/0003_admin_tools.sql`.
+   All are safe to run again.
 3. **Make yourself an admin**: sign up in the app once, then in the SQL editor run
    ```sql
    insert into public.admins (user_id)
@@ -113,6 +114,22 @@ Without these the app runs in clearly labelled **device mode**: accounts, histor
 stay on that device, and the admin panel is unavailable.
 
 ### Using it
+
+**Admin powers** (Admin tab; every rule is enforced by the database, `0003_admin_tools.sql`):
+
+| Tab | What the team can do |
+|---|---|
+| Verification | Check a hospital's / organisation's registration and verify or decline it, with a note |
+| Reports | Answer "wrong sign", "missing sign" and bug reports; the user sees the reply |
+| Users | Find logins by email; block a login that misuses the app (it can still read and delete its own data), unblock it |
+| Team | Add or remove admins by email (they must have signed up); the last admin cannot be removed |
+| Announcements | Post a message shown at the top of everyone's app; hide or delete it |
+| Vocabulary | Add words, correct or hide wrong ones, and record which fluent ISL signer reviewed each one — no new release needed |
+| Analytics | Translations per day, new logins, how people use it, the signs users ask for most. Counts only |
+| Sign pack | Preview a pack (signs, examples, avatar motion, weak signs) and publish it to every device |
+
+The Admin tab shows a red badge with the number of hospitals waiting for review plus open reports.
+The team never sees anyone's history, recordings or individual account details.
 
 - **Verification**: a hospital or organisation presses *Request verification* on the Accounts
   screen; an admin checks the registration details under **Admin → Verification** and verifies

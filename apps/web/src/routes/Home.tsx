@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { buildIndex } from '@signsphere/gloss';
+import { useLexicon } from '../lib/vocabulary.js';
 import { isMastered, sampleCounts } from '../lib/storage.js';
 import { useSession } from '../state/session.js';
 import { useSettings } from '../state/settings.js';
@@ -66,7 +67,7 @@ export default function Home() {
     });
   }, []);
 
-  const lexicon = buildIndex();
+  const lexicon = buildIndex(useLexicon());
   const mastered = Object.keys(progress.signs).filter((gloss) => isMastered(progress, gloss)).length;
 
   return (

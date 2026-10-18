@@ -5,6 +5,7 @@
 
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { translate } from '@signsphere/gloss';
+import { useLexicon } from '../lib/vocabulary.js';
 import SignPlayer from '../components/SignPlayer.js';
 
 import { createRecognizer, isSpeechRecognitionSupported, type Recognizer } from '../lib/speech.js';
@@ -34,10 +35,11 @@ export default function TextToSign({ mode }: TextToSignProps) {
   const [listening, setListening] = useState(false);
   const [speechError, setSpeechError] = useState<string | null>(null);
   const recognizerRef = useRef<Recognizer | null>(null);
+  const vocabulary = useLexicon();
 
   const result = useMemo(
-    () => translate(text, { speed: settings.playbackSpeed }),
-    [text, settings.playbackSpeed],
+    () => translate(text, { speed: settings.playbackSpeed, lexicon: vocabulary }),
+    [text, settings.playbackSpeed, vocabulary],
   );
 
   // Save finished translations to this account's history.

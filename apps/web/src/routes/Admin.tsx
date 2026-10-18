@@ -1,22 +1,23 @@
 import { useCallback, useEffect, useState } from 'react';
 import { FIELDS, typeLabel } from '../lib/accountTypes.js';
 import { friendlyError, type Account, type AdminOverview, type Feedback } from '../lib/backend.js';
-import { validatePack } from '../lib/signPack.js';
+import { Analytics, AnnouncementsAdmin, PackPublisher, Team, Users, VocabularyAdmin } from './AdminTools.js';
 import { useSession } from '../state/session.js';
 import { FEEDBACK_KINDS } from './Feedback.js';
 
-type Tab = 'reviews' | 'reports' | 'pack';
+type Tab = 'reviews' | 'reports' | 'users' | 'team' | 'news' | 'words' | 'stats' | 'pack';
 
 /** SignSphere team only: verify hospitals and organisations, answer reports, publish the sign pack. */
 export default function Admin() {
-  const { backend, isAdmin } = useSession();
+  const { backend, isAdmin, refreshAlerts } = useSession();
   const [tab, setTab] = useState<Tab>('reviews');
   const [overview, setOverview] = useState<AdminOverview | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const loadOverview = useCallback(() => {
     backend.adminOverview().then(setOverview, (e: unknown) => setError(friendlyError(e)));
-  }, [backend]);
+    refreshAlerts();
+  }, [backend, refreshAlerts]);
   useEffect(() => {
     if (isAdmin) loadOverview();
   }, [isAdmin, loadOverview]);
@@ -54,11 +55,16 @@ export default function Admin() {
         </div>
       )}
 
-      <div className="segmented" role="group" aria-label="Section" style={{ margin: '1.25rem 0' }}>
+      <div className="segmented wrap" role="group" aria-label="Section" style={{ margin: '1.25rem 0' }}>
         {(
           [
-            ['reviews', 'Verification'],
-            ['reports', 'Reports'],
+            ['reviews', `Verification${overview?.pendingReviews ? ` (${overview.pendingReviews})` : ''}`],
+            ['reports', `Reports${overview?.openFeedback ? ` (${overview.openFeedback})` : ''}`],
+            ['users', 'Users'],
+            ['team', 'Team'],
+            ['news', 'Announcements'],
+            ['words', 'Vocabulary'],
+            ['stats', 'Analytics'],
             ['pack', 'Sign pack'],
           ] as Array<[Tab, string]>
         ).map(([key, label]) => (
@@ -70,6 +76,11 @@ export default function Admin() {
 
       {tab === 'reviews' && <Reviews onChange={loadOverview} />}
       {tab === 'reports' && <Reports onChange={loadOverview} />}
+      {tab === 'users' && <Users />}
+      {tab === 'team' && <Team />}
+      {tab === 'news' && <AnnouncementsAdmin />}
+      {tab === 'words' && <VocabularyAdmin />}
+      {tab === 'stats' && <Analytics />}
       {tab === 'pack' && <PackPublisher />}
     </>
   );
@@ -248,57 +259,6 @@ function Reports({ onChange }: { onChange(): void }) {
             </li>
           ))}
         </ul>
-      )}
-    </section>
-  );
-}
-
-function PackPublisher() {
-  const { backend } = useSession();
-  const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
-  const [busy, setBusy] = useState(false);
-
-  async function publish(file: File) {
-    setBusy(true);
-    setStatus(null);
-    try {
-      const pack = validatePack(JSON.parse(await file.text()));
-      const url = await backend.adminPublishSignPack(new Blob([await file.text()], { type: 'application/json' }));
-      setStatus({
-        ok: true,
-        text: `Published "${pack.name}" (${Object.keys(pack.signs).length} signs, version ${pack.version}). Every device installs it on its next start. ${url}`,
-      });
-    } catch (e) {
-      setStatus({ ok: false, text: e instanceof SyntaxError ? 'That file is not a SignSphere sign pack.' : friendlyError(e) });
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <section className="card stack" aria-label="Sign pack">
-      <p style={{ margin: 0 }}>
-        Publish the ISL sign pack made on the <strong>ISL dataset</strong> screen (<code>isl-include.json</code>). Every copy of
-        SignSphere downloads it automatically, so new signs reach users without a new release.
-      </p>
-      <label className="btn" style={{ alignSelf: 'start' }}>
-        {busy ? 'Publishing…' : 'Choose sign pack…'}
-        <input
-          type="file"
-          accept="application/json,.json"
-          className="sr-only"
-          disabled={busy}
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) void publish(file);
-            e.target.value = '';
-          }}
-        />
-      </label>
-      {status && (
-        <p className={`notice ${status.ok ? '' : 'error'}`} role={status.ok ? 'status' : 'alert'} style={{ overflowWrap: 'anywhere' }}>
-          {status.text}
-        </p>
       )}
     </section>
   );

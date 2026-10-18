@@ -18,6 +18,7 @@
 
 import { useMemo, useState } from 'react';
 import { translate } from '@signsphere/gloss';
+import { useLexicon } from '../lib/vocabulary.js';
 import { loadContacts, saveContacts, type EmergencyContact } from '../lib/storage.js';
 import { speak } from '../lib/speech.js';
 import { useSettings } from '../state/settings.js';
@@ -53,6 +54,7 @@ const PHRASES: Array<{ english: string; category: string }> = [
 
 export default function Emergency() {
   const { settings } = useSettings();
+  const vocabulary = useLexicon();
   const [contacts, setContacts] = useState<EmergencyContact[]>(() => loadContacts());
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -105,7 +107,7 @@ export default function Emergency() {
     return `sms:${contact.phone}?&body=${encodeURIComponent(body)}`;
   }
 
-  const selectedGloss = selected ? translate(selected).glosses.join(' ') : null;
+  const selectedGloss = selected ? translate(selected, { lexicon: vocabulary }).glosses.join(' ') : null;
 
   return (
     <>

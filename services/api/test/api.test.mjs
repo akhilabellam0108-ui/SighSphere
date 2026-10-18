@@ -124,6 +124,32 @@ try {
   assert.equal((await call(null, 'GET', '/sign-pack')).body.id, 'isl-include');
   ok('sign pack: only admins publish; everyone can download');
 
+  // Admin tools
+  assert.equal((await call(TA, 'POST', '/rpc/admin_list_users', { search: '' })).status, 403);
+  assert.equal((await call(null, 'POST', '/rpc/admin_list_users', { search: '' })).status, 401);
+  const people = (await call(T0, 'POST', '/rpc/admin_list_users', { search: 'example' })).body;
+  assert.deepEqual(people.map((p) => p.email).sort(), ['akhila@example.com', 'bee@example.com']);
+  assert.ok(people.every((p) => p.joined && 'lastSignIn' in p));
+  const added = await call(T0, 'POST', '/rpc/admin_add_admin', { target_email: 'nobody@example.com' });
+  assert.equal(added.status, 400);
+  assert.match(added.body.message, /sign up first/);
+  assert.equal((await call(T0, 'POST', '/rpc/admin_add_admin', { target_email: 'bee@example.com' })).body.length, 2);
+  assert.equal((await call(TB, 'GET', '/admin/me')).body.admin, true);
+  assert.equal((await call(T0, 'POST', '/rpc/admin_remove_admin', { target: b.body.user.id })).body.length, 1);
+  await call(T0, 'POST', '/rpc/admin_set_blocked', { target: b.body.user.id, blocked: true, reason: 'Spam' });
+  assert.deepEqual((await call(TB, 'POST', '/rpc/my_status', {})).body, { blocked: true, reason: 'Spam' });
+  assert.equal((await call(TB, 'POST', '/feedback', { kind: 'bug', message: 'spam spam' })).status, 403);
+  await call(T0, 'POST', '/rpc/admin_set_blocked', { target: b.body.user.id, blocked: false, reason: null });
+  assert.equal((await call(TB, 'POST', '/feedback', { kind: 'bug', message: 'real bug' })).status, 200);
+  await call(T0, 'POST', '/rpc/admin_post_announcement', { title: 'Welcome', body: 'New signs this week' });
+  assert.equal((await call(null, 'POST', '/rpc/active_announcements', {})).body[0].title, 'Welcome');
+  await call(T0, 'POST', '/rpc/admin_save_word', { gloss: 'pain', english: ['pain', 'hurt'], pos: 'noun', category: 'medical', reviewed: false, two_handed: false, hidden: false });
+  assert.equal((await call(null, 'POST', '/rpc/vocabulary_entries', {})).body[0].gloss, 'PAIN');
+  const stats = (await call(T0, 'POST', '/rpc/admin_stats', { days: 7 })).body;
+  assert.equal(stats.daily.length, 7);
+  assert.ok(stats.daily.at(-1).signups >= 3);
+  ok('admin tools: team, users, blocking, announcements, vocabulary and statistics over HTTP');
+
   // Delete login
   await call(TA, 'POST', '/auth/delete');
   assert.equal((await call(TA, 'GET', '/auth/me')).status, 401);

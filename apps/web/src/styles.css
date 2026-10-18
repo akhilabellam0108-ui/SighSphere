@@ -1161,3 +1161,54 @@ pre, code { overflow-wrap: anywhere; white-space: pre-wrap; }
 .sos-setup { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45rem; }
 .sos-setup li { display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; flex-wrap: wrap; padding: 0.45rem 0; border-bottom: 1px solid var(--border, #ddd); }
 button.link { background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; font: inherit; min-height: 0; }
+
+/* ───────────────────────── admin tools ───────────────────────── */
+.nav a { position: relative; }
+.nav-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.35em;
+  height: 1.35em;
+  padding: 0 0.35em;
+  margin-left: 0.3em;
+  border-radius: 999px;
+  background: var(--danger);
+  color: var(--surface);
+  font-size: 0.75em;
+  font-weight: 700;
+  line-height: 1;
+}
+.announcement {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.announcement button { flex: none; min-width: var(--tap); }
+.segmented.wrap { flex-wrap: wrap; }
+.segmented.wrap button { flex: 1 1 8rem; }
+.admin-table { width: 100%; border-collapse: collapse; }
+.admin-table th, .admin-table td { text-align: left; padding: 0.5rem 0.4rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+.admin-table th { font-size: 0.85em; color: var(--text-muted); font-weight: 600; }
+.table-scroll { overflow-x: auto; }
+.tag {
+  display: inline-block;
+  padding: 0.05em 0.5em;
+  border-radius: 999px;
+  font-size: 0.8em;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  margin-right: 0.25em;
+}
+.tag.danger { color: var(--danger); border-color: var(--danger); }
+.tag.ok { color: var(--success); border-color: var(--success); }
+.bars { display: flex; align-items: flex-end; gap: 2px; height: 120px; padding-top: 0.5rem; }
+.bars span { flex: 1; min-width: 3px; background: var(--accent); border-radius: 3px 3px 0 0; }
+.bars span.zero { background: var(--border); }
+.hbar { display: grid; grid-template-columns: minmax(6rem, 10rem) 1fr auto; gap: 0.5rem; align-items: center; margin: 0.25rem 0; }
+.hbar > div { height: 0.7rem; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.hbar > div > i { display: block; height: 100%; background: var(--accent); }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0.75rem; }
+.pack-preview { max-height: 20rem; overflow: auto; }
+.nav-more { position: relative; }
+.nav-more .nav-badge { position: absolute; top: 0.15rem; right: 18%; margin: 0; }
