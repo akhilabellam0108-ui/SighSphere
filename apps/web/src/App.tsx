@@ -6,6 +6,8 @@ import { ensureBundledPack } from './lib/packInstaller.js';
 import { useSession } from './state/session.js';
 import { asset } from './lib/base.js';
 import BackButton, { useNativeBackButton } from './components/BackButton.js';
+import ErrorBoundary from './components/ErrorBoundary.js';
+import { useT, type MessageKey } from './lib/i18n.js';
 
 // Screens load on demand so the first screen appears quickly on slow connections.
 const AccountForm = lazy(() => import('./routes/AccountForm.js'));
@@ -20,6 +22,7 @@ const Learn = lazy(() => import('./routes/Learn.js'));
 const Login = lazy(() => import('./routes/Login.js'));
 const NotFound = lazy(() => import('./routes/NotFound.js'));
 const Privacy = lazy(() => import('./routes/Privacy.js'));
+const Terms = lazy(() => import('./routes/Terms.js'));
 const Recorder = lazy(() => import('./routes/Recorder.js'));
 const SettingsPage = lazy(() => import('./routes/Settings.js'));
 const SignToText = lazy(() => import('./routes/SignToText.js'));
@@ -28,18 +31,18 @@ const Welcome = lazy(() => import('./routes/Welcome.js'));
 const Conversation = lazy(() => import('./routes/Conversation.js'));
 
 const NAV = [
-  { to: '/', label: 'Home', icon: '⌂' },
-  { to: '/text-to-sign', label: 'Text → Sign', icon: '⌨' },
-  { to: '/voice-to-sign', label: 'Voice → Sign', icon: '🎤' },
-  { to: '/sign-to-text', label: 'Sign → Text', icon: '👁' },
-  { to: '/sign-to-voice', label: 'Sign → Voice', icon: '🔊' },
-  { to: '/conversation', label: 'Conversation', icon: '💬' },
-  { to: '/record', label: 'Record', icon: '⏺' },
-  { to: '/learn', label: 'Learn', icon: '★' },
-  { to: '/history', label: 'History', icon: '🕘' },
-  { to: '/emergency', label: 'Emergency', icon: '✚' },
-  { to: '/settings', label: 'Settings', icon: '⚙' },
-] as const;
+  { to: '/', label: 'nav.home', icon: '⌂' },
+  { to: '/text-to-sign', label: 'nav.textToSign', icon: '⌨' },
+  { to: '/voice-to-sign', label: 'nav.voiceToSign', icon: '🎤' },
+  { to: '/sign-to-text', label: 'nav.signToText', icon: '👁' },
+  { to: '/sign-to-voice', label: 'nav.signToVoice', icon: '🔊' },
+  { to: '/conversation', label: 'nav.conversation', icon: '💬' },
+  { to: '/record', label: 'nav.record', icon: '⏺' },
+  { to: '/learn', label: 'nav.learn', icon: '★' },
+  { to: '/history', label: 'nav.history', icon: '🕘' },
+  { to: '/emergency', label: 'nav.emergency', icon: '✚' },
+  { to: '/settings', label: 'nav.settings', icon: '⚙' },
+] as const satisfies ReadonlyArray<{ to: string; label: MessageKey; icon: string }>;
 
 /** Top-bar account switcher: current account, others, add, manage, sign out. */
 function AccountMenu() {
@@ -207,7 +210,8 @@ const PRIMARY = new Set(['/', '/text-to-sign', '/sign-to-text', '/record']);
 
 function Shell() {
   const { isAdmin, adminAlerts } = useSession();
-  const nav = isAdmin ? [...NAV, { to: '/admin', label: 'Admin', icon: '🛡' } as const] : NAV;
+  const { t } = useT();
+  const nav: ReadonlyArray<{ to: string; label: MessageKey; icon: string }> = isAdmin ? [...NAV, { to: '/admin', label: 'nav.admin', icon: '🛡' }] : NAV;
   const [moreOpen, setMoreOpen] = useState(false);
   const location = useLocation();
   useEffect(() => setMoreOpen(false), [location.pathname]);
@@ -229,7 +233,7 @@ function Shell() {
             <span className="nav-icon" aria-hidden="true">
               {item.icon}
             </span>
-            <span>{item.label}</span>
+            <span>{t(item.label)}</span>
             {item.to === '/admin' && adminAlerts > 0 && (
               <span className="nav-badge" aria-label={`${adminAlerts} waiting`}>
                 {adminAlerts > 99 ? '99+' : adminAlerts}
@@ -241,7 +245,7 @@ function Shell() {
           <span className="nav-icon" aria-hidden="true">
             {moreOpen ? '✕' : '☰'}
           </span>
-          <span>{moreOpen ? 'Close' : 'More'}</span>
+          <span>{moreOpen ? t('nav.close') : t('nav.more')}</span>
           {!moreOpen && adminAlerts > 0 && (
             <span className="nav-badge" aria-label={`${adminAlerts} waiting in Admin`}>
               {adminAlerts > 99 ? '99+' : adminAlerts}
@@ -254,9 +258,11 @@ function Shell() {
         <SuspendedNotice />
         <Announcements />
         <BundledPack />
-        <Suspense fallback={<p className="muted">Loading…</p>}>
-          <Outlet />
-        </Suspense>
+        <ErrorBoundary resetKey={location.pathname}>
+          <Suspense fallback={<p className="muted">Loading…</p>}>
+            <Outlet />
+          </Suspense>
+        </ErrorBoundary>
       </main>
 
       {/*
@@ -265,10 +271,8 @@ function Shell() {
         to saying it here.
       */}
       <footer className="disclaimer">
-        SignSphere is a learning and communication aid, not a replacement for a qualified ISL
-        interpreter. Do not rely on it for medical, legal, or emergency interpretation. Sign
-        recognition covers a limited vocabulary and makes mistakes. <Link to="/privacy">Privacy</Link> ·{' '}
-        <Link to="/feedback">Report a problem</Link>
+        {t('footer.disclaimer')} <Link to="/privacy">{t('footer.privacy')}</Link> · <Link to="/terms">{t('footer.terms')}</Link> ·{' '}
+        <Link to="/feedback">{t('footer.report')}</Link>
       </footer>
     </div>
   );
@@ -289,6 +293,7 @@ export default function App() {
         {/* No login needed: nobody should have to sign in during an emergency. */}
         <Route path="/emergency" element={<Emergency />} />
         <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
 
         <Route element={<RequireLogin />}>
           <Route path="/accounts/new" element={<AccountForm />} />

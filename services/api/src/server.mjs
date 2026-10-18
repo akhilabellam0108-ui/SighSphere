@@ -301,6 +301,11 @@ export async function startServer({
     admin_save_word: ['gloss:text', 'english:text[]', 'pos:text', 'category:text', 'notes:text', 'two_handed:boolean', 'reviewed:boolean', 'reviewed_by:text', 'hidden:boolean'],
     admin_delete_word: ['gloss:text'],
     admin_stats: ['days:int'],
+    report_error: { args: ['message:text', 'stack:text', 'page:text', 'app_version:text', 'platform:text'], open: true },
+    admin_list_errors: ['include_resolved:boolean'],
+    admin_resolve_error: ['id:bigint', 'resolved:boolean'],
+    admin_delete_resolved_errors: [],
+    admin_open_errors: [],
   };
   for (const [name, spec] of Object.entries(RPC)) {
     const { args, open } = Array.isArray(spec) ? { args: spec, open: false } : spec;

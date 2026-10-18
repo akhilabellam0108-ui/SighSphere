@@ -1,21 +1,23 @@
 import { useCallback, useEffect, useState } from 'react';
 import { FIELDS, typeLabel } from '../lib/accountTypes.js';
 import { friendlyError, type Account, type AdminOverview, type Feedback } from '../lib/backend.js';
-import { Analytics, AnnouncementsAdmin, PackPublisher, Team, Users, VocabularyAdmin } from './AdminTools.js';
+import { Analytics, AnnouncementsAdmin, Errors, PackPublisher, Team, Users, VocabularyAdmin } from './AdminTools.js';
 import { useSession } from '../state/session.js';
 import { FEEDBACK_KINDS } from './Feedback.js';
 
-type Tab = 'reviews' | 'reports' | 'users' | 'team' | 'news' | 'words' | 'stats' | 'pack';
+type Tab = 'reviews' | 'reports' | 'errors' | 'users' | 'team' | 'news' | 'words' | 'stats' | 'pack';
 
 /** SignSphere team only: verify hospitals and organisations, answer reports, publish the sign pack. */
 export default function Admin() {
   const { backend, isAdmin, refreshAlerts } = useSession();
   const [tab, setTab] = useState<Tab>('reviews');
   const [overview, setOverview] = useState<AdminOverview | null>(null);
+  const [openErrors, setOpenErrors] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   const loadOverview = useCallback(() => {
     backend.adminOverview().then(setOverview, (e: unknown) => setError(friendlyError(e)));
+    backend.adminOpenErrors().then(setOpenErrors, () => setOpenErrors(0));
     refreshAlerts();
   }, [backend, refreshAlerts]);
   useEffect(() => {
@@ -60,6 +62,7 @@ export default function Admin() {
           [
             ['reviews', `Verification${overview?.pendingReviews ? ` (${overview.pendingReviews})` : ''}`],
             ['reports', `Reports${overview?.openFeedback ? ` (${overview.openFeedback})` : ''}`],
+            ['errors', `Errors${openErrors ? ` (${openErrors})` : ''}`],
             ['users', 'Users'],
             ['team', 'Team'],
             ['news', 'Announcements'],
@@ -76,6 +79,7 @@ export default function Admin() {
 
       {tab === 'reviews' && <Reviews onChange={loadOverview} />}
       {tab === 'reports' && <Reports onChange={loadOverview} />}
+      {tab === 'errors' && <Errors onChange={loadOverview} />}
       {tab === 'users' && <Users />}
       {tab === 'team' && <Team />}
       {tab === 'news' && <AnnouncementsAdmin />}

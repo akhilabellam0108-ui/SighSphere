@@ -267,6 +267,31 @@ assert.ok(!JSON.stringify(stats).includes('please add water'));
 assert.ok(!JSON.stringify(stats).includes(A));
 ok('statistics are counts only: no user ids, no messages, no history text');
 
+// ───────────────────────── part 4: error reports
+await as(null, () => q(`select public.report_error('TypeError: x is undefined', 'TypeError\n    at Avatar (app.js?v=1:10:5)', '/text-to-sign', 'abc123', 'web')`));
+await as(A, () => q(`select public.report_error('TypeError: x is undefined', 'TypeError\n    at Avatar (app.js?v=2:10:5)', '/learn', 'abc124', 'android-app')`));
+await as(A, () => q(`select public.report_error('Other problem', null, '/', 'abc124', 'web')`));
+let errors = await rpc(ADMIN, `select public.admin_list_errors(false)`);
+assert.equal(errors.length, 2);
+const grouped = errors.find((e) => e.message.startsWith('TypeError'));
+assert.equal(grouped.count, 2);
+assert.equal(grouped.page, '/learn');
+assert.ok(!JSON.stringify(errors).includes(A));
+ok('errors from signed-out and signed-in people are grouped by cause, with no login id');
+await fails(as(A, () => q(`select public.admin_list_errors(false)`)), 'only admins read error reports');
+await fails(as(A, () => q(`select * from public.error_reports`)), 'nobody reads error reports directly');
+await rpc(ADMIN, `select public.admin_resolve_error(${grouped.id}, true)`);
+assert.equal(await rpc(ADMIN, `select public.admin_open_errors()`), 1);
+await as(B, () => q(`select public.report_error('TypeError: x is undefined', 'TypeError\n    at Avatar (app.js:10:5)', '/x', 'v', 'web')`));
+assert.equal(await rpc(ADMIN, `select public.admin_open_errors()`), 2);
+await rpc(ADMIN, `select public.admin_resolve_error(${grouped.id}, true)`);
+await rpc(ADMIN, `select public.admin_delete_resolved_errors()`);
+errors = await rpc(ADMIN, `select public.admin_list_errors(true)`);
+assert.equal(errors.length, 1);
+await as(null, () => q(`select public.report_error(repeat('x', 900))`));
+assert.ok((await rpc(ADMIN, `select public.admin_list_errors(false)`)).every((e) => e.message.length <= 500));
+ok('a resolved error reopens if it happens again; admins resolve and clear; long messages are trimmed');
+
 // Migrations are safe to re-run.
 for (const file of readdirSync(new URL('../migrations/', import.meta.url)).sort()) {
   await db.exec(readFileSync(new URL(`../migrations/${file}`, import.meta.url), 'utf8'));

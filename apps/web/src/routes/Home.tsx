@@ -2,73 +2,35 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { buildIndex } from '@signsphere/gloss';
 import { useLexicon } from '../lib/vocabulary.js';
-import { isMastered, sampleCounts } from '../lib/storage.js';
+import { useT, type MessageKey } from '../lib/i18n.js';
+import { isMastered, sampleSummary } from '../lib/storage.js';
 import { useSession } from '../state/session.js';
 import { useSettings } from '../state/settings.js';
 
 const FEATURES = [
-  {
-    to: '/text-to-sign',
-    title: 'Text → Sign',
-    body: 'Type English and see it in ISL gloss order, with fingerspelling for unknown words.',
-  },
-  {
-    to: '/voice-to-sign',
-    title: 'Voice → Sign',
-    body: 'Speak, and see the same translation. Falls back to typing if speech is unavailable.',
-  },
-  {
-    to: '/sign-to-text',
-    title: 'Sign → Text',
-    body: 'Sign to your camera and see the recognised sign. Limited vocabulary.',
-  },
-  {
-    to: '/sign-to-voice',
-    title: 'Sign → Voice',
-    body: 'The same recognition, spoken aloud for a hearing person.',
-  },
-  {
-    to: '/conversation',
-    title: '💬 Live Conversation',
-    body: 'A deaf and a hearing person take turns on one phone: signs become speech, speech becomes ISL.',
-  },
-  {
-    to: '/record',
-    title: '⏺ Record a sign',
-    body: 'Sign it once to the camera: it is recognised in Sign → Text and the 3D avatar signs it back.',
-  },
-  {
-    to: '/learn',
-    title: 'Learning Hub',
-    body: 'Lessons with camera practice and instant feedback. Streaks and spaced review.',
-  },
-  {
-    to: '/emergency',
-    title: 'Emergency',
-    body: 'Offline phrase cards and contacts. Works with no network, always free.',
-  },
-  {
-    to: '/history',
-    title: 'History',
-    body: 'Everything signed, typed or spoken in this account, searchable.',
-  },
-  {
-    to: '/dataset',
-    title: 'ISL dataset',
-    body: 'Install Indian Sign Language signs so nobody has to record them first.',
-  },
-] as const;
+  { to: '/text-to-sign', title: 'nav.textToSign', body: 'home.card.textToSign' },
+  { to: '/voice-to-sign', title: 'nav.voiceToSign', body: 'home.card.voiceToSign' },
+  { to: '/sign-to-text', title: 'nav.signToText', body: 'home.card.signToText' },
+  { to: '/sign-to-voice', title: 'nav.signToVoice', body: 'home.card.signToVoice' },
+  { to: '/conversation', title: 'home.card.conversationTitle', body: 'home.card.conversation' },
+  { to: '/record', title: 'home.card.recordTitle', body: 'home.card.record' },
+  { to: '/learn', title: 'home.card.learnTitle', body: 'home.card.learn' },
+  { to: '/emergency', title: 'nav.emergency', body: 'home.card.emergency' },
+  { to: '/history', title: 'nav.history', body: 'home.card.history' },
+  { to: '/dataset', title: 'home.card.datasetTitle', body: 'home.card.dataset' },
+] as const satisfies ReadonlyArray<{ to: string; title: MessageKey; body: MessageKey }>;
 
 export default function Home() {
   const { progress } = useSettings();
   const { active } = useSession();
+  const { t } = useT();
   const [recorded, setRecorded] = useState(0);
   const [labels, setLabels] = useState(0);
 
   useEffect(() => {
-    void sampleCounts().then((counts) => {
-      setRecorded(Object.values(counts).reduce((sum, n) => sum + n, 0));
-      setLabels(Object.keys(counts).length);
+    void sampleSummary().then((summary) => {
+      setRecorded(summary.mine);
+      setLabels(summary.signs);
     });
   }, []);
 
@@ -77,11 +39,8 @@ export default function Home() {
 
   return (
     <>
-      <h1>{active ? `Welcome, ${active.type === 'individual' ? active.displayName.split(' ')[0] : active.displayName}` : 'SignSphere'}</h1>
-      <p className="lede">
-        Learn and communicate in Indian Sign Language. Your camera is processed entirely on this
-        device — no video is uploaded, and it works offline once loaded.
-      </p>
+      <h1>{active ? t('home.welcome', { name: active.type === 'individual' ? (active.displayName.split(' ')[0] ?? active.displayName) : active.displayName }) : 'SignSphere'}</h1>
+      <p className="lede">{t('home.lede')}</p>
 
       {labels === 0 && (
         <p className="notice">
@@ -94,21 +53,21 @@ export default function Home() {
       )}
 
       <section className="card grid" aria-label="Your progress" style={{ marginBottom: '1.25rem' }}>
-        <Stat value={progress.xp} label="XP" />
-        <Stat value={progress.dayStreak} label="Day streak" />
-        <Stat value={mastered} label="Signs mastered" />
-        <Stat value={`${labels}`} label="Signs it can recognise" />
-        <Stat value={recorded} label="Clips you recorded" />
-        <Stat value={lexicon.stats.entries} label="Lexicon size" />
+        <Stat value={progress.xp} label={t('home.xp')} />
+        <Stat value={progress.dayStreak} label={t('home.streak')} />
+        <Stat value={mastered} label={t('home.mastered')} />
+        <Stat value={`${labels}`} label={t('home.recognise')} />
+        <Stat value={recorded} label={t('home.recorded')} />
+        <Stat value={lexicon.stats.entries} label={t('home.words')} />
       </section>
 
-      <h2>What you can do</h2>
+      <h2>{t('home.whatYouCanDo')}</h2>
       <div className="grid">
         {FEATURES.map((feature) => (
           <Link key={feature.to} to={feature.to} className="card" style={{ textDecoration: 'none' }}>
-            <h3>{feature.title}</h3>
+            <h3>{t(feature.title)}</h3>
             <p className="small muted" style={{ margin: 0 }}>
-              {feature.body}
+              {t(feature.body)}
             </p>
           </Link>
         ))}

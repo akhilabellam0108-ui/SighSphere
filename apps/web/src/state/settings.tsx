@@ -46,6 +46,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     root.dataset['contrast'] = settings.highContrast ? 'high' : 'normal';
     root.dataset['reduceMotion'] = String(settings.reduceMotion);
     root.style.setProperty('--font-scale', String(settings.fontScale));
+    root.lang = settings.uiLang === 'hi' ? 'hi' : settings.uiLang === 'te' ? 'te' : 'en-IN';
   }, [settings]);
 
   useEffect(() => {

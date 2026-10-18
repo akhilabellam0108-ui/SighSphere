@@ -23,38 +23,27 @@ import { loadContacts, saveContacts, type EmergencyContact } from '../lib/storag
 import { speak } from '../lib/speech.js';
 import { useSettings } from '../state/settings.js';
 import SosSigner from '../components/SosSigner.js';
+import { EMERGENCY_PHRASES, speechLangFor, useT, type MessageKey } from '../lib/i18n.js';
 
 interface ServiceNumber {
-  label: string;
+  label: MessageKey;
   number: string;
   note: string;
 }
 
 const SERVICES: ServiceNumber[] = [
-  { label: 'All emergencies', number: '112', note: 'Unified national emergency number' },
-  { label: 'Police', number: '100', note: 'Verify locally' },
-  { label: 'Fire', number: '101', note: 'Verify locally' },
-  { label: 'Ambulance', number: '108', note: '102 in some states — verify locally' },
+  { label: 'em.svc.all', number: '112', note: 'Unified national emergency number' },
+  { label: 'em.svc.police', number: '100', note: 'Verify locally' },
+  { label: 'em.svc.fire', number: '101', note: 'Verify locally' },
+  { label: 'em.svc.ambulance', number: '108', note: '102 in some states — verify locally' },
 ];
 
-const PHRASES: Array<{ english: string; category: string }> = [
-  { english: 'I am deaf. I cannot hear you.', category: 'Identity' },
-  { english: 'Please write it down for me.', category: 'Identity' },
-  { english: 'I need a sign language interpreter.', category: 'Identity' },
-  { english: 'I need help now.', category: 'Urgent' },
-  { english: 'Call an ambulance.', category: 'Urgent' },
-  { english: 'Call the police.', category: 'Urgent' },
-  { english: 'There is a fire.', category: 'Urgent' },
-  { english: 'I have pain here.', category: 'Medical' },
-  { english: 'I need medicine.', category: 'Medical' },
-  { english: 'Take me to the hospital.', category: 'Medical' },
-  { english: 'Please call my family.', category: 'Contact' },
-  { english: 'I do not understand. Please show me.', category: 'Contact' },
-];
+const PHRASES = EMERGENCY_PHRASES;
 
 export default function Emergency() {
   const { settings } = useSettings();
   const vocabulary = useLexicon();
+  const { t, lang } = useT();
   const [contacts, setContacts] = useState<EmergencyContact[]>(() => loadContacts());
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -108,13 +97,18 @@ export default function Emergency() {
   }
 
   const selectedGloss = selected ? translate(selected, { lexicon: vocabulary }).glosses.join(' ') : null;
+  const selectedPhrase = PHRASES.find((p) => p.en === selected);
+  /** Read aloud in the interface language, so a Hindi or Telugu speaker nearby understands. */
+  const sayAloud = () => {
+    if (!selected) return;
+    const text = selectedPhrase && lang !== 'en' ? selectedPhrase[lang] : selected;
+    speak(text, speechLangFor(lang, settings.ttsLang));
+  };
 
   return (
     <>
-      <h1>Emergency</h1>
-      <p className="lede">
-        Show these cards to anyone who can help. Works offline, always free, no account needed.
-      </p>
+      <h1>{t('em.title')}</h1>
+      <p className="lede">{t('em.lede')}</p>
 
       <SosSigner textLink={(message) => (contacts[0] ? smsLink(contacts[0], `${message} I am deaf and cannot use a voice call.`) : null)} />
 
@@ -124,13 +118,13 @@ export default function Emergency() {
         qualified ISL interpreter.
       </p>
 
-      <h2>Call for help</h2>
+      <h2>{t('em.call')}</h2>
       <div className="grid">
         {SERVICES.map((service) => (
           <a key={service.number} className="card btn" href={`tel:${service.number}`} style={{ display: 'block' }}>
             <div className="stat">
               <div className="value">{service.number}</div>
-              <div className="label">{service.label}</div>
+              <div className="label">{t(service.label)}</div>
             </div>
             <p className="small muted" style={{ margin: '0.35rem 0 0', textAlign: 'center' }}>
               {service.note}
@@ -143,21 +137,27 @@ export default function Emergency() {
         to someone nearby, or text an emergency contact.
       </p>
 
-      <h2 style={{ marginTop: '1.75rem' }}>Show a card</h2>
+      <h2 style={{ marginTop: '1.75rem' }}>{t('em.showCard')}</h2>
       {selected && (
         <div className="card stack" style={{ marginBottom: '1rem' }}>
           <p style={{ fontSize: '1.6rem', fontWeight: 800, margin: 0, lineHeight: 1.25 }}>{selected}</p>
+          {selectedPhrase && (
+            <>
+              <p lang="hi" style={{ fontSize: '1.45rem', fontWeight: 700, margin: 0, lineHeight: 1.35 }}>{selectedPhrase.hi}</p>
+              <p lang="te" style={{ fontSize: '1.45rem', fontWeight: 700, margin: 0, lineHeight: 1.35 }}>{selectedPhrase.te}</p>
+            </>
+          )}
           {selectedGloss && (
             <p className="small muted" style={{ margin: 0 }}>
               ISL gloss: {selectedGloss}
             </p>
           )}
           <div className="row">
-            <button type="button" className="primary" onClick={() => speak(selected, settings.ttsLang)}>
-              🔊 Speak this aloud
+            <button type="button" className="primary" onClick={sayAloud}>
+              {t('em.speak')}
             </button>
             <button type="button" onClick={() => setSelected(null)}>
-              Close
+              {t('em.close')}
             </button>
           </div>
         </div>
@@ -165,25 +165,26 @@ export default function Emergency() {
 
       {categories.map((category) => (
         <section key={category} style={{ marginBottom: '1rem' }}>
-          <h3>{category}</h3>
+          <h3>{t(`em.cat.${category}` as MessageKey)}</h3>
           <div className="grid">
             {PHRASES.filter((phrase) => phrase.category === category).map((phrase) => (
               <button
-                key={phrase.english}
+                key={phrase.en}
                 type="button"
                 className="card"
                 style={{ textAlign: 'left', fontSize: '1rem', lineHeight: 1.4 }}
-                onClick={() => setSelected(phrase.english)}
-                aria-pressed={selected === phrase.english}
+                onClick={() => setSelected(phrase.en)}
+                aria-pressed={selected === phrase.en}
               >
-                {phrase.english}
+                {lang === 'en' ? phrase.en : phrase[lang]}
+                {lang !== 'en' && <span className="small muted" style={{ display: 'block' }}>{phrase.en}</span>}
               </button>
             ))}
           </div>
         </section>
       ))}
 
-      <h2 style={{ marginTop: '1.75rem' }}>Emergency contacts</h2>
+      <h2 style={{ marginTop: '1.75rem' }}>{t('em.contacts')}</h2>
       <div className="card stack">
         <div className="row">
           <button type="button" onClick={fetchLocation}>
@@ -213,10 +214,10 @@ export default function Emergency() {
                 </span>
                 <span className="row">
                   <a className="btn primary" href={smsLink(contact)}>
-                    ✉ Text for help
+                    {t('em.text')}
                   </a>
                   <a className="btn" href={`tel:${contact.phone}`}>
-                    ☎ Call
+                    {t('em.callBtn')}
                   </a>
                   <button
                     type="button"
@@ -234,7 +235,7 @@ export default function Emergency() {
 
         <form onSubmit={addContact} className="stack">
           <div className="field">
-            <label htmlFor="contact-name">Name</label>
+            <label htmlFor="contact-name">{t('em.name')}</label>
             <input
               id="contact-name"
               type="text"
@@ -244,7 +245,7 @@ export default function Emergency() {
             />
           </div>
           <div className="field">
-            <label htmlFor="contact-phone">Phone number</label>
+            <label htmlFor="contact-phone">{t('em.phone')}</label>
             <input
               id="contact-phone"
               type="tel"
@@ -254,7 +255,7 @@ export default function Emergency() {
             />
           </div>
           <button type="submit" className="primary" disabled={!name.trim() || !phone.trim()}>
-            Add contact
+            {t('em.add')}
           </button>
           <p className="hint">Contacts are stored only on this device.</p>
         </form>

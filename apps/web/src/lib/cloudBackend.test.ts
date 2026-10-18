@@ -86,6 +86,11 @@ describe('app ↔ database contract', () => {
     await b.adminSaveWord({ gloss: 'PAIN', english: ['pain'], pos: 'noun', category: null, notes: null, twoHanded: false, reviewed: false, reviewedBy: null, hidden: false });
     await b.adminDeleteWord('PAIN');
     await b.adminStats(30);
+    await b.reportError({ message: 'm', stack: 's', page: '/', appVersion: 'v', platform: 'web' });
+    await b.adminListErrors(false);
+    await b.adminResolveError(1, true);
+    await b.adminDeleteResolvedErrors();
+    await b.adminOpenErrors();
 
     const tables = new Set(['accounts', 'history', 'signs', 'feedback', 'admins']);
     for (const s of seen) {

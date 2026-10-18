@@ -124,6 +124,20 @@ export interface AdminStats {
   admins: number;
 }
 
+export interface ErrorReport {
+  id: number;
+  message: string;
+  stack: string | null;
+  page: string | null;
+  appVersion: string | null;
+  platform: string | null;
+  count: number;
+  signedIn: boolean;
+  resolved: boolean;
+  firstSeen: string;
+  lastSeen: string;
+}
+
 export interface MyStatus {
   blocked: boolean;
   reason: string | null;
@@ -147,7 +161,7 @@ export interface Backend {
   getUser(): Promise<User | null>;
   onAuthChange(callback: (user: User | null) => void): () => void;
   /** Returns true when the user must confirm their email before signing in. */
-  signUp(email: string, password: string): Promise<boolean>;
+  signUp(email: string, password: string, consent?: { termsVersion: string; termsAcceptedAt: string }): Promise<boolean>;
   signIn(email: string, password: string): Promise<void>;
   signOut(): Promise<void>;
   resetPassword(email: string): Promise<void>;
@@ -211,6 +225,13 @@ export interface Backend {
   adminSaveWord(word: VocabWord): Promise<VocabWord[]>;
   adminDeleteWord(gloss: string): Promise<VocabWord[]>;
   adminStats(days: number): Promise<AdminStats>;
+
+  // Error reports (never contain the person's words, recordings or identity).
+  reportError(report: { message: string; stack?: string; page?: string; appVersion?: string; platform?: string }): Promise<void>;
+  adminListErrors(includeResolved: boolean): Promise<ErrorReport[]>;
+  adminResolveError(id: number, resolved: boolean): Promise<void>;
+  adminDeleteResolvedErrors(): Promise<void>;
+  adminOpenErrors(): Promise<number>;
 }
 
 /** Admin tools are database functions; both servers call them by name with the same arguments. */
@@ -223,6 +244,7 @@ function adminTools(t: ToolCalls): Pick<
   | 'myStatus' | 'announcements' | 'vocabulary' | 'adminListAdmins' | 'adminAddAdmin' | 'adminRemoveAdmin' | 'adminListUsers'
   | 'adminSetBlocked' | 'adminListAnnouncements' | 'adminPostAnnouncement' | 'adminSetAnnouncement' | 'adminDeleteAnnouncement'
   | 'adminSaveWord' | 'adminDeleteWord' | 'adminStats'
+  | 'reportError' | 'adminListErrors' | 'adminResolveError' | 'adminDeleteResolvedErrors' | 'adminOpenErrors'
 > {
   return {
     async myStatus() {
@@ -260,6 +282,23 @@ function adminTools(t: ToolCalls): Pick<
       }),
     adminDeleteWord: (gloss) => t.rpc('admin_delete_word', { gloss }),
     adminStats: (days) => t.rpc('admin_stats', { days }),
+    async reportError(r) {
+      try {
+        await t.rpc('report_error', { message: r.message, stack: r.stack ?? null, page: r.page ?? null, app_version: r.appVersion ?? null, platform: r.platform ?? null });
+      } catch {
+        /* reporting must never cause another error */
+      }
+    },
+    adminListErrors: (includeResolved) => t.rpc('admin_list_errors', { include_resolved: includeResolved }),
+    async adminResolveError(id, resolved) {
+      await t.rpc('admin_resolve_error', { id, resolved });
+    },
+    async adminDeleteResolvedErrors() {
+      await t.rpc('admin_delete_resolved_errors');
+    },
+    async adminOpenErrors() {
+      return (await t.rpc<number | null>('admin_open_errors')) ?? 0;
+    },
   };
 }
 
@@ -414,8 +453,16 @@ export function cloudBackend(client: SupabaseClient, projectUrl = ''): Backend {
       const { data } = client.auth.onAuthStateChange((_event, session) => callback(toUser(session?.user)));
       return () => data.subscription.unsubscribe();
     },
-    async signUp(email, password) {
-      const { data, error } = await client.auth.signUp({ email, password, options: { emailRedirectTo: appUrl('login') } });
+    async signUp(email, password, consent) {
+      const { data, error } = await client.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: appUrl('login'),
+          // Who agreed to which Terms, and when — kept with the login.
+          data: consent ? { terms_version: consent.termsVersion, terms_accepted_at: consent.termsAcceptedAt } : undefined,
+        },
+      });
       if (error) throw new Error(friendlyError(error));
       return !data.session;
     },
@@ -728,6 +775,7 @@ export function deviceBackend(): Backend {
       async rpc<T>(name: string) {
         if (name === 'my_status') return { blocked: false, reason: null } as T;
         if (name === 'active_announcements' || name === 'vocabulary_entries') return [] as T;
+        if (name === 'report_error') return undefined as T;
         throw new NeedsServerError();
       },
     }),
@@ -792,8 +840,8 @@ export function serverBackend(apiUrl: string): Backend {
       listeners.add(callback);
       return () => listeners.delete(callback);
     },
-    async signUp(email, password) {
-      setSession(await call('POST', '/auth/signup', { email, password }));
+    async signUp(email, password, consent) {
+      setSession(await call('POST', '/auth/signup', { email, password, terms_version: consent?.termsVersion }));
       return false;
     },
     async signIn(email, password) {

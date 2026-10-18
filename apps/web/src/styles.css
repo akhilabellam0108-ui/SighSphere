@@ -1225,3 +1225,4 @@ button.link { background: none; border: 0; padding: 0; color: var(--accent); tex
 .convo > .stack { align-self: start; min-width: 0; }
 .check { display: flex; gap: 0.6rem; align-items: flex-start; }
 .check input { margin-top: 0.25em; flex: none; }
+.lang-picker { max-width: 22rem; }

@@ -5,7 +5,7 @@
  */
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { buildIndex, type LexEntry } from '@signsphere/gloss';
-import { friendlyError, type AdminStats, type Announcement, type TeamMember, type UserSummary, type VocabWord } from '../lib/backend.js';
+import { friendlyError, type AdminStats, type Announcement, type ErrorReport, type TeamMember, type UserSummary, type VocabWord } from '../lib/backend.js';
 import { validatePack, type SignPack } from '../lib/signPack.js';
 import { setVocabulary, useLexicon } from '../lib/vocabulary.js';
 import { useSession } from '../state/session.js';
@@ -796,6 +796,83 @@ export function PackPublisher() {
         <p className={`notice ${status.ok ? '' : 'error'}`} role={status.ok ? 'status' : 'alert'} style={{ overflowWrap: 'anywhere' }}>
           {status.text}
         </p>
+      )}
+    </section>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────── errors
+
+export function Errors({ onChange }: { onChange(): void }) {
+  const { backend } = useSession();
+  const [showResolved, setShowResolved] = useState(false);
+  const [items, setItems] = useState<ErrorReport[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(() => {
+    backend.adminListErrors(showResolved).then(setItems, (e: unknown) => setError(friendlyError(e)));
+  }, [backend, showResolved]);
+  useEffect(load, [load]);
+
+  async function act(fn: () => Promise<void>) {
+    setError(null);
+    try {
+      await fn();
+      load();
+      onChange();
+    } catch (e) {
+      setError(friendlyError(e));
+    }
+  }
+
+  return (
+    <section className="stack" aria-label="Errors">
+      <p className="muted small" style={{ margin: 0 }}>
+        Problems the app hit on people's devices, grouped by cause. Reports never include anyone's words, recordings or identity.
+        Mark one fixed after a release; it reopens by itself if it happens again.
+      </p>
+      <div className="row" style={{ justifyContent: 'space-between' }}>
+        <label className="check">
+          <input type="checkbox" checked={showResolved} onChange={(e) => setShowResolved(e.target.checked)} />
+          Show fixed ones too
+        </label>
+        {showResolved && (
+          <button type="button" className="small" onClick={() => window.confirm('Delete all errors marked fixed?') && void act(() => backend.adminDeleteResolvedErrors())}>
+            Delete fixed
+          </button>
+        )}
+      </div>
+      <ErrorNote error={error} />
+      {items === null ? (
+        <p className="muted">Loading…</p>
+      ) : items.length === 0 ? (
+        <p className="muted">No problems reported. 🎉</p>
+      ) : (
+        <ul className="admin-list">
+          {items.map((item) => (
+            <li key={item.id} className="card stack">
+              <p style={{ margin: 0, overflowWrap: 'anywhere' }}>
+                <strong>{item.message}</strong>{' '}
+                <span className={`tag ${item.resolved ? 'ok' : 'danger'}`}>{item.resolved ? 'Fixed' : `${item.count}×`}</span>
+              </p>
+              <p className="small muted" style={{ margin: 0 }}>
+                Last {new Date(item.lastSeen).toLocaleString()} · first {date(item.firstSeen)} · screen {item.page ?? '—'} · {item.platform ?? '—'} ·
+                version {item.appVersion ?? '—'}
+              </p>
+              {item.stack && (
+                <details>
+                  <summary className="small">Where in the code</summary>
+                  <pre className="small" style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', margin: 0 }}>{item.stack}</pre>
+                </details>
+              )}
+              <div>
+                <button type="button" className="small" onClick={() => void act(() => backend.adminResolveError(item.id, !item.resolved))}>
+                  {item.resolved ? 'Reopen' : 'Mark fixed'}
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
       )}
     </section>
   );

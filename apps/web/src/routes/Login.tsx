@@ -3,6 +3,7 @@ import BackButton from '../components/BackButton.js';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ACCOUNT_TYPES, validators, type AccountType } from '../lib/accountTypes.js';
 import { friendlyError } from '../lib/backend.js';
+import { rememberAcceptance } from '../lib/terms.js';
 import { PREFERRED_TYPE_KEY, useSession } from '../state/session.js';
 import { asset } from '../lib/base.js';
 
@@ -21,6 +22,7 @@ export default function Login() {
   const [mode, setMode] = useState<Mode>(params.get('mode') === 'signup' ? 'signup' : 'signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [agreed, setAgreed] = useState(false);
   const [confirm, setConfirm] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,6 +46,8 @@ export default function Login() {
     if (!type) return;
     setError(null);
     setInfo(null);
+    const needsConsent = device || mode === 'signup';
+    if (needsConsent && !agreed) return setError('Please read and agree to the Terms of Use and Privacy notice to continue.');
     if (!device) {
       const emailProblem = validators.email(email);
       if (emailProblem) return setError(emailProblem);
@@ -57,7 +61,7 @@ export default function Login() {
         setInfo('If that email has a login, a reset link is on its way.');
         setMode('signin');
       } else if (mode === 'signup') {
-        const needsConfirmation = await backend.signUp(email.trim(), password);
+        const needsConfirmation = await backend.signUp(email.trim(), password, rememberAcceptance());
         if (needsConfirmation) {
           setInfo('Check your email and open the confirmation link, then sign in here.');
           setMode('signin');
@@ -160,6 +164,22 @@ export default function Login() {
                   <input id="login-confirm" type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
                 </div>
               )}
+              {(device || mode === 'signup') && (
+                <label className="check">
+                  <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} required />
+                  <span>
+                    I have read and agree to the{' '}
+                    <Link to="/terms" target="_blank">
+                      Terms of Use
+                    </Link>{' '}
+                    and{' '}
+                    <Link to="/privacy" target="_blank">
+                      Privacy notice
+                    </Link>
+                    .
+                  </span>
+                </label>
+              )}
               {error && (
                 <p className="notice error" role="alert">
                   {error}
@@ -188,9 +208,11 @@ export default function Login() {
                 )}
               </p>
             )}
-            <p className="hint">
-              By continuing you agree to how SignSphere handles your data — see the <Link to="/privacy">privacy notice</Link>.
-            </p>
+            {mode === 'signin' && !device && (
+              <p className="hint">
+                By signing in you agree to the <Link to="/terms">Terms of Use</Link> and <Link to="/privacy">Privacy notice</Link>.
+              </p>
+            )}
           </section>
         )}
 

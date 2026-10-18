@@ -21,6 +21,7 @@ import { record } from '../lib/historyStore.js';
 import type { TrackedFrame } from '../lib/landmarks.js';
 import { createRecognizer, speak, stopSpeaking, type Recognizer } from '../lib/speech.js';
 import { useLexicon } from '../lib/vocabulary.js';
+import { speechLangFor, useT, type MessageKey } from '../lib/i18n.js';
 import { useSession } from '../state/session.js';
 import { useSettings } from '../state/settings.js';
 
@@ -38,12 +39,14 @@ interface Message {
 }
 
 /** One tap for the signer: things a deaf person often needs to say mid-conversation. */
-const QUICK_REPLIES = ['Yes', 'No', 'Please repeat', 'Please speak slowly', 'Please write it down', 'I do not understand', 'Thank you', 'Wait'];
+const QUICK_REPLIES: MessageKey[] = ['quick.yes', 'quick.no', 'quick.repeat', 'quick.slow', 'quick.write', 'quick.notUnderstand', 'quick.thanks', 'quick.wait'];
 
 export default function Conversation() {
   const { settings } = useSettings();
   const { active } = useSession();
   const vocabulary = useLexicon();
+  const { t, lang } = useT();
+  const voice = speechLangFor(lang, settings.ttsLang);
 
   const [turn, setTurn] = useState<Who>('speaker');
   const [autoSwitch, setAutoSwitch] = useState(true);
@@ -142,7 +145,7 @@ export default function Conversation() {
     const gloss = who === 'speaker' ? translate(clean, { lexicon: vocabulary }).glosses.join(' ') : undefined;
     setMessages((list) => [...list, { id: nextId.current++, who, text: clean, gloss, at: new Date() }]);
     if (who === 'signer') {
-      if (speakAloud) speak(clean, settings.ttsLang);
+      if (speakAloud) speak(clean, voice);
       if (active) record(active.id, 'sign-to-voice', clean, clean);
     } else {
       setShowing({ text: clean, replay: Date.now() });
@@ -221,18 +224,15 @@ export default function Conversation() {
 
   return (
     <>
-      <h1>Live Conversation</h1>
-      <p className="lede">
-        A deaf and a hearing person take turns on this device. Signs become text and speech; speech becomes text and ISL from
-        the avatar.
-      </p>
+      <h1>{t('convo.title')}</h1>
+      <p className="lede">{t('convo.lede')}</p>
 
       <div className="segmented convo-turns" role="group" aria-label="Whose turn">
         <button type="button" aria-pressed={turn === 'signer'} onClick={() => switchTo('signer')}>
-          🤟 Signing
+          {t('convo.signing')}
         </button>
         <button type="button" aria-pressed={turn === 'speaker'} onClick={() => switchTo('speaker')}>
-          🗣 Speaking
+          {t('convo.speaking')}
         </button>
       </div>
 
@@ -241,7 +241,7 @@ export default function Conversation() {
           {/* Camera stays mounted so permission is asked once; it only listens on the signer's turn. */}
           <section className={`card stack${turn === 'signer' ? '' : ' convo-hidden'}`} aria-label="Signer">
             <h2 className="small" style={{ margin: 0 }}>
-              Deaf person: sign, then press Send
+              {t('convo.signerHeading')}
             </h2>
             {untrained && (
               <p className="notice warn" style={{ margin: 0 }}>
@@ -256,37 +256,37 @@ export default function Conversation() {
             <CameraView onFrame={handleFrame} paused={turn !== 'signer'} recording={capturing} badge={capturing ? '● Reading sign…' : undefined} />
             {unsure && (
               <p className="small muted" role="status" style={{ margin: 0 }}>
-                Not sure about that sign — nothing was added. Try again a little slower.
+                {t('convo.unsure')}
               </p>
             )}
             <form className="stack" onSubmit={sendSigned}>
               <div className="gloss-row" aria-live="polite" aria-label="Recognised signs">
-                {signed.length === 0 ? <span className="muted small">Recognised signs appear here.</span> : signed.map((w, i) => <span key={`${w}-${i}`} className="chip">{w}</span>)}
+                {signed.length === 0 ? <span className="muted small">{t('convo.recognised')}</span> : signed.map((w, i) => <span key={`${w}-${i}`} className="chip">{w}</span>)}
               </div>
               <label className="field">
-                <span>Or type</span>
+                <span>{t('convo.orType')}</span>
                 <input type="text" value={signerText} onChange={(e) => setSignerText(e.target.value)} placeholder="Add words here" />
               </label>
               <div className="row">
                 <button type="submit" className="primary" disabled={!draft}>
-                  Send{speakAloud ? ' and speak' : ''}
+                  {speakAloud ? t('convo.sendSpeak') : t('convo.send')}
                 </button>
                 <button type="button" onClick={() => setSigned((w) => w.slice(0, -1))} disabled={!signed.length}>
-                  ⌫ Undo sign
+                  {t('convo.undo')}
                 </button>
                 <button type="button" onClick={() => { setSigned([]); setSignerText(''); }} disabled={!draft}>
-                  Clear
+                  {t('convo.clear')}
                 </button>
               </div>
             </form>
             <div>
               <h3 className="small" style={{ margin: '0 0 0.4rem' }}>
-                Quick replies
+                {t('convo.quick')}
               </h3>
               <div className="row">
                 {QUICK_REPLIES.map((reply) => (
-                  <button key={reply} type="button" className="small" onClick={() => post('signer', reply)}>
-                    {reply}
+                  <button key={reply} type="button" className="small" onClick={() => post('signer', t(reply))}>
+                    {t(reply)}
                   </button>
                 ))}
               </div>
@@ -296,10 +296,10 @@ export default function Conversation() {
           {turn === 'speaker' && (
             <section className="card stack" aria-label="Speaker">
               <h2 className="small" style={{ margin: 0 }}>
-                Hearing person: speak or type, then press Send
+                {t('convo.speakerHeading')}
               </h2>
               <button type="button" className={listening ? 'danger' : 'primary'} onClick={toggleListening} aria-pressed={listening}>
-                {listening ? '⏹ Stop listening' : '🎤 Speak'}
+                {listening ? t('convo.stop') : t('convo.speak')}
               </button>
               {partial && (
                 <p className="small muted" aria-live="polite" style={{ margin: 0 }}>
@@ -313,11 +313,11 @@ export default function Conversation() {
               )}
               <form className="stack" onSubmit={sendSpoken}>
                 <label className="field">
-                  <span>Message</span>
-                  <textarea rows={3} value={speakerText} onChange={(e) => setSpeakerText(e.target.value)} placeholder="e.g. Your appointment is at 3 pm" />
+                  <span>{t('convo.message')}</span>
+                  <textarea rows={3} value={speakerText} onChange={(e) => setSpeakerText(e.target.value)} placeholder={t('convo.placeholder')} />
                 </label>
                 <button type="submit" className="primary" disabled={!speakerText.trim() && !partial.trim()}>
-                  Send and sign
+                  {t('convo.sendSign')}
                 </button>
               </form>
               <p className="hint" style={{ margin: 0 }}>
@@ -330,7 +330,7 @@ export default function Conversation() {
         <div className="stack">
           <section className="card stack" aria-label="Avatar">
             <h2 className="small" style={{ margin: 0 }}>
-              In ISL {showing ? `— “${showing.text}”` : ''}
+              {t('convo.inIsl')} {showing ? `— “${showing.text}”` : ''}
             </h2>
             {showing ? (
               <Suspense fallback={<SignPlayer plan={plan} />}>
@@ -338,7 +338,7 @@ export default function Conversation() {
               </Suspense>
             ) : (
               <p className="muted small" style={{ margin: 0 }}>
-                The hearing person's messages are signed here.
+                {t('convo.avatarEmpty')}
               </p>
             )}
           </section>
@@ -346,32 +346,32 @@ export default function Conversation() {
           <section className="card stack" aria-label="Conversation">
             <div className="row" style={{ justifyContent: 'space-between' }}>
               <h2 className="small" style={{ margin: 0 }}>
-                Conversation
+                {t('convo.log')}
               </h2>
               <button type="button" className="small" disabled={!messages.length} onClick={() => window.confirm('Clear this conversation from the screen? It stays in History.') && setMessages([])}>
-                New conversation
+                {t('convo.new')}
               </button>
             </div>
             {messages.length === 0 ? (
               <p className="muted small" style={{ margin: 0 }}>
-                Messages from both people appear here{active ? ' and are saved to History' : ''}.
+                {t('convo.empty')}
               </p>
             ) : (
               <ol className="convo-log" ref={transcriptRef} aria-live="polite">
                 {messages.map((m) => (
                   <li key={m.id} className={`bubble ${m.who}`}>
                     <span className="small muted">
-                      {m.who === 'signer' ? '🤟 Signed' : '🗣 Said'} · {m.at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {m.who === 'signer' ? t('convo.signed') : t('convo.said')} · {m.at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                     <span className="bubble-text">{m.text}</span>
                     {m.gloss && <span className="small muted">ISL: {m.gloss}</span>}
                     {m.who === 'speaker' ? (
                       <button type="button" className="small" onClick={() => setShowing({ text: m.text, replay: Date.now() })}>
-                        ▶ Sign again
+                        {t('convo.signAgain')}
                       </button>
                     ) : (
-                      <button type="button" className="small" onClick={() => speak(m.text, settings.ttsLang)}>
-                        🔊 Say again
+                      <button type="button" className="small" onClick={() => speak(m.text, voice)}>
+                        {t('convo.sayAgain')}
                       </button>
                     )}
                   </li>
@@ -383,11 +383,11 @@ export default function Conversation() {
           <section className="card stack" aria-label="Options">
             <label className="check">
               <input type="checkbox" checked={autoSwitch} onChange={(e) => setAutoSwitch(e.target.checked)} />
-              Switch turns automatically after each message
+              {t('convo.autoSwitch')}
             </label>
             <label className="check">
               <input type="checkbox" checked={speakAloud} onChange={(e) => setSpeakAloud(e.target.checked)} />
-              Speak the signer's messages aloud
+              {t('convo.speakAloud')}
             </label>
           </section>
         </div>
