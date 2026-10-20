@@ -4,13 +4,17 @@ The code side is ready: signed App Bundle (.aab) builds, versioning, no Android 
 recordings, and the features Play requires (privacy notice, in-app login deletion). What's
 left needs **your Play Console account**.
 
-**Before a store build:** put the server online ([DEPLOY.md](DEPLOY.md)) and set the repository
-variable `VITE_API_URL` (e.g. `https://signsphere.onrender.com/api`). Without it the app
-keeps everything on the phone only — fine for a demo, not for real users with logins.
+**Before a store build:** the app must be connected to a backend. SignSphere uses **Supabase**:
+the repository variables `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are set, and
+`supabase/migrations/0001`–`0004` have been run. (The built-in server with `VITE_API_URL` also works — [DEPLOY.md](DEPLOY.md).)
+
+**Ready-made store graphics** are in [`docs/play-store/`](play-store/): `icon-512.png`, `feature-graphic.png`
+(1024×500) and six 1080×1920 phone screenshots.
 
 | Link | Address |
 |---|---|
-| Privacy policy | `https://akhilabellam0108-ui.github.io/SighSphere/privacy` (or your domain) |
+| Privacy policy | `https://akhilabellam0108-ui.github.io/SighSphere/privacy/` (or your domain) |
+| Terms of Use | `https://akhilabellam0108-ui.github.io/SighSphere/terms/` |
 | Delete login (in app) | Accounts → Delete my login |
 | Delete login (web) | Same screen on the website |
 
@@ -61,6 +65,8 @@ and pick a track when running the workflow. Version codes go up automatically.
 | Audio | **No** — speech recognition by the phone's system service | |
 | Precise location | **No** — only placed into an SMS you send yourself | |
 | Contacts | **No** — emergency contacts stay on the phone | |
+| Crash logs / diagnostics | Yes — error message, screen, app version, device type | App functionality (fixing bugs). **Not linked to the user**: no email, login id, words or recordings |
+| Terms acceptance | Yes — version and date, stored with the login | Account management |
 
 Data encrypted in transit: **Yes**. Users can request deletion: **Yes**. No data is sold or used for ads.
 
@@ -77,14 +83,26 @@ Data encrypted in transit: **Yes**. Users can request deletion: **Yes**. No data
   > • **Sign for help (SOS):** set up emergency signs once; in an emergency, sign them and
   >   SignSphere shows a big message, says it aloud and lets you call or text in one tap —
   >   **with no internet**.
-  > • **Emergency cards** for hospitals, police and strangers, and texts to your contacts with your location.
-  > • **Learn ISL** with practice and feedback.
+  > • **Live Conversation:** a Deaf and a hearing person take turns on one phone — signs become speech, speech becomes ISL.
+  > • **Emergency cards** in English, Hindi and Telugu for hospitals, police and strangers, and texts to your contacts with your location.
+  > • **Learn ISL** with practice and feedback. Real ISL signs from the INCLUDE dataset (AI4Bharat) are built in.
+  > • **English, हिन्दी, తెలుగు** interface.
+  > • **For hospitals and organisations:** separate verified accounts.
   > • **Private:** the camera is processed on your phone; video never leaves it.
   >
   > SignSphere is a communication aid, not a replacement for a qualified ISL interpreter.
 
 - **Category:** Communication. **Tags:** sign language, accessibility, deaf.
-- **Graphics:** 512×512 icon, 1024×500 feature graphic, 2–8 phone screenshots (use your own recordings or a consenting signer).
+- **Graphics:** `docs/play-store/icon-512.png`, `docs/play-store/feature-graphic.png`, and the six screenshots in `docs/play-store/`.
+  Replace them later with photos of a consenting Deaf signer using the app — real people make a stronger listing.
+- **Translated listings** (Play Console → Store presence → Main store listing → Manage translations): add Hindi (hi-IN) and Telugu (te-IN):
+
+  | | Hindi | Telugu |
+  |---|---|---|
+  | Short description | भारतीय सांकेतिक भाषा से लिखित और आवाज़ — बिना इंटरनेट भी चलता है। | భారతీయ సంజ్ఞా భాష నుంచి అక్షరాలు, మాట — ఇంటర్నెట్ లేకున్నా పనిచేస్తుంది. |
+  | Full description (first line) | साइनस्फ़ियर बधिर और सुनने वाले लोगों को भारतीय सांकेतिक भाषा में एक-दूसरे से बात करने में मदद करता है। | సైన్‌స్ఫియర్ బధిరులు, వినగలిగేవారు భారతీయ సంజ్ఞా భాషలో ఒకరితో ఒకరు మాట్లాడుకోవడానికి సహాయపడుతుంది. |
+
+  Have a native speaker check these before publishing.
 
 ## 5. Release
 
@@ -93,7 +111,10 @@ staged rollout. Every upload needs a higher version code; the workflow handles i
 
 ## Checklist
 
-- [ ] Server online and `VITE_API_URL` set ([DEPLOY.md](DEPLOY.md))
+- [x] Backend connected (Supabase variables set, migrations 0001–0004 run)
+- [x] Privacy and Terms pages online with real addresses; consent at sign-up; in-app login deletion
+- [x] Store graphics ready (`docs/play-store/`)
+- [ ] Support email set (`VITE_SUPPORT_EMAIL` repository variable) — Play shows it on the listing
 - [ ] Emergency numbers verified with local services and a Deaf advisor (see `Emergency.tsx`)
 - [ ] Play Console account, upload key and secrets
 - [ ] App content forms and data safety filled in as above
