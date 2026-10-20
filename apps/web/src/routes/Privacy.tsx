@@ -39,6 +39,11 @@ export default function Privacy() {
           <li>
             Where: {backend.mode === 'cloud' ? 'on SignSphere’s database (Supabase), protected so that only your login can read your data.' : 'currently only in this browser (this-device mode).'}
           </li>
+          <li>
+            Error reports: if the app breaks, it sends the SignSphere team the error message, the screen, the app version and the
+            type of device — never your words, recordings, email or login.
+          </li>
+          <li>Terms: the version of the Terms of Use you agreed to, and when, is kept with your login.</li>
           <li>We do not sell your data or use it for advertising.</li>
         </ul>
       </section>

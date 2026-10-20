@@ -42,6 +42,12 @@ jobs:
         run: npm run build
       # GitHub Pages has no SPA routing: serve the app for any deep link.
       - run: cp apps/web/dist/index.html apps/web/dist/404.html && touch apps/web/dist/.nojekyll
+      # Pages linked from outside (Play Store privacy policy, Terms, emergency QR) get a real
+      # 200 response instead of the 404 fallback: stores and crawlers reject 404 policy links.
+      - run: |
+          for route in privacy terms welcome emergency; do
+            mkdir -p apps/web/dist/$route && cp apps/web/dist/index.html apps/web/dist/$route/index.html
+          done
       - uses: actions/upload-pages-artifact@v3
         with:
           path: apps/web/dist
