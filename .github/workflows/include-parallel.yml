@@ -105,6 +105,8 @@ jobs:
         timeout-minutes: 200
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          # Several runners download at once; fewer connections each keeps Zenodo from refusing them.
+          INCLUDE_PARALLEL: '6'
         run: python scripts/include/download.py --plan /tmp/shards/shard-${{ matrix.shard }}.json --out /tmp/include-raw
       - name: Save downloaded videos (also if the download ran out of time)
         if: always() && steps.raw.outcome == 'success'
