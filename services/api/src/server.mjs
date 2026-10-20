@@ -306,6 +306,9 @@ export async function startServer({
     admin_resolve_error: ['id:bigint', 'resolved:boolean'],
     admin_delete_resolved_errors: [],
     admin_open_errors: [],
+    admin_get_alerts: [],
+    admin_set_alerts: ['enabled:boolean', 'resend_key:text', 'from_email:text', 'to_emails:text'],
+    admin_test_alert: [],
   };
   for (const [name, spec] of Object.entries(RPC)) {
     const { args, open } = Array.isArray(spec) ? { args: spec, open: false } : spec;

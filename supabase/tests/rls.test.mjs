@@ -292,6 +292,24 @@ await as(null, () => q(`select public.report_error(repeat('x', 900))`));
 assert.ok((await rpc(ADMIN, `select public.admin_list_errors(false)`)).every((e) => e.message.length <= 500));
 ok('a resolved error reopens if it happens again; admins resolve and clear; long messages are trimmed');
 
+// ───────────────────────── part 5: email alerts
+await fails(as(A, () => q(`select public.admin_get_alerts()`)), 'only admins see alert settings');
+await fails(as(A, () => q(`select public.admin_set_alerts(true, 're_x', null, 'a@example.com')`)), 'only admins change alert settings');
+await fails(as(A, () => q(`select public.send_alert('x', 'y')`)), 'nobody can send alert emails directly');
+let alerts = await rpc(ADMIN, `select public.admin_set_alerts(true, 're_secret_key', 'SignSphere <onboarding@resend.dev>', 'staff@example.com')`);
+assert.equal(alerts.hasKey, true);
+assert.ok(!JSON.stringify(alerts).includes('re_secret_key'));
+alerts = await rpc(ADMIN, `select public.admin_set_alerts(true, '', 'SignSphere <onboarding@resend.dev>', 'staff@example.com')`);
+assert.equal(alerts.hasKey, true, 'an empty key keeps the saved one');
+await fails(as(ADMIN, () => q(`select * from public.alert_settings`)), 'the key cannot be read, even by admins');
+await as(B, () => q(`insert into public.feedback (kind, gloss, message) values ('missing-sign', 'water', 'please add water sign')`));
+alerts = await rpc(ADMIN, `select public.admin_test_alert()`);
+assert.equal(alerts.available, false);
+assert.ok(alerts.recent.length >= 2 && alerts.recent.every((r) => r.sent === false && /pg_net/.test(r.note)));
+await rpc(ADMIN, `select public.admin_set_alerts(false, null, null, null)`);
+await as(B, () => q(`delete from public.feedback where user_id = $1`, [B]));
+ok('email alerts: admin-only settings, write-only key, reports and tests queue an email (skipped safely without pg_net)');
+
 // Migrations are safe to re-run.
 for (const file of readdirSync(new URL('../migrations/', import.meta.url)).sort()) {
   await db.exec(readFileSync(new URL(`../migrations/${file}`, import.meta.url), 'utf8'));

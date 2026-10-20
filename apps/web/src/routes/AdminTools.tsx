@@ -5,7 +5,7 @@
  */
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { buildIndex, type LexEntry } from '@signsphere/gloss';
-import { friendlyError, type AdminStats, type Announcement, type ErrorReport, type TeamMember, type UserSummary, type VocabWord } from '../lib/backend.js';
+import { friendlyError, type AdminStats, type AlertSettings, type Announcement, type ErrorReport, type TeamMember, type UserSummary, type VocabWord } from '../lib/backend.js';
 import { validatePack, type SignPack } from '../lib/signPack.js';
 import { setVocabulary, useLexicon } from '../lib/vocabulary.js';
 import { useSession } from '../state/session.js';
@@ -873,6 +873,119 @@ export function Errors({ onChange }: { onChange(): void }) {
             </li>
           ))}
         </ul>
+      )}
+    </section>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────── email alerts
+
+export function EmailAlerts() {
+  const { backend, user } = useSession();
+  const [settings, setSettings] = useState<AlertSettings | null>(null);
+  const [form, setForm] = useState({ enabled: true, resendKey: '', fromEmail: 'SignSphere <onboarding@resend.dev>', toEmails: '' });
+  const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState<string | null>(null);
+
+  const adopt = useCallback((s: AlertSettings) => {
+    setSettings(s);
+    setForm((f) => ({ ...f, enabled: s.hasKey ? s.enabled : true, fromEmail: s.fromEmail ?? f.fromEmail, toEmails: s.toEmails ?? (user?.email ?? ''), resendKey: '' }));
+  }, [user]);
+
+  useEffect(() => {
+    backend.adminGetAlerts().then(adopt, (e: unknown) => setError(friendlyError(e)));
+  }, [backend, adopt]);
+
+  async function run(fn: () => Promise<AlertSettings>, message: string) {
+    setError(null);
+    setDone(null);
+    try {
+      adopt(await fn());
+      setDone(message);
+    } catch (e) {
+      setError(friendlyError(e));
+    }
+  }
+
+  if (!settings) return error ? <ErrorNote error={error} /> : <p className="muted">Loading…</p>;
+
+  return (
+    <section className="stack" aria-label="Email alerts">
+      <p className="muted small" style={{ margin: 0 }}>
+        Get an email when a hospital or organisation asks to be verified, when someone sends a report, and when a new kind of
+        error appears. At most 30 emails an hour.
+      </p>
+      {!settings.available && (
+        <p className="notice warn" style={{ margin: 0 }}>
+          This server cannot send email (it needs Supabase's <code>pg_net</code> extension). Settings are saved, but nothing is
+          sent from here.
+        </p>
+      )}
+      <form
+        className="card stack"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void run(() => backend.adminSetAlerts(form), 'Saved.');
+        }}
+      >
+        <ol className="small" style={{ margin: 0, paddingLeft: '1.2rem' }}>
+          <li>
+            Create a free account at <a href="https://resend.com" target="_blank" rel="noopener noreferrer">resend.com</a> with the
+            email address that should receive alerts.
+          </li>
+          <li>In Resend → API Keys → Create API key (permission: Sending access). Paste it below.</li>
+          <li>
+            Leave “From” as <code>onboarding@resend.dev</code>: it can send to your own Resend email without setting up a domain.
+          </li>
+        </ol>
+        <label className="field">
+          <span>Resend API key {settings.hasKey && <span className="tag ok">saved</span>}</span>
+          <input
+            type="password"
+            autoComplete="off"
+            value={form.resendKey}
+            onChange={(e) => setForm({ ...form, resendKey: e.target.value })}
+            placeholder={settings.hasKey ? 'Saved — leave empty to keep it' : 're_…'}
+          />
+        </label>
+        <label className="field">
+          <span>Send alerts to (comma-separated)</span>
+          <input type="text" value={form.toEmails} onChange={(e) => setForm({ ...form, toEmails: e.target.value })} placeholder="you@example.com" />
+        </label>
+        <label className="field">
+          <span>From</span>
+          <input type="text" value={form.fromEmail} onChange={(e) => setForm({ ...form, fromEmail: e.target.value })} />
+        </label>
+        <label className="check">
+          <input type="checkbox" checked={form.enabled} onChange={(e) => setForm({ ...form, enabled: e.target.checked })} />
+          Send email alerts
+        </label>
+        <div className="row">
+          <button type="submit" className="btn primary">
+            Save
+          </button>
+          <button type="button" className="btn" disabled={!settings.hasKey} onClick={() => void run(() => backend.adminTestAlert(), 'Test email queued — check your inbox (and spam) in a minute.')}>
+            Send a test email
+          </button>
+        </div>
+      </form>
+      <ErrorNote error={error} />
+      {done && (
+        <p className="notice" role="status" style={{ margin: 0 }}>
+          {done}
+        </p>
+      )}
+      {settings.recent.length > 0 && (
+        <div className="card stack">
+          <h3 style={{ margin: 0 }}>Recent alerts</h3>
+          <ul className="small" style={{ margin: 0, paddingLeft: '1.2rem' }}>
+            {settings.recent.map((r) => (
+              <li key={`${r.at}${r.subject}`}>
+                {new Date(r.at).toLocaleString()} · {r.subject} · {r.sent ? 'sent' : `not sent (${r.note ?? 'unknown'})`}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </section>
   );

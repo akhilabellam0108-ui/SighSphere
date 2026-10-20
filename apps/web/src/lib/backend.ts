@@ -138,6 +138,17 @@ export interface ErrorReport {
   lastSeen: string;
 }
 
+export interface AlertSettings {
+  enabled: boolean;
+  /** A Resend key is saved (it is never sent back). */
+  hasKey: boolean;
+  fromEmail: string | null;
+  toEmails: string | null;
+  /** The database can send email (Supabase with pg_net). */
+  available: boolean;
+  recent: Array<{ subject: string; sent: boolean; note: string | null; at: string }>;
+}
+
 export interface MyStatus {
   blocked: boolean;
   reason: string | null;
@@ -232,6 +243,12 @@ export interface Backend {
   adminResolveError(id: number, resolved: boolean): Promise<void>;
   adminDeleteResolvedErrors(): Promise<void>;
   adminOpenErrors(): Promise<number>;
+
+  // Email alerts (Supabase + Resend).
+  adminGetAlerts(): Promise<AlertSettings>;
+  /** An empty key keeps the saved one. */
+  adminSetAlerts(settings: { enabled: boolean; resendKey: string; fromEmail: string; toEmails: string }): Promise<AlertSettings>;
+  adminTestAlert(): Promise<AlertSettings>;
 }
 
 /** Admin tools are database functions; both servers call them by name with the same arguments. */
@@ -245,6 +262,7 @@ function adminTools(t: ToolCalls): Pick<
   | 'adminSetBlocked' | 'adminListAnnouncements' | 'adminPostAnnouncement' | 'adminSetAnnouncement' | 'adminDeleteAnnouncement'
   | 'adminSaveWord' | 'adminDeleteWord' | 'adminStats'
   | 'reportError' | 'adminListErrors' | 'adminResolveError' | 'adminDeleteResolvedErrors' | 'adminOpenErrors'
+  | 'adminGetAlerts' | 'adminSetAlerts' | 'adminTestAlert'
 > {
   return {
     async myStatus() {
@@ -299,6 +317,9 @@ function adminTools(t: ToolCalls): Pick<
     async adminOpenErrors() {
       return (await t.rpc<number | null>('admin_open_errors')) ?? 0;
     },
+    adminGetAlerts: () => t.rpc('admin_get_alerts'),
+    adminSetAlerts: (a) => t.rpc('admin_set_alerts', { enabled: a.enabled, resend_key: a.resendKey || null, from_email: a.fromEmail || null, to_emails: a.toEmails || null }),
+    adminTestAlert: () => t.rpc('admin_test_alert'),
   };
 }
 
