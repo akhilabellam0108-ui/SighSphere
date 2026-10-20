@@ -22,6 +22,7 @@ import type { TrackedFrame } from '../lib/landmarks.js';
 import { speak, stopSpeaking } from '../lib/speech.js';
 import { useRecordHistory } from '../state/history.js';
 import { useSettings } from '../state/settings.js';
+import { speechLangFor, useT } from '../lib/i18n.js';
 
 export interface SignToTextProps {
   speakOutput: boolean;
@@ -29,6 +30,8 @@ export interface SignToTextProps {
 
 export default function SignToText({ speakOutput }: SignToTextProps) {
   const { settings } = useSettings();
+  const { t, lang } = useT();
+  const voice = speechLangFor(lang, settings.ttsLang);
   const [classifier, setClassifier] = useState<SignClassifier | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [predictions, setPredictions] = useState<Prediction[]>([]);
@@ -74,7 +77,7 @@ export default function SignToText({ speakOutput }: SignToTextProps) {
       if (top && top.confidence >= REJECTION_THRESHOLD) {
         setRejected(false);
         setSentence((previous) => [...previous, top.label]);
-        if (speakOutput) speak(top.label, settings.ttsLang);
+        if (speakOutput) speak(top.label, voice);
       } else {
         setRejected(true);
       }
@@ -84,7 +87,7 @@ export default function SignToText({ speakOutput }: SignToTextProps) {
       windowRef.current.clear();
       busyRef.current = false;
     }
-  }, [speakOutput, settings.ttsLang]);
+  }, [speakOutput, voice]);
 
   const handleFrame = useCallback(
     (frame: TrackedFrame) => {
@@ -113,20 +116,19 @@ export default function SignToText({ speakOutput }: SignToTextProps) {
 
   return (
     <>
-      <h1>{speakOutput ? 'Sign → Voice' : 'Sign → Text'}</h1>
+      <h1>{speakOutput ? t('nav.signToVoice') : t('nav.signToText')}</h1>
       <p className="lede">
-        Sign to the camera. Start moving to begin a sign, then hold still briefly to finish it.
-        Video never leaves this device.
+        {t('s2t.lede')}
       </p>
       <p style={{ marginTop: 0 }}>
         <Link className="btn small" to="/record">
-          ⏺ Record a new sign
+          {t('s2t.record')}
         </Link>
       </p>
 
       {untrained && (
         <p className="notice">
-          <strong>No signs recorded yet</strong>
+          <strong>{t('s2t.noneTitle')}</strong>
           Recognition needs examples first. Go to <Link to="/record">Record</Link> and capture 5
           takes each of a few signs, then come back. It works immediately — no training run
           required.
@@ -135,7 +137,7 @@ export default function SignToText({ speakOutput }: SignToTextProps) {
 
       {loadError && (
         <p className="notice error">
-          <strong>Recognition unavailable</strong>
+          <strong>{t('s2t.unavailable')}</strong>
           {loadError}
         </p>
       )}
@@ -145,15 +147,15 @@ export default function SignToText({ speakOutput }: SignToTextProps) {
           <CameraView
             onFrame={handleFrame}
             recording={capturing}
-            badge={capturing ? '● Capturing sign…' : undefined}
+            badge={capturing ? t('s2t.capturing') : undefined}
           />
         </section>
 
         <section className="card stack" aria-label="Recognition">
           <div>
-            <h2 className="small">Best guesses</h2>
+            <h2 className="small">{t('s2t.guesses')}</h2>
             {predictions.length === 0 ? (
-              <p className="muted small">Sign something to see predictions.</p>
+              <p className="muted small">{t('s2t.signSomething')}</p>
             ) : (
               <div className="prediction">
                 {predictions.map((prediction) => (
@@ -170,36 +172,35 @@ export default function SignToText({ speakOutput }: SignToTextProps) {
             )}
             {rejected && (
               <p className="notice warn" style={{ marginTop: '0.6rem' }}>
-                <strong>Not sure about that one</strong>
-                Confidence was below {Math.round(REJECTION_THRESHOLD * 100)}%, so nothing was
-                added. Try signing a little slower, with both hands fully in frame.
+                <strong>{t('s2t.notSure')}</strong>
+                {t('s2t.notSureBody')} ({Math.round(REJECTION_THRESHOLD * 100)}%)
               </p>
             )}
           </div>
 
           <div>
-            <h2 className="small">Recognised so far</h2>
+            <h2 className="small">{t('s2t.sofar')}</h2>
             <p aria-live="polite" style={{ minHeight: '2.5rem', fontWeight: 700, margin: 0 }}>
-              {sentenceText || <span className="muted small">Nothing yet.</span>}
+              {sentenceText || <span className="muted small">{t('s2t.nothing')}</span>}
             </p>
             <div className="row" style={{ marginTop: '0.6rem' }}>
               <button
                 type="button"
                 className="primary"
-                onClick={() => speak(sentenceText, settings.ttsLang)}
+                onClick={() => speak(sentenceText, voice)}
                 disabled={!sentenceText}
               >
-                🔊 Speak
+                {t('s2t.speak')}
               </button>
               <button
                 type="button"
                 onClick={() => setSentence((previous) => previous.slice(0, -1))}
                 disabled={sentence.length === 0}
               >
-                ⌫ Undo
+                {t('s2t.undo')}
               </button>
               <button type="button" onClick={() => setSentence([])} disabled={sentence.length === 0}>
-                Clear
+                {t('convo.clear')}
               </button>
             </div>
           </div>
@@ -211,7 +212,7 @@ export default function SignToText({ speakOutput }: SignToTextProps) {
               </h2>
               {classifier instanceof OnnxClassifier && classifier.info.top1 !== undefined && (
                 <p className="hint">
-                  Tested on people it never saw: right {Math.round(classifier.info.top1 * 100)}% of the time.
+                  {t('s2t.tested')} {Math.round(classifier.info.top1 * 100)}% {t('s2t.ofTime')}
                 </p>
               )}
               <div className="gloss-row">

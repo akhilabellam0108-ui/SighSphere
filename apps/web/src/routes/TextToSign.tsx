@@ -6,6 +6,7 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { translate } from '@signsphere/gloss';
 import { useLexicon } from '../lib/vocabulary.js';
+import { useT } from '../lib/i18n.js';
 import SignPlayer from '../components/SignPlayer.js';
 
 import { createRecognizer, isSpeechRecognitionSupported, type Recognizer } from '../lib/speech.js';
@@ -36,6 +37,7 @@ export default function TextToSign({ mode }: TextToSignProps) {
   const [speechError, setSpeechError] = useState<string | null>(null);
   const recognizerRef = useRef<Recognizer | null>(null);
   const vocabulary = useLexicon();
+  const { t } = useT();
 
   const result = useMemo(
     () => translate(text, { speed: settings.playbackSpeed, lexicon: vocabulary }),
@@ -85,18 +87,15 @@ export default function TextToSign({ mode }: TextToSignProps) {
 
   return (
     <>
-      <h1>{mode === 'voice' ? 'Voice → Sign' : 'Text → Sign'}</h1>
+      <h1>{mode === 'voice' ? t('nav.voiceToSign') : t('nav.textToSign')}</h1>
       <p className="lede">
-        {mode === 'voice'
-          ? 'Speak, and see it in Indian Sign Language order. You can edit the transcript before playing.'
-          : 'Type English and see it in Indian Sign Language order. Words with no sign are fingerspelled.'}
+        {mode === 'voice' ? t('t2s.ledeVoice') : t('t2s.ledeText')}
       </p>
 
       {mode === 'voice' && (
         <p className="notice warn">
-          <strong>Microphone privacy</strong>
-          Unlike the camera, speech recognition in most browsers sends your audio to the
-          browser vendor&rsquo;s servers for transcription. If that matters to you, type instead.
+          <strong>{t('t2s.micTitle')}</strong>
+          {t('t2s.micBody')}
         </p>
       )}
 
@@ -110,22 +109,22 @@ export default function TextToSign({ mode }: TextToSignProps) {
                 onClick={toggleListening}
                 aria-pressed={listening}
               >
-                {listening ? '⏹ Stop listening' : '🎤 Start listening'}
+                {listening ? t('convo.stop') : t('t2s.start')}
               </button>
               {!isSpeechRecognitionSupported() && (
                 <p className="notice warn">
-                  <strong>Speech recognition unavailable</strong>
-                  Type in the box below instead — everything else works the same.
+                  <strong>{t('t2s.noSpeechTitle')}</strong>
+                  {t('t2s.noSpeechBody')}
                 </p>
               )}
               {partial && (
                 <p className="small muted" aria-live="polite">
-                  Hearing: &ldquo;{partial}&rdquo;
+                  {t('t2s.hearing')} &ldquo;{partial}&rdquo;
                 </p>
               )}
               {speechError && (
                 <p className="notice error">
-                  <strong>Speech problem</strong>
+                  <strong>{t('t2s.speechProblem')}</strong>
                   {speechError}
                 </p>
               )}
@@ -133,22 +132,21 @@ export default function TextToSign({ mode }: TextToSignProps) {
           )}
 
           <div className="field">
-            <label htmlFor="source-text">English text</label>
+            <label htmlFor="source-text">{t('t2s.english')}</label>
             <textarea
               id="source-text"
               value={text}
               onChange={(event) => setText(event.target.value)}
-              placeholder="Type a sentence, e.g. Where is the school?"
+              placeholder={t('t2s.placeholder')}
               rows={4}
             />
             <p className="hint">
-              English word order is converted to ISL sign order — the output is deliberately not
-              a word-for-word match.
+              {t('t2s.orderHint')}
             </p>
           </div>
 
           <div>
-            <h3 className="small">Try an example</h3>
+            <h3 className="small">{t('t2s.example')}</h3>
             <div className="row">
               {EXAMPLES.map((example) => (
                 <button key={example} type="button" className="small" onClick={() => setText(example)}>
@@ -160,7 +158,7 @@ export default function TextToSign({ mode }: TextToSignProps) {
 
           <div className="field">
             <label htmlFor="speed">
-              Playback speed: {settings.playbackSpeed.toFixed(2)}×
+              {t('t2s.speed')}: {settings.playbackSpeed.toFixed(2)}×
             </label>
             <input
               id="speed"
@@ -171,13 +169,13 @@ export default function TextToSign({ mode }: TextToSignProps) {
               value={settings.playbackSpeed}
               onChange={(event) => update({ playbackSpeed: Number(event.target.value) })}
             />
-            <p className="hint">Learners usually want 0.6–0.8×.</p>
+            <p className="hint">{t('t2s.speedHint')}</p>
           </div>
         </section>
 
         <section className="card stack" aria-label="Sign output">
           <div>
-            <h2 className="small">ISL gloss order</h2>
+            <h2 className="small">{t('t2s.gloss')}</h2>
             <div className="gloss-row">
               {result.glosses.length === 0 && <span className="muted small">—</span>}
               {result.tokens.map((token, i) => (
@@ -200,7 +198,7 @@ export default function TextToSign({ mode }: TextToSignProps) {
             </div>
             {result.glosses.length > 0 && (
               <p className="hint">
-                Dashed = fingerspelled. &ldquo;?&rdquo; = not yet checked by a fluent signer.
+                {t('t2s.glossHint')}
               </p>
             )}
           </div>
@@ -211,9 +209,10 @@ export default function TextToSign({ mode }: TextToSignProps) {
 
           {result.unknown.length > 0 && (
             <p className="notice warn">
-              <strong>{result.unknown.length} word(s) have no sign yet</strong>
-              {result.unknown.join(', ')} — these get fingerspelled. Add them to the lexicon at{' '}
-              <code>packages/gloss/lexicon/isl-core.json</code>.
+              <strong>
+                {result.unknown.length} {t('t2s.noSign')}
+              </strong>
+              {result.unknown.join(', ')} — {t('t2s.spelled')}
             </p>
           )}
         </section>

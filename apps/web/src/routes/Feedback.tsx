@@ -1,3 +1,4 @@
+import { useT, type MessageKey } from '../lib/i18n.js';
 import { useEffect, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { friendlyError, type Feedback as FeedbackItem, type FeedbackKind } from '../lib/backend.js';
@@ -17,6 +18,7 @@ const kindLabel = (kind: FeedbackKind) => FEEDBACK_KINDS.find((k) => k.kind === 
 /** Report a problem or suggest something. Reviewed by the SignSphere team (admin panel). */
 export default function Feedback() {
   const { backend, active } = useSession();
+  const { t } = useT();
   const [params] = useSearchParams();
   const initialKind = (FEEDBACK_KINDS.find((k) => k.kind === params.get('kind'))?.kind ?? 'wrong-sign') as FeedbackKind;
   const [kind, setKind] = useState<FeedbackKind>(initialKind);
@@ -34,11 +36,11 @@ export default function Feedback() {
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (message.trim().length < 3) {
-      setStatus({ ok: false, text: 'Please describe the problem in a few words.' });
+      setStatus({ ok: false, text: t('fb.err.describe') });
       return;
     }
     if (needsSign && !gloss.trim()) {
-      setStatus({ ok: false, text: 'Which sign or word is it about?' });
+      setStatus({ ok: false, text: t('fb.err.which') });
       return;
     }
     setBusy(true);
@@ -54,7 +56,7 @@ export default function Feedback() {
       setMessage('');
       setStatus({
         ok: true,
-        text: backend.mode === 'cloud' ? 'Thank you — sent to the SignSphere team.' : 'Saved on this device. It will reach the team once the server is connected.',
+        text: backend.mode === 'cloud' ? t('fb.sentCloud') : t('fb.sentDevice'),
       });
       load();
     } catch (e) {
@@ -66,32 +68,29 @@ export default function Feedback() {
 
   return (
     <>
-      <h1>Report a problem</h1>
-      <p className="lede">
-        Seen a sign that looks wrong, or need a sign that is missing? Tell us. Fluent ISL signers on the SignSphere team
-        review every report.
-      </p>
+      <h1>{t('fb.title')}</h1>
+      <p className="lede">{t('fb.lede')}</p>
 
       <form className="card stack" onSubmit={(e) => void submit(e)} noValidate>
         <label className="field">
-          <span>What is it about?</span>
+          <span>{t('fb.about')}</span>
           <select value={kind} onChange={(e) => setKind(e.target.value as FeedbackKind)}>
             {FEEDBACK_KINDS.map((k) => (
               <option key={k.kind} value={k.kind}>
-                {k.label}
+                {t(`fb.kind.${k.kind}` as MessageKey)}
               </option>
             ))}
           </select>
         </label>
         {needsSign && (
           <label className="field">
-            <span>Sign or word</span>
+            <span>{t('fb.sign')}</span>
             <input type="text" value={gloss} onChange={(e) => setGloss(e.target.value)} maxLength={64} placeholder="e.g. HOSPITAL" required />
           </label>
         )}
         <label className="field">
-          <span>Details</span>
-          <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={4} maxLength={2000} required placeholder="What did you expect, and what happened?" />
+          <span>{t('fb.details')}</span>
+          <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={4} maxLength={2000} required placeholder={t('fb.detailsPh')} />
         </label>
         {status && (
           <p className={`notice ${status.ok ? '' : 'error'}`} role={status.ok ? 'status' : 'alert'}>
@@ -100,19 +99,19 @@ export default function Feedback() {
         )}
         <div>
           <button type="submit" className="primary" disabled={busy}>
-            {busy ? 'Sending…' : 'Send report'}
+            {busy ? t('fb.sending') : t('fb.send')}
           </button>
         </div>
       </form>
 
       {mine.length > 0 && (
         <section className="stack" style={{ marginTop: '1.5rem' }} aria-labelledby="mine-heading">
-          <h2 id="mine-heading">Your reports</h2>
+          <h2 id="mine-heading">{t('fb.mine')}</h2>
           <ul className="feedback-list">
             {mine.map((item) => (
               <li key={item.id} className="card">
                 <p style={{ margin: 0 }}>
-                  <span className={`status-pill ${item.status}`}>{item.status === 'resolved' ? 'Resolved' : 'Open'}</span>{' '}
+                  <span className={`status-pill ${item.status}`}>{item.status === 'resolved' ? t('fb.resolved') : t('fb.open')}</span>{' '}
                   <strong>{kindLabel(item.kind)}</strong>
                   {item.gloss && ` · ${item.gloss}`}
                   <span className="small muted"> · {new Date(item.createdAt).toLocaleDateString()}</span>
@@ -122,7 +121,7 @@ export default function Feedback() {
                 </p>
                 {item.adminNote && (
                   <p className="small muted" style={{ margin: '0.4rem 0 0' }}>
-                    Reply from SignSphere: {item.adminNote}
+                    {t('fb.reply')} {item.adminNote}
                   </p>
                 )}
               </li>
