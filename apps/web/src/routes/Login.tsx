@@ -4,6 +4,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ACCOUNT_TYPES, validators, type AccountType } from '../lib/accountTypes.js';
 import { friendlyError } from '../lib/backend.js';
 import { rememberAcceptance } from '../lib/terms.js';
+import { useT, type MessageKey } from '../lib/i18n.js';
 import { PREFERRED_TYPE_KEY, useSession } from '../state/session.js';
 import { asset } from '../lib/base.js';
 
@@ -23,6 +24,7 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [agreed, setAgreed] = useState(false);
+  const { t } = useT();
   const [confirm, setConfirm] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,23 +49,23 @@ export default function Login() {
     setError(null);
     setInfo(null);
     const needsConsent = device || mode === 'signup';
-    if (needsConsent && !agreed) return setError('Please read and agree to the Terms of Use and Privacy notice to continue.');
+    if (needsConsent && !agreed) return setError(t('login.err.agree'));
     if (!device) {
       const emailProblem = validators.email(email);
       if (emailProblem) return setError(emailProblem);
-      if (mode !== 'reset' && password.length < 8) return setError('Use a password of at least 8 characters.');
-      if (mode === 'signup' && password !== confirm) return setError('The two passwords do not match.');
+      if (mode !== 'reset' && password.length < 8) return setError(t('login.err.short'));
+      if (mode === 'signup' && password !== confirm) return setError(t('login.err.match'));
     }
     setBusy(true);
     try {
       if (mode === 'reset') {
         await backend.resetPassword(email.trim());
-        setInfo('If that email has a login, a reset link is on its way.');
+        setInfo(t('login.info.reset'));
         setMode('signin');
       } else if (mode === 'signup') {
         const needsConfirmation = await backend.signUp(email.trim(), password, rememberAcceptance());
         if (needsConfirmation) {
-          setInfo('Check your email and open the confirmation link, then sign in here.');
+          setInfo(t('login.info.confirm'));
           setMode('signin');
         } else {
           await afterAuth(type);
@@ -92,16 +94,16 @@ export default function Login() {
 
         {!type ? (
           <section aria-labelledby="as-heading">
-            <h1 id="as-heading">Sign in as</h1>
-            <p className="lede">Choose who is using SignSphere. You can add more accounts later.</p>
+            <h1 id="as-heading">{t('login.signInAs')}</h1>
+            <p className="lede">{t('login.choose')}</p>
             <div className="type-cards">
               {ACCOUNT_TYPES.map((option) => (
                 <button key={option.type} type="button" className="type-card" onClick={() => setType(option.type)}>
                   <span className="type-icon" aria-hidden="true">
                     {option.icon}
                   </span>
-                  <span className="type-label">{option.label}</span>
-                  <span className="type-desc">{option.description}</span>
+                  <span className="type-label">{t(`acct.${option.type}` as MessageKey)}</span>
+                  <span className="type-desc">{t(`acct.${option.type}.desc` as MessageKey)}</span>
                 </button>
               ))}
             </div>
@@ -110,27 +112,26 @@ export default function Login() {
           <section className="card stack" aria-labelledby="login-heading">
             <div className="row" style={{ justifyContent: 'space-between' }}>
               <h1 id="login-heading" style={{ margin: 0 }}>
-                {mode === 'signup' ? 'Create your login' : mode === 'reset' ? 'Reset password' : 'Sign in'}
+                {mode === 'signup' ? t('login.create') : mode === 'reset' ? t('login.reset') : t('login.signIn')}
               </h1>
               <button type="button" className="small" onClick={() => setType(null)}>
-                {ACCOUNT_TYPES.find((t) => t.type === type)?.icon} {ACCOUNT_TYPES.find((t) => t.type === type)?.label} · change
+                {ACCOUNT_TYPES.find((a) => a.type === type)?.icon} {t(`acct.${type}` as MessageKey)} · {t('login.change')}
               </button>
             </div>
 
             {device ? (
               <p className="notice warn">
-                <strong>This-device mode</strong>
-                The server is not connected yet, so there is no password: your accounts and history
-                stay in this browser only. Anyone using this device can open them.
+                <strong>{t('login.deviceTitle')}</strong>
+                {t('login.deviceBody')}
               </p>
             ) : (
               mode !== 'reset' && (
                 <div className="segmented" role="group" aria-label="Sign in or create a login">
                   <button type="button" aria-pressed={mode === 'signin'} className={mode === 'signin' ? 'primary' : ''} onClick={() => setMode('signin')}>
-                    Sign in
+                    {t('login.signIn')}
                   </button>
                   <button type="button" aria-pressed={mode === 'signup'} className={mode === 'signup' ? 'primary' : ''} onClick={() => setMode('signup')}>
-                    Create login
+                    {t('login.createLogin')}
                   </button>
                 </div>
               )
@@ -139,13 +140,13 @@ export default function Login() {
             <form onSubmit={(event) => void submit(event)} noValidate className="stack">
               {!device && (
                 <div className="field">
-                  <label htmlFor="login-email">Email</label>
+                  <label htmlFor="login-email">{t('login.email')}</label>
                   <input id="login-email" type="email" autoComplete="email" inputMode="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
                 </div>
               )}
               {!device && mode !== 'reset' && (
                 <div className="field">
-                  <label htmlFor="login-password">Password</label>
+                  <label htmlFor="login-password">{t('login.password')}</label>
                   <input
                     id="login-password"
                     type="password"
@@ -155,12 +156,12 @@ export default function Login() {
                     minLength={8}
                     required
                   />
-                  {mode === 'signup' && <p className="hint">At least 8 characters.</p>}
+                  {mode === 'signup' && <p className="hint">{t('login.min8')}</p>}
                 </div>
               )}
               {!device && mode === 'signup' && (
                 <div className="field">
-                  <label htmlFor="login-confirm">Confirm password</label>
+                  <label htmlFor="login-confirm">{t('login.confirm')}</label>
                   <input id="login-confirm" type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
                 </div>
               )}
@@ -168,13 +169,13 @@ export default function Login() {
                 <label className="check">
                   <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} required />
                   <span>
-                    I have read and agree to the{' '}
+                    {t('login.agree1')}{' '}
                     <Link to="/terms" target="_blank">
-                      Terms of Use
+                      {t('login.terms')}
                     </Link>{' '}
-                    and{' '}
+                    {t('login.and')}{' '}
                     <Link to="/privacy" target="_blank">
-                      Privacy notice
+                      {t('login.privacy')}
                     </Link>
                     .
                   </span>
@@ -191,7 +192,7 @@ export default function Login() {
                 </p>
               )}
               <button type="submit" className="primary" disabled={busy}>
-                {busy ? 'Please wait…' : device ? 'Continue on this device' : mode === 'signup' ? 'Create login' : mode === 'reset' ? 'Send reset link' : 'Sign in'}
+                {busy ? t('login.wait') : device ? t('login.continueDevice') : mode === 'signup' ? t('login.createLogin') : mode === 'reset' ? t('login.sendReset') : t('login.signIn')}
               </button>
             </form>
 
@@ -199,25 +200,25 @@ export default function Login() {
               <p className="small">
                 {mode === 'reset' ? (
                   <button type="button" className="linklike" onClick={() => setMode('signin')}>
-                    Back to sign in
+                    {t('login.backToSignIn')}
                   </button>
                 ) : (
                   <button type="button" className="linklike" onClick={() => setMode('reset')}>
-                    Forgot password?
+                    {t('login.forgot')}
                   </button>
                 )}
               </p>
             )}
             {mode === 'signin' && !device && (
               <p className="hint">
-                By signing in you agree to the <Link to="/terms">Terms of Use</Link> and <Link to="/privacy">Privacy notice</Link>.
+                {t('login.byIn')} <Link to="/terms">{t('login.terms')}</Link> {t('login.and')} <Link to="/privacy">{t('login.privacy')}</Link>.
               </p>
             )}
           </section>
         )}
 
         <p className="small muted">
-          <Link to="/emergency">Emergency cards</Link> work without a login.
+          <Link to="/emergency">{t('login.emergencyCards')}</Link> {t('login.noLogin')}
         </p>
       </main>
     </div>

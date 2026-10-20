@@ -9,6 +9,7 @@
  * a UI checkbox is a reminder, not a control.
  */
 
+import { useT } from '../lib/i18n.js';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { buildIndex } from '@signsphere/gloss';
 import { useLexicon } from '../lib/vocabulary.js';
@@ -48,6 +49,7 @@ type Phase = 'idle' | 'countdown' | 'recording' | 'saved';
 export default function Recorder() {
   const { settings, update } = useSettings();
   const { backend, active } = useSession();
+  const { t } = useT();
   const cloud = backend.mode === 'cloud';
   const lexicon = buildIndex(useLexicon());
 
@@ -227,17 +229,12 @@ export default function Recorder() {
           <Link className="btn small" to={returnTo}>← Back{returnTo.startsWith('/emergency') ? ' to SOS setup' : ''}{counts[activeLabel] ? ` (${activeLabel}: ${counts[activeLabel]} recorded)` : ''}</Link>
         </p>
       )}
-      <h1>Record signs</h1>
-      <p className="lede">
-        Record examples to teach recognition on this device, and to export training data. Nothing
-        is uploaded — export is a manual file download you control.
-      </p>
+      <h1>{t('rec.title')}</h1>
+      <p className="lede">{t('rec.lede')}</p>
 
       <p className="notice">
-        <strong>Before recording anyone else, read the protocol</strong>
-        Consent (in ISL video, not just text), a pseudonymous signer ID, and an honorarium are all
-        required. See <code>docs/data-collection-protocol.md</code>. Recording yourself for testing
-        is fine.
+        <strong>{t('rec.protocolTitle')}</strong>
+        {t('rec.protocolBody')}
       </p>
 
       <div className="split">
@@ -247,9 +244,9 @@ export default function Recorder() {
             recording={phase === 'recording'}
             badge={
               phase === 'countdown'
-                ? `Get ready… ${countdown}`
+                ? `${t('rec.getReady')} ${countdown}`
                 : phase === 'recording'
-                  ? `● Recording ${activeLabel} · ${Math.min(frames, TARGET_FRAMES)}/${TARGET_FRAMES} frames`
+                  ? `${t('rec.recording')} ${activeLabel} · ${Math.min(frames, TARGET_FRAMES)}/${TARGET_FRAMES} ${t('rec.frames')}`
                   : undefined
             }
           />
@@ -260,14 +257,14 @@ export default function Recorder() {
               onClick={startCapture}
               disabled={phase === 'countdown' || phase === 'recording'}
             >
-              {phase === 'idle' || phase === 'saved' ? `⏺ Record ${activeLabel}` : 'Recording…'}
+              {phase === 'idle' || phase === 'saved' ? `${t('rec.record')} ${activeLabel}` : t('rec.recordingBtn')}
             </button>
             <span className="small muted" aria-live="polite">
-              {phase === 'countdown' && `Starting in ${countdown}…`}
+              {phase === 'countdown' && `${t('rec.startingIn')} ${countdown}…`}
               {phase === 'recording' &&
                 (handFrames < MIN_FRAMES
-                  ? `Sign now — ${handFrames} of at least ${MIN_FRAMES} frames with your hand in view`
-                  : `Sign now — ${Math.min(frames, TARGET_FRAMES)} of ${TARGET_FRAMES} frames`)}
+                  ? `${t('rec.signNow')} — ${handFrames} ${t('rec.atLeast')} ${MIN_FRAMES} ${t('rec.handInView')}`
+                  : `${t('rec.signNow')} — ${Math.min(frames, TARGET_FRAMES)} ${t('rec.of')} ${TARGET_FRAMES} ${t('rec.frames')}`)}
             </span>
           </div>
           {message && (
@@ -279,7 +276,7 @@ export default function Recorder() {
 
         <section className="card stack" aria-label="Recording settings">
           <div className="field">
-            <label htmlFor="label-select">Sign to record</label>
+            <label htmlFor="label-select">{t('rec.signToRecord')}</label>
             <select
               id="label-select"
               value={label}
@@ -298,7 +295,7 @@ export default function Recorder() {
           </div>
 
           <div className="field">
-            <label htmlFor="custom-label">Or type a gloss not in the lexicon</label>
+            <label htmlFor="custom-label">{t('rec.orType')}</label>
             <input
               id="custom-label"
               type="text"
@@ -309,7 +306,7 @@ export default function Recorder() {
           </div>
 
           <div className="field">
-            <label htmlFor="signer-id">Signer ID (pseudonymous — never a real name)</label>
+            <label htmlFor="signer-id">{t('rec.signerId')}</label>
             <input
               id="signer-id"
               type="text"
@@ -320,27 +317,26 @@ export default function Recorder() {
           </div>
 
           <div className="field">
-            <label htmlFor="lighting">Lighting</label>
+            <label htmlFor="lighting">{t('rec.lighting')}</label>
             <select
               id="lighting"
               value={lighting}
               onChange={(event) => setLighting(event.target.value as SampleMeta['lighting'])}
             >
-              <option value="bright">Bright</option>
-              <option value="normal">Normal</option>
-              <option value="dim">Dim</option>
+              <option value="bright">{t('rec.bright')}</option>
+              <option value="normal">{t('rec.normal')}</option>
+              <option value="dim">{t('rec.dim')}</option>
             </select>
             <p className="hint">
-              Vary this deliberately across sessions. A model trained in one lighting condition
-              fails in every other one.
+              {t('rec.lightingHint')}
             </p>
           </div>
 
           <label className="switch">
             <span>
-              Consent: these samples may be used to train the model
+              {t('rec.consent')}
               <span className="hint" style={{ display: 'block' }}>
-                Opt-in A. Without this, samples stay on this device and are excluded from export.
+                {t('rec.consentHint')}
               </span>
             </span>
             <input
@@ -355,8 +351,7 @@ export default function Recorder() {
       <h2 style={{ marginTop: '1.75rem' }}>Recorded so far ({total})</h2>
       {total === 0 ? (
         <p className="muted">
-          Nothing recorded yet. Aim for at least 5 takes per sign, and get several different people
-          to record the same signs — a model trained on one person recognises only that person.
+          {t('rec.nothing')}
         </p>
       ) : (
         <div className="card">
@@ -364,9 +359,9 @@ export default function Recorder() {
             <caption className="sr-only">Recorded samples per sign</caption>
             <thead>
               <tr>
-                <th scope="col">Sign</th>
-                <th scope="col">Samples</th>
-                <th scope="col">Enough?</th>
+                <th scope="col">{t('rec.sign')}</th>
+                <th scope="col">{t('rec.samples')}</th>
+                <th scope="col">{t('rec.enough')}</th>
               </tr>
             </thead>
             <tbody>
@@ -378,7 +373,7 @@ export default function Recorder() {
                       <strong>{gloss}</strong>
                     </td>
                     <td>{count}</td>
-                    <td>{count >= 5 ? '✓ workable' : `needs ${5 - count} more`}</td>
+                    <td>{count >= 5 ? t('rec.workable') : t('rec.needs', { n: 5 - count })}</td>
                   </tr>
                 ))}
             </tbody>
@@ -403,11 +398,11 @@ export default function Recorder() {
             });
           }}
         >
-          Delete all samples
+          {t('rec.deleteAll')}
         </button>
       </div>
       <p className="hint">
-        After recording, reopen Sign → Text to rebuild the recogniser with the new samples.
+        {t('rec.after')}
       </p>
     </>
   );

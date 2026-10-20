@@ -5,6 +5,7 @@
  * Callers get frames, not pixels. No consumer of this component ever touches the video.
  */
 
+import { translateKey, currentLang } from '../lib/i18n.js';
 import { useEffect, useRef, useState } from 'react';
 import {
   HAND_CONNECTIONS,
@@ -46,6 +47,7 @@ export default function CameraView({ onFrame, badge, recording = false, paused =
   const [processorInUse, setProcessorInUse] = useState<'GPU' | 'CPU' | null>(null);
 
   const { settings } = useSettings();
+  const lang = currentLang(settings.uiLang);
 
   // Keep the latest callback without restarting the camera on every parent render.
   useEffect(() => {
@@ -88,7 +90,7 @@ export default function CameraView({ onFrame, badge, recording = false, paused =
       try {
         await video.play();
       } catch {
-        setError('The browser blocked video playback. Tap the page and try again.');
+        setError(translateKey(lang, 'cam.blocked'));
         setStatus('error');
         return;
       }
@@ -161,11 +163,11 @@ export default function CameraView({ onFrame, badge, recording = false, paused =
         <video ref={videoRef} playsInline muted aria-label="Camera preview" />
         <canvas ref={canvasRef} aria-hidden="true" />
         <span className={`badge${recording ? ' recording' : ''}`}>
-          {status === 'running' ? (badge ?? `Tracking · ${fps} fps`) : statusLabel(status)}
+          {status === 'running' ? (badge ?? `${translateKey(lang, 'cam.tracking')} · ${fps} fps`) : statusLabel(status, lang)}
         </span>
         {status === 'running' && (
           <span className="badge points-badge" aria-hidden="true">
-            {points.length === 0 ? 'No hand in view' : points.map((n, i) => `Hand ${i + 1}: ${n}/21`).join(' · ')}
+            {points.length === 0 ? translateKey(lang, 'cam.noHand') : points.map((n, i) => `${translateKey(lang, 'cam.hand')} ${i + 1}: ${n}/21`).join(' · ')}
             {processorInUse ? ` · ${processorInUse}` : ''}
           </span>
         )}
@@ -173,37 +175,38 @@ export default function CameraView({ onFrame, badge, recording = false, paused =
 
       {/* Status is announced to screen readers, not just shown visually. */}
       <p className="sr-only" role="status">
-        {status === 'running' ? `Camera running at ${fps} frames per second` : statusLabel(status)}
+        {status === 'running' ? `Camera running at ${fps} frames per second` : statusLabel(status, lang)}
       </p>
 
       {error && (
         <p className="notice error">
-          <strong>Camera problem</strong>
+          <strong>{translateKey(lang, 'cam.problem')}</strong>
           {error}
         </p>
       )}
 
       {status === 'running' && fps > 0 && fps < 12 && (
         <p className="notice warn">
-          <strong>Tracking is slow ({fps} fps)</strong>
-          Recognition needs about 15 fps to work well. Close other tabs, or in Settings try
-          &ldquo;Tracking runs on: Main processor&rdquo; or turn on &ldquo;hands only&rdquo;.
+          <strong>
+            {translateKey(lang, 'cam.slow')} ({fps} fps)
+          </strong>
+          {translateKey(lang, 'cam.slowBody')}
         </p>
       )}
     </div>
   );
 }
 
-function statusLabel(status: Status): string {
+function statusLabel(status: Status, lang: ReturnType<typeof currentLang>): string {
   switch (status) {
     case 'idle':
-      return 'Camera off';
+      return translateKey(lang, 'cam.off');
     case 'starting':
-      return 'Starting camera…';
+      return translateKey(lang, 'cam.starting');
     case 'running':
-      return 'Tracking';
+      return translateKey(lang, 'cam.tracking');
     case 'error':
-      return 'Camera unavailable';
+      return translateKey(lang, 'cam.unavailable');
   }
 }
 

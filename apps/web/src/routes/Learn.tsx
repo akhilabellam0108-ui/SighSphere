@@ -11,6 +11,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { buildIndex, translate, type LexEntry } from '@signsphere/gloss';
 import { useLexicon } from '../lib/vocabulary.js';
+import { useT } from '../lib/i18n.js';
 import CameraView from '../components/CameraView.js';
 import SignPlayer from '../components/SignPlayer.js';
 
@@ -86,6 +87,7 @@ function titleCase(value: string): string {
 export default function Learn() {
   const { settings, progress, setProgress } = useSettings();
   const vocabulary = useLexicon();
+  const { t } = useT();
   const lexicon = useMemo(() => buildIndex(vocabulary), [vocabulary]);
   const lessons = useMemo(() => buildLessons(lexicon.lexicon.entries), [lexicon]);
 
@@ -134,13 +136,13 @@ export default function Learn() {
 
     // Geometric hints first: these are actionable even when the classifier can't help.
     if (!sawAnyHandRef.current) {
-      hints.push('No hand was detected. Move closer and make sure your hands are in frame.');
+      hints.push(t('learn.hint.noHand'));
     }
     if (target.twoHanded && !sawSecondHandRef.current) {
-      hints.push('This is a two-handed sign, but only one hand was visible.');
+      hints.push(t('learn.hint.twoHands'));
     }
     if (window.length < 10) {
-      hints.push('Tracking dropped out — try better lighting or a plainer background.');
+      hints.push(t('learn.hint.tracking'));
     }
 
     const canGrade = classifier !== null && classifier.labels.includes(target.gloss);
@@ -155,9 +157,9 @@ export default function Learn() {
       confidence = top?.confidence ?? 0;
       correct = heard === target.gloss && confidence >= REJECTION_THRESHOLD;
       if (!correct && heard && heard !== target.gloss) {
-        hints.push(`That looked more like ${heard}. Check your handshape and where you place it.`);
+        hints.push(t('learn.hint.lookedLike', { heard: heard ?? '' }));
       } else if (!correct && confidence < REJECTION_THRESHOLD) {
-        hints.push('Not confident enough to call it. Try signing a little slower and more clearly.');
+        hints.push(t('learn.hint.notConfident'));
       }
     }
 
@@ -195,10 +197,9 @@ export default function Learn() {
   if (!lesson) {
     return (
       <>
-        <h1>Learning Hub</h1>
+        <h1>{t('home.card.learnTitle')}</h1>
         <p className="lede">
-          Watch a sign, then sign it back to the camera and get feedback. {lessons.length} lessons
-          built from the lexicon.
+          {t('learn.lede')} {t('learn.lessons', { n: lessons.length })}
         </p>
 
         <section className="card grid" aria-label="Your progress" style={{ marginBottom: '1.25rem' }}>
@@ -208,21 +209,20 @@ export default function Learn() {
           </div>
           <div className="stat">
             <div className="value">{progress.dayStreak}</div>
-            <div className="label">Day streak</div>
+            <div className="label">{t('home.streak')}</div>
           </div>
           <div className="stat">
             <div className="value">
               {Object.keys(progress.signs).filter((g) => isMastered(progress, g)).length}
             </div>
-            <div className="label">Mastered</div>
+            <div className="label">{t('learn.mastered')}</div>
           </div>
         </section>
 
         {classifier && classifier.labels.length === 0 && (
           <p className="notice warn">
-            <strong>Practice cannot be graded yet</strong>
-            No signs have been recorded, so the app can show you a sign but cannot check yours.
-            Record examples first — see the Record tab.
+            <strong>{t('learn.cannotGradeTitle')}</strong>
+            {t('learn.cannotGradeBody')}
           </p>
         )}
 
@@ -244,7 +244,7 @@ export default function Learn() {
               >
                 <h3>{item.title}</h3>
                 <p className="small muted" style={{ margin: 0 }}>
-                  {item.entries.length} signs · {done} mastered
+                  {t('learn.signsMastered', { n: item.entries.length, done })}
                 </p>
                 <p className="small" style={{ margin: '0.4rem 0 0' }}>
                   {item.entries.map((entry) => entry.gloss).join(' · ')}
@@ -263,11 +263,11 @@ export default function Learn() {
       <div className="row" style={{ justifyContent: 'space-between' }}>
         <h1 style={{ margin: 0 }}>{lesson.title}</h1>
         <button type="button" onClick={() => setLessonId(null)}>
-          ← All lessons
+          {t('learn.all')}
         </button>
       </div>
       <p className="lede">
-        Sign {signIndex + 1} of {lesson.entries.length}
+        {t('learn.signOf', { i: signIndex + 1, n: lesson.entries.length })}
         {target && ` · ${target.gloss}`}
       </p>
 
@@ -279,9 +279,8 @@ export default function Learn() {
           </Suspense>
           {target && !target.reviewed && (
             <p className="notice warn">
-              <strong>Unverified sign</strong>
-              This gloss has not been checked by a fluent ISL signer, and there is no signer video
-              yet. Do not learn it as correct.
+              <strong>{t('learn.unverifiedTitle')}</strong>
+              {t('learn.unverifiedBody')}
             </p>
           )}
         </section>
@@ -293,9 +292,9 @@ export default function Learn() {
             recording={step === 'recording'}
             badge={
               step === 'countdown'
-                ? `Get ready… ${countdown}`
+                ? `${t('rec.getReady')} ${countdown}`
                 : step === 'recording'
-                  ? '● Sign now'
+                  ? t('learn.signNow')
                   : undefined
             }
           />
@@ -311,7 +310,7 @@ export default function Learn() {
                 setStep('countdown');
               }}
             >
-              {step === 'result' ? '↻ Try again' : '▶ Practise this sign'}
+              {step === 'result' ? t('learn.tryAgain') : t('learn.practise')}
             </button>
             <button
               type="button"
@@ -322,7 +321,7 @@ export default function Learn() {
                 setFeedback(null);
               }}
             >
-              Next sign →
+              {t('learn.next')}
             </button>
           </div>
 
@@ -333,21 +332,19 @@ export default function Learn() {
             >
               <strong>
                 {!feedback.gradable
-                  ? 'Cannot grade this sign yet'
+                  ? t('learn.cannotGrade')
                   : feedback.correct
-                    ? '✓ Correct'
-                    : 'Not quite'}
+                    ? t('learn.correct')
+                    : t('learn.notQuite')}
               </strong>
               {!feedback.gradable && (
                 <span>
-                  {target?.gloss} has no recorded examples, so the app cannot check your signing.
-                  Record examples of it first, then practice will be graded.
+                  {target?.gloss} {t('learn.noExamples')}
                 </span>
               )}
               {feedback.gradable && feedback.heard && (
                 <span>
-                  Recognised as <strong>{feedback.heard}</strong> ({Math.round(feedback.confidence * 100)}%
-                  confident).{' '}
+                  {t('learn.recognisedAs')} <strong>{feedback.heard}</strong> ({Math.round(feedback.confidence * 100)}% {t('learn.confident')}).{' '}
                 </span>
               )}
               {feedback.hints.length > 0 && (
@@ -363,7 +360,7 @@ export default function Learn() {
       </div>
 
       <div className="card" style={{ marginTop: '1.25rem' }}>
-        <h2 className="small">Signs in this lesson</h2>
+        <h2 className="small">{t('learn.inLesson')}</h2>
         <div className="gloss-row">
           {lesson.entries.map((entry, i) => (
             <button

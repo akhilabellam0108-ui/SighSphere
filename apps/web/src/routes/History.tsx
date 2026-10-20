@@ -1,3 +1,4 @@
+import { useT, type MessageKey } from '../lib/i18n.js';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { HistoryItem, HistoryKind } from '../lib/backend.js';
@@ -6,10 +7,10 @@ import { useHistory } from '../state/history.js';
 import { useSession } from '../state/session.js';
 
 const KINDS: Array<{ kind: HistoryKind; label: string; icon: string; to: string }> = [
-  { kind: 'text-to-sign', label: 'Text → Sign', icon: '⌨', to: '/text-to-sign' },
-  { kind: 'voice-to-sign', label: 'Voice → Sign', icon: '🎤', to: '/voice-to-sign' },
-  { kind: 'sign-to-text', label: 'Sign → Text', icon: '👁', to: '/sign-to-text' },
-  { kind: 'sign-to-voice', label: 'Sign → Voice', icon: '🔊', to: '/sign-to-voice' },
+  { kind: 'text-to-sign', label: 'nav.textToSign', icon: '⌨', to: '/text-to-sign' },
+  { kind: 'voice-to-sign', label: 'nav.voiceToSign', icon: '🎤', to: '/voice-to-sign' },
+  { kind: 'sign-to-text', label: 'nav.signToText', icon: '👁', to: '/sign-to-text' },
+  { kind: 'sign-to-voice', label: 'nav.signToVoice', icon: '🔊', to: '/sign-to-voice' },
 ];
 
 function dayLabel(iso: string): string {
@@ -32,6 +33,7 @@ function groupByDay(items: HistoryItem[]): Array<[string, HistoryItem[]]> {
 
 export default function History() {
   const { active, backend } = useSession();
+  const { t } = useT();
   const { items, remove, clear } = useHistory();
   const [query, setQuery] = useState('');
   const [kinds, setKinds] = useState<HistoryKind[]>([]);
@@ -40,22 +42,22 @@ export default function History() {
 
   return (
     <>
-      <h1>History</h1>
+      <h1>{t('nav.history')}</h1>
       <p className="lede">
-        Everything signed, typed or spoken in <strong>{active?.displayName}</strong>
-        {backend.mode === 'cloud' ? ', saved to your account.' : ', saved in this browser.'}
-        {pending > 0 && ` ${pending} change${pending === 1 ? '' : 's'} will sync when you are online.`}
+        {t('hist.lede')} <strong>{active?.displayName}</strong>
+        {backend.mode === 'cloud' ? t('hist.savedCloud') : t('hist.savedDevice')}
+        {pending > 0 && ` ${t('hist.pending', { n: pending })}`}
       </p>
 
       {items.length === 0 ? (
         <div className="card stack">
           <p style={{ margin: 0 }}>
-            <strong>Nothing here yet.</strong> Translations appear here automatically as you use SignSphere.
+            <strong>{t('hist.empty')}</strong> {t('hist.emptyBody')}
           </p>
           <div className="row">
             {KINDS.map((k) => (
               <Link key={k.kind} className="btn small" to={k.to}>
-                {k.icon} {k.label}
+                {k.icon} {t(k.label as MessageKey)}
               </Link>
             ))}
           </div>
@@ -64,8 +66,8 @@ export default function History() {
         <>
           <div className="card stack">
             <div className="field" style={{ margin: 0 }}>
-              <label htmlFor="history-search">Search</label>
-              <input id="history-search" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search words or signs…" />
+              <label htmlFor="history-search">{t('hist.search')}</label>
+              <input id="history-search" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('hist.searchPh')} />
             </div>
             <div className="row" role="group" aria-label="Filter by type">
               {KINDS.map((k) => {
@@ -78,7 +80,7 @@ export default function History() {
                     aria-pressed={on}
                     onClick={() => setKinds(on ? kinds.filter((x) => x !== k.kind) : [...kinds, k.kind])}
                   >
-                    {k.icon} {k.label}
+                    {k.icon} {t(k.label as MessageKey)}
                   </button>
                 );
               })}
@@ -86,7 +88,7 @@ export default function History() {
           </div>
 
           <p className="small muted" role="status">
-            {shown.length} of {items.length}
+            {shown.length} {t('hist.of')} {items.length}
           </p>
 
           {groupByDay(shown).map(([day, dayItems]) => (
@@ -105,7 +107,7 @@ export default function History() {
                       <p className="history-input">{item.input}</p>
                       {!signed && item.output && item.output !== item.input && <p className="history-output">ISL: {item.output}</p>}
                       <button type="button" className="small danger history-delete" onClick={() => remove([item.id])} aria-label={`Delete “${item.input}”`}>
-                        Delete
+                        {t('hist.delete')}
                       </button>
                     </li>
                   );
@@ -122,7 +124,7 @@ export default function History() {
                 if (confirm(`Delete all history for ${active?.displayName ?? 'this account'}? This cannot be undone.`)) void clear();
               }}
             >
-              Delete all history
+              {t('hist.deleteAll')}
             </button>
           </div>
         </>

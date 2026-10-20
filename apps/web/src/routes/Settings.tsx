@@ -16,6 +16,7 @@ import { isSpeechRecognitionSupported, isSpeechSynthesisSupported, speak } from 
 import { useSettings } from '../state/settings.js';
 import ShareApp from '../components/ShareApp.js';
 import LanguagePicker from '../components/LanguagePicker.js';
+import { useT } from '../lib/i18n.js';
 
 const LANGS = [
   { code: 'en-IN', label: 'English (India)' },
@@ -29,31 +30,31 @@ const LANGS = [
 
 export default function SettingsPage() {
   const { settings, update, resetAll } = useSettings();
+  const { t } = useT();
   const [message, setMessage] = useState<string | null>(null);
   const lexicon = buildIndex(useLexicon());
   const problems = validateLexicon();
 
   return (
     <>
-      <h1>Settings</h1>
-      <p className="lede">Everything here is stored on this device only.</p>
+      <h1>{t('nav.settings')}</h1>
+      <p className="lede">{t('set.lede')}</p>
 
       <section className="card stack" aria-labelledby="lang-heading" style={{ marginBottom: '1rem' }}>
         <h2 id="lang-heading">Language · भाषा · భాష</h2>
         <LanguagePicker />
         <p className="hint" style={{ margin: 0 }}>
-          Changes the app's words and the voice that reads things aloud. Typing and speaking for Text → Sign stay in English,
-          because the sign translation works from English.
+          {t('set.langHint')}
         </p>
       </section>
       <section className="card stack" aria-labelledby="a11y-heading">
-        <h2 id="a11y-heading">Accessibility</h2>
+        <h2 id="a11y-heading">{t('set.a11y')}</h2>
 
         <label className="switch">
           <span>
-            High contrast
+            {t('set.contrast')}
             <span className="hint" style={{ display: 'block' }}>
-              Maximum contrast, independent of your light/dark setting.
+              {t('set.contrastHint')}
             </span>
           </span>
           <input
@@ -65,9 +66,9 @@ export default function SettingsPage() {
 
         <label className="switch">
           <span>
-            Reduce motion
+            {t('set.motion')}
             <span className="hint" style={{ display: 'block' }}>
-              Removes animations and transitions.
+              {t('set.motionHint')}
             </span>
           </span>
           <input
@@ -78,7 +79,7 @@ export default function SettingsPage() {
         </label>
 
         <div className="field">
-          <label htmlFor="font-scale">Text size: {Math.round(settings.fontScale * 100)}%</label>
+          <label htmlFor="font-scale">{t('set.textSize')}: {Math.round(settings.fontScale * 100)}%</label>
           <input
             id="font-scale"
             type="range"
@@ -92,21 +93,20 @@ export default function SettingsPage() {
       </section>
 
       <section className="card stack" aria-labelledby="recognition-heading" style={{ marginTop: '1rem' }}>
-        <h2 id="recognition-heading">Signing and recognition</h2>
+        <h2 id="recognition-heading">{t('set.signing')}</h2>
 
         <div className="field">
-          <label htmlFor="dominant-hand">Dominant hand</label>
+          <label htmlFor="dominant-hand">{t('set.hand')}</label>
           <select
             id="dominant-hand"
             value={settings.dominantHand}
             onChange={(event) => update({ dominantHand: event.target.value as 'left' | 'right' })}
           >
-            <option value="right">Right</option>
-            <option value="left">Left</option>
+            <option value="right">{t('set.right')}</option>
+            <option value="left">{t('set.left')}</option>
           </select>
           <p className="hint">
-            Set this correctly before recording. It decides which hand is treated as dominant in the
-            features, and getting it wrong makes recognition much worse for left-dominant signers.
+            {t('set.handHint')}
           </p>
         </div>
 
@@ -155,10 +155,10 @@ export default function SettingsPage() {
       </section>
 
       <section className="card stack" aria-labelledby="speech-heading" style={{ marginTop: '1rem' }}>
-        <h2 id="speech-heading">Speech</h2>
+        <h2 id="speech-heading">{t('set.speech')}</h2>
 
         <div className="field">
-          <label htmlFor="tts-lang">Speaking voice</label>
+          <label htmlFor="tts-lang">{t('set.voice')}</label>
           <select
             id="tts-lang"
             value={settings.ttsLang}
@@ -173,15 +173,15 @@ export default function SettingsPage() {
           <button
             type="button"
             style={{ marginTop: '0.5rem' }}
-            onClick={() => speak('This is how SignSphere will sound.', settings.ttsLang)}
+            onClick={() => speak(t('set.testPhrase'), settings.ttsLang)}
             disabled={!isSpeechSynthesisSupported()}
           >
-            🔊 Test voice
+            {t('set.test')}
           </button>
         </div>
 
         <div className="field">
-          <label htmlFor="stt-lang">Listening language</label>
+          <label htmlFor="stt-lang">{t('set.listen')}</label>
           <select
             id="stt-lang"
             value={settings.sttLang}
@@ -202,17 +202,15 @@ export default function SettingsPage() {
       </section>
 
       <section className="card stack" aria-labelledby="data-heading" style={{ marginTop: '1rem' }}>
-        <h2 id="data-heading">Your data</h2>
+        <h2 id="data-heading">{t('set.data')}</h2>
         <p className="small" style={{ margin: 0 }}>
-          Camera frames are processed on this device and never uploaded. Recordings, progress, and
-          contacts are stored locally. Speech recognition is the one exception — see the note on the
-          Voice → Sign screen.
+          {t('set.dataBody')}
         </p>
         <label className="switch">
           <span>
-            Allow my recordings to be used for training
+            {t('set.allowTrain')}
             <span className="hint" style={{ display: 'block' }}>
-              Off by default. Only affects samples exported from the Record screen.
+              {t('set.allowTrainHint')}
             </span>
           </span>
           <input
@@ -233,7 +231,7 @@ export default function SettingsPage() {
               });
             }}
           >
-            Delete everything on this device
+            {t('set.deleteAll')}
           </button>
         </div>
         {message && (
@@ -244,7 +242,7 @@ export default function SettingsPage() {
       </section>
 
       <section className="card stack" aria-labelledby="share-heading" style={{ marginTop: '1rem' }}>
-        <h2 id="share-heading">Open on another device</h2>
+        <h2 id="share-heading">{t('set.share')}</h2>
         <ShareApp />
       </section>
 

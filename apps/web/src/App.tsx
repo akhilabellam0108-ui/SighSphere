@@ -126,14 +126,15 @@ function RequireLogin() {
 
 /** Installs the bundled ISL sign pack in the background, once per version. */
 function BundledPack() {
+  const { t } = useT();
   const [status, setStatus] = useState<string | null>(null);
   useEffect(() => {
     let cancelled = false;
     void ensureBundledPack((done, total) => {
-      if (!cancelled && done % 25 === 0) setStatus(`Installing ISL signs… ${Math.round((done / total) * 100)}%`);
+      if (!cancelled && done % 25 === 0) setStatus(t('pack.installing', { p: Math.round((done / total) * 100) }));
     }).then((result) => {
       if (cancelled) return;
-      setStatus(result === 'installed' || result === 'updated' ? 'ISL signs installed — recognition and the avatar are ready.' : null);
+      setStatus(result === 'installed' || result === 'updated' ? t('pack.ready') : null);
       if (result === 'installed' || result === 'updated') window.setTimeout(() => !cancelled && setStatus(null), 6000);
     });
     return () => {
