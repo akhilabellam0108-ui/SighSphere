@@ -1,0 +1,221 @@
+name: INCLUDE dataset (large, parallel) → signs + model
+
+# For big sign sets (e.g. all 263 INCLUDE signs, ~4,200 videos) that are too slow for one
+# runner: the videos are split into shards that download and hand-track at the same time on
+# separate runners, then one job joins the results and trains the model.
+#
+# Accuracy safeguards — the new model is put in the app ONLY if all of these hold:
+#   * test top-1 accuracy ≥ min_top1 (default 0.85) and ≥ the linear baseline
+#   * every offline-SOS sign in the test set (DOCTOR, HOSPITAL, POLICE, MEDICINE, DEAF, SICK)
+#     is recognised ≥ min_sos (default 0.9) of the time
+# Otherwise only the sign pack ships (recognition then uses examples, the avatar still learns
+# every sign) and the summary says which check failed. Per-sign results are in the summary.
+#
+# Run: Actions → "INCLUDE dataset (large, parallel)" → Run workflow.
+
+on:
+  workflow_dispatch:
+    inputs:
+      signs:
+        description: 'Which signs: all (263), include50, sos, glosses like DOCTOR,HELLO, or combined with + (include50+sos)'
+        default: all
+      shards:
+        description: 'How many runners work in parallel'
+        default: '10'
+      min_top1:
+        description: 'Ship the model only if test top-1 accuracy is at least this'
+        default: '0.85'
+      min_sos:
+        description: 'Ship the model only if every SOS sign is recognised at least this often'
+        default: '0.9'
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: write
+
+concurrency:
+  group: include-parallel
+  cancel-in-progress: false
+
+env:
+  SIGNS: ${{ inputs.signs || 'all' }}
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.shard.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Plan and split
+        id: shard
+        run: |
+          git clone -q --depth 1 https://github.com/AI4Bharat/INCLUDE.git /tmp/INCLUDE
+          node scripts/include/plan.mjs --signs "$SIGNS" --max-per-sign 40 --include-repo /tmp/INCLUDE --out /tmp/plan.json
+          node scripts/include/shard.mjs --plan /tmp/plan.json --shards "${{ inputs.shards || '10' }}" --out /tmp/shards
+          echo "matrix=$(cat /tmp/shards/matrix.json)" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: plan
+          path: /tmp/shards
+
+  track:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJson(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Make room
+        run: sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/local/lib/android /opt/hostedtoolcache/CodeQL
+      - name: Tools
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+          npm ci
+          npm i --no-save playwright@1
+          npx playwright install --with-deps chromium
+          npm run setup:mediapipe --workspace @signsphere/web
+      - uses: actions/download-artifact@v4
+        with:
+          name: plan
+          path: /tmp/shards
+      - name: Restore this shard's videos (if an earlier run downloaded them)
+        id: raw
+        uses: actions/cache/restore@v4
+        with:
+          path: /tmp/include-raw
+          key: include-shard-${{ env.SIGNS }}-${{ matrix.shard }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: include-shard-${{ env.SIGNS }}-${{ matrix.shard }}-
+      - name: Download this shard's videos
+        id: download
+        timeout-minutes: 200
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/include/download.py --plan /tmp/shards/shard-${{ matrix.shard }}.json --out /tmp/include-raw
+      - name: Save downloaded videos (also if the download ran out of time)
+        if: always() && steps.raw.outcome == 'success'
+        continue-on-error: true
+        uses: actions/cache/save@v4
+        with:
+          path: /tmp/include-raw
+          key: ${{ steps.raw.outputs.cache-primary-key }}
+      - name: Hand tracking
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p /tmp/out/shard-${{ matrix.shard }}
+          node scripts/include/import.mjs --plan /tmp/shards/shard-${{ matrix.shard }}.json --raw /tmp/include-raw \
+            --pack /tmp/out/shard-${{ matrix.shard }}/isl-include.json --jsonl /tmp/out/shard-${{ matrix.shard }}/include.jsonl \
+            --stats /tmp/out/shard-${{ matrix.shard }}/include-stats.json --port $((5200 + ${{ matrix.shard }}))
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shard-${{ matrix.shard }}
+          path: /tmp/out/shard-${{ matrix.shard }}
+
+  train:
+    needs: track
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: shard-*
+          path: /tmp/shards-out
+      - name: Join the shards
+        run: node scripts/include/merge.mjs --in /tmp/shards-out --pack apps/web/public/datasets/isl-include.json --jsonl /tmp/include.jsonl --stats /tmp/include-stats.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: include-all-${{ github.run_number }}
+          path: |
+            apps/web/public/datasets/isl-include.json
+            /tmp/include.jsonl
+            /tmp/include-stats.json
+      - name: Train and check accuracy
+        id: train
+        env:
+          MIN_TOP1: ${{ inputs.min_top1 || '0.85' }}
+          MIN_SOS: ${{ inputs.min_sos || '0.9' }}
+        run: |
+          pip install -q torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -q numpy onnx onnxscript onnxruntime
+          cd services/ml
+          python train.py --data /tmp/include.jsonl --model linear --epochs 60 --out /tmp/models --test-signer-ids test --val-signer-ids val
+          # More signs to tell apart: train longer and with more augmented examples.
+          python train.py --data /tmp/include.jsonl --model cnn --epochs 120 --augment 6 --out /tmp/models --test-signer-ids test --val-signer-ids val
+          python check_model.py /tmp/models/sign-cnn-v1.onnx
+          python - <<'PY'
+          import json, os
+          m = json.load(open('/tmp/models/sign-cnn-v1.metrics.json'))
+          base = json.load(open('/tmp/models/sign-linear-v1.metrics.json'))['top1']
+          min_top1, min_sos = float(os.environ['MIN_TOP1']), float(os.environ['MIN_SOS'])
+          sos = ['DOCTOR', 'HOSPITAL', 'POLICE', 'MEDICINE', 'DEAF', 'SICK']
+          per = m.get('per_class', {})
+          checks = [
+              (f"top-1 {m['top1']:.3f} ≥ {min_top1}", m['top1'] >= min_top1),
+              (f"beats the linear baseline ({base:.3f})", m['top1'] >= base),
+          ] + [(f"SOS sign {s}: {per[s]:.2f} ≥ {min_sos}", per[s] >= min_sos) for s in sos if s in per]
+          ok = all(passed for _, passed in checks)
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
+              out.write(f"ok={1 if ok else 0}\ntop1={m['top1']:.3f}\n")
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as s:
+              s.write(f"## Model: {m['classes']} signs · test top-1 {m['top1']:.3f} · top-3 {m['top3']:.3f}\n\n")
+              for label, passed in checks:
+                  s.write(f"- {'✅' if passed else '❌'} {label}\n")
+              s.write(f"\n**Ship the model: {'yes' if ok else 'no — the app keeps its current model'}**\n\n")
+              s.write("### Weakest signs (re-record or review these)\n\n| Sign | Test accuracy |\n|---|---|\n")
+              for g, a in sorted(per.items(), key=lambda kv: kv[1])[:25]:
+                  s.write(f"| {g} | {a:.2f} |\n")
+          PY
+      - name: Put the model in the app
+        if: steps.train.outputs.ok == '1'
+        run: |
+          D=apps/web/public/models
+          cp /tmp/models/sign-cnn-v1.onnx $D/sign-model.onnx
+          python - <<PY
+          import json, datetime
+          info = json.load(open("/tmp/models/sign-cnn-v1.labels.json"))
+          m = json.load(open("/tmp/models/sign-cnn-v1.metrics.json"))
+          info.update(top1=m["top1"], top3=m["top3"], model="cnn", source="INCLUDE (AI4Bharat, CC BY 4.0)", trainedAt=datetime.date.today().isoformat())
+          json.dump(info, open("$D/sign-model.labels.json", "w"), indent=2)
+          json.dump(m, open("$D/sign-model.metrics.json", "w"), indent=2)
+          PY
+      - name: Sign pack summary
+        run: |
+          python -c "
+          import json; s=json.load(open('/tmp/include-stats.json'))
+          print(f\"## Sign pack: {len(s['signs'])} signs\"); print(); print(f\"{s['usable']} of {s['videos']} videos had hands tracked · split {s['bySplit']} · {s['shards']} runners\")" >> "$GITHUB_STEP_SUMMARY"
+      # Pushes the results to a branch (and opens a PR if the repository allows Actions to).
+      - name: Save results to a branch
+        continue-on-error: true
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: include/${{ env.SIGNS }}-parallel-${{ github.run_number }}
+          base: ${{ github.ref_name }}
+          title: 'ISL from INCLUDE: ${{ env.SIGNS }} signs${{ steps.train.outputs.ok == ''1'' && format('' + model (top-1 {0})'', steps.train.outputs.top1) || '' (model not shipped)'' }}'
+          commit-message: 'Add INCLUDE sign pack (${{ env.SIGNS }})'
+          add-paths: |
+            apps/web/public/datasets/isl-include.json
+            apps/web/public/models/*
+          body: |
+            Built by "INCLUDE dataset (large, parallel)" run ${{ github.run_number }} from the INCLUDE dataset by AI4Bharat (CC BY 4.0). Only hand landmarks, no video. See the run summary for accuracy checks and per-sign results.
