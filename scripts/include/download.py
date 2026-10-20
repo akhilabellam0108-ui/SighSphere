@@ -126,7 +126,13 @@ def main() -> None:
         dest = dest_for(sign, info.filename)
         if dest.exists() and dest.stat().st_size == info.file_size:
             return 1
-        return copy_member(zip_for(f), info, sign)
+        try:
+            return copy_member(zip_for(f), info, sign)
+        except Exception as e:  # noqa: BLE001 — one slow or refused video must not stop the rest
+            # A broken connection can leave this thread's zip handle unusable: open a fresh one next time.
+            getattr(local, "zips", {}).pop(f["key"], None)
+            report(f"  {sign['gloss']}: {dest.name} failed ({type(e).__name__}) — will retry")
+            return 0
 
     def full_download(f: dict) -> int:
         t = time.time()
@@ -157,8 +163,27 @@ def main() -> None:
     jobs.sort(key=lambda j: (j[2]["gloss"], j[1].filename))
     todo = [j for j in jobs if not (dest_for(j[2], j[1].filename).exists() and dest_for(j[2], j[1].filename).stat().st_size == j[1].file_size)]
     report(f"{len(jobs)} videos wanted, {len(jobs) - len(todo)} already here, downloading {len(todo)}", force=True)
-    with ThreadPoolExecutor(max_workers=int(os.environ.get("INCLUDE_PARALLEL", "16"))) as pool:
-        found = (len(jobs) - len(todo)) + sum(pool.map(fetch, todo))
+    workers = int(os.environ.get("INCLUDE_PARALLEL", "16"))
+    found = len(jobs) - len(todo)
+    # Failed videos are retried in later rounds, with fewer connections and a pause, because
+    # Zenodo refuses requests when too many arrive at once.
+    for attempt in range(5):
+        if not todo:
+            break
+        if attempt:
+            pause = 60 * attempt
+            report(f"retry round {attempt}: {len(todo)} videos, {workers} at a time, after {pause} s", force=True)
+            time.sleep(pause)
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            results = list(pool.map(fetch, todo))
+        found += sum(results)
+        todo = [job for job, ok in zip(todo, results) if not ok]
+        workers = max(2, workers // 2)
+    if todo:
+        missing = len(todo) / max(1, len(jobs))
+        report(f"{len(todo)} videos could not be downloaded ({missing:.0%}) — continuing without them", force=True)
+        if missing > 0.1:
+            sys.exit(f"Too many videos missing ({len(todo)} of {len(jobs)}). Run again: finished videos are kept.")
     for f in whole:
         found += full_download(f)
     finish(f"download done: {found} videos for {len(wanted_dirs)} signs")
