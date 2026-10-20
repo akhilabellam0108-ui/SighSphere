@@ -22,8 +22,10 @@ const vocab = JSON.parse(readFileSync(new URL('../../apps/web/src/data/include-v
 // The SOS signs (apps/web/src/lib/sos.ts) that INCLUDE has, plus a few that help in a hospital.
 const SOS = ['DOCTOR', 'HOSPITAL', 'POLICE', 'MEDICINE', 'DEAF', 'SICK'];
 
-// Sets can be combined with "+", e.g. "include50+sos" or "include50+WATER,PAIN".
+// Sets: "all" (all 263 INCLUDE signs), "include50", "sos", or glosses; combine with "+",
+// e.g. "include50+sos" or "include50+WATER,PAIN".
 function pick(part) {
+  if (part === 'all') return vocab;
   if (part === 'sos') return vocab.filter((s) => SOS.includes(s.gloss));
   if (part === 'include50') {
     const map = JSON.parse(readFileSync(join(repo, 'label_maps/label_map_include50.json'), 'utf8'));
