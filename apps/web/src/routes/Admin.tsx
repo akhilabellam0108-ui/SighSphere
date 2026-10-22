@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { FIELDS, typeLabel } from '../lib/accountTypes.js';
 import { friendlyError, type Account, type AdminOverview, type Feedback } from '../lib/backend.js';
-import { Analytics, AnnouncementsAdmin, Errors, PackPublisher, Team, Users, VocabularyAdmin } from './AdminTools.js';
+import { Analytics, AnnouncementsAdmin, EmailAlerts, Errors, PackPublisher, Team, Users, VocabularyAdmin } from './AdminTools.js';
 import { useSession } from '../state/session.js';
 import { FEEDBACK_KINDS } from './Feedback.js';
 
-type Tab = 'reviews' | 'reports' | 'errors' | 'users' | 'team' | 'news' | 'words' | 'stats' | 'pack';
+type Tab = 'reviews' | 'reports' | 'errors' | 'users' | 'team' | 'news' | 'words' | 'stats' | 'pack' | 'alerts';
 
 /** SignSphere team only: verify hospitals and organisations, answer reports, publish the sign pack. */
 export default function Admin() {
@@ -69,6 +69,7 @@ export default function Admin() {
             ['words', 'Vocabulary'],
             ['stats', 'Analytics'],
             ['pack', 'Sign pack'],
+            ['alerts', 'Email alerts'],
           ] as Array<[Tab, string]>
         ).map(([key, label]) => (
           <button key={key} type="button" aria-pressed={tab === key} onClick={() => setTab(key)}>
@@ -86,6 +87,7 @@ export default function Admin() {
       {tab === 'words' && <VocabularyAdmin />}
       {tab === 'stats' && <Analytics />}
       {tab === 'pack' && <PackPublisher />}
+      {tab === 'alerts' && <EmailAlerts />}
     </>
   );
 }

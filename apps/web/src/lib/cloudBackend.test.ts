@@ -91,6 +91,9 @@ describe('app ↔ database contract', () => {
     await b.adminResolveError(1, true);
     await b.adminDeleteResolvedErrors();
     await b.adminOpenErrors();
+    await b.adminGetAlerts();
+    await b.adminSetAlerts({ enabled: true, resendKey: 'k', fromEmail: 'f', toEmails: 't' });
+    await b.adminTestAlert();
 
     const tables = new Set(['accounts', 'history', 'signs', 'feedback', 'admins']);
     for (const s of seen) {
