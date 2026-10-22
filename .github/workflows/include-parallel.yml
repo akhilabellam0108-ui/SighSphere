@@ -28,11 +28,18 @@ on:
       min_sos:
         description: 'Ship the model only if every SOS sign is recognised at least this often'
         default: '0.9'
+      only_shards:
+        description: 'Only build these shards, e.g. 3,4 (to finish an earlier run). Empty = all'
+        default: ''
+      reuse_run:
+        description: 'Run ID whose finished shards to reuse (with only_shards). Empty = none'
+        default: ''
 
 permissions:
   contents: write
   pull-requests: write
   checks: write
+  actions: read          # download finished shards from an earlier run
 
 concurrency:
   group: include-parallel
@@ -57,7 +64,11 @@ jobs:
           git clone -q --depth 1 https://github.com/AI4Bharat/INCLUDE.git /tmp/INCLUDE
           node scripts/include/plan.mjs --signs "$SIGNS" --max-per-sign 40 --include-repo /tmp/INCLUDE --out /tmp/plan.json
           node scripts/include/shard.mjs --plan /tmp/plan.json --shards "${{ inputs.shards || '10' }}" --out /tmp/shards
-          echo "matrix=$(cat /tmp/shards/matrix.json)" >> "$GITHUB_OUTPUT"
+          if [ -n "${{ inputs.only_shards }}" ]; then
+            echo "matrix=[${{ inputs.only_shards }}]" >> "$GITHUB_OUTPUT"
+          else
+            echo "matrix=$(cat /tmp/shards/matrix.json)" >> "$GITHUB_OUTPUT"
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: plan
@@ -140,6 +151,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - name: Finished shards from an earlier run
+        if: inputs.reuse_run != ''
+        uses: actions/download-artifact@v4
+        with:
+          pattern: shard-*
+          path: /tmp/shards-out
+          run-id: ${{ inputs.reuse_run }}
+          github-token: ${{ github.token }}
       - uses: actions/download-artifact@v4
         with:
           pattern: shard-*
