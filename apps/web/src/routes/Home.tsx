@@ -4,6 +4,7 @@ import { buildIndex } from '@signsphere/gloss';
 import { useLexicon } from '../lib/vocabulary.js';
 import { useT, type MessageKey } from '../lib/i18n.js';
 import { isMastered, sampleSummary } from '../lib/storage.js';
+import { PACKS_CHANGED } from '../lib/packInstaller.js';
 import { useSession } from '../state/session.js';
 import { useSettings } from '../state/settings.js';
 
@@ -28,10 +29,15 @@ export default function Home() {
   const [labels, setLabels] = useState(0);
 
   useEffect(() => {
-    void sampleSummary().then((summary) => {
-      setRecorded(summary.mine);
-      setLabels(summary.signs);
-    });
+    const load = () =>
+      void sampleSummary().then((summary) => {
+        setRecorded(summary.mine);
+        setLabels(summary.signs);
+      });
+    load();
+    // Refresh when the built-in ISL signs finish installing.
+    window.addEventListener(PACKS_CHANGED, load);
+    return () => window.removeEventListener(PACKS_CHANGED, load);
   }, []);
 
   const lexicon = buildIndex(useLexicon());
