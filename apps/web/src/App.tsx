@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Navigate, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { ACCOUNT_TYPES, typeLabel } from './lib/accountTypes.js';
+import { ACCOUNT_TYPES } from './lib/accountTypes.js';
 import type { Announcement } from './lib/backend.js';
 import { ensureBundledPack } from './lib/packInstaller.js';
 import { useSession } from './state/session.js';
@@ -50,27 +50,28 @@ function AccountMenu() {
   const navigate = useNavigate();
   const ref = useRef<HTMLDetailsElement>(null);
   const location = useLocation();
+  const { t } = useT();
   useEffect(() => {
     if (ref.current) ref.current.open = false;
   }, [location.pathname, active?.id]);
   if (!user) {
     return (
       <Link className="btn small" to="/login">
-        Sign in
+        {t('nav.signIn')}
       </Link>
     );
   }
   const icon = (type: string) => ACCOUNT_TYPES.find((t) => t.type === type)?.icon ?? '';
   return (
     <details className="account-menu" ref={ref}>
-      <summary aria-label={`Account: ${active?.displayName ?? 'none'}. Open account menu`}>
+      <summary aria-label={t('menu.aria', { name: active?.displayName ?? t('menu.none') })}>
         <span aria-hidden="true">{active ? icon(active.type) : '👤'}</span>
-        <span className="account-menu-name">{active?.displayName ?? 'Choose account'}</span>
-        <span className="small muted account-menu-type">{active ? typeLabel(active.type) : ''}</span>
+        <span className="account-menu-name">{active?.displayName ?? t('menu.choose')}</span>
+        <span className="small muted account-menu-type">{active ? t(`acct.${active.type}` as MessageKey) : ''}</span>
       </summary>
       <div className="account-menu-panel">
         <p className="small muted" style={{ margin: '0 0 0.4rem' }}>
-          {backend.mode === 'cloud' ? user.email : 'This-device mode'}
+          {backend.mode === 'cloud' ? user.email : t('accts.deviceMode')}
         </p>
         <ul>
           {accounts.map((account) => (
@@ -82,20 +83,20 @@ function AccountMenu() {
                 onClick={() => switchAccount(account.id)}
               >
                 <span aria-hidden="true">{icon(account.type)}</span> {account.displayName}
-                <span className="small"> · {typeLabel(account.type)}</span>
+                <span className="small"> · {t(`acct.${account.type}` as MessageKey)}</span>
               </button>
             </li>
           ))}
         </ul>
         <div className="account-menu-actions">
           <Link className="btn small" to="/accounts/new">
-            + Add account
+            {t('accts.add')}
           </Link>
           <Link className="btn small" to="/accounts">
-            Manage
+            {t('menu.manage')}
           </Link>
           <button type="button" className="small" onClick={() => void signOut().then(() => navigate('/welcome', { replace: true }))}>
-            Sign out
+            {t('accts.signOut')}
           </button>
         </div>
       </div>
