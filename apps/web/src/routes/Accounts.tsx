@@ -1,22 +1,23 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ACCOUNT_TYPES, typeLabel } from '../lib/accountTypes.js';
+import { ACCOUNT_TYPES } from '../lib/accountTypes.js';
 import { friendlyError } from '../lib/backend.js';
 import { useSession } from '../state/session.js';
 import Verification from '../components/Verification.js';
+import { useT, type MessageKey } from '../lib/i18n.js';
 
 /** Manage every account under this login: switch, add, edit, delete; delete the login. */
 export default function Accounts() {
   const navigate = useNavigate();
   const { user, accounts, active, switchAccount, backend, signOut, deleteLogin } = useSession();
   const [error, setError] = useState<string | null>(null);
+  const { t } = useT();
 
   return (
     <>
-      <h1>Accounts</h1>
+      <h1>{t('accts.title')}</h1>
       <p className="lede">
-        {backend.mode === 'cloud' ? `Signed in as ${user?.email ?? ''}. ` : 'This-device mode. '}
-        One login can hold up to 10 accounts. History is kept separately for each.
+        {backend.mode === 'cloud' ? t('accts.signedIn', { email: user?.email ?? '' }) : t('accts.deviceMode')} {t('accts.limit')}
       </p>
 
       <ul className="account-list">
@@ -31,19 +32,19 @@ export default function Accounts() {
               <div className="account-main">
                 <p className="account-name">{account.displayName}</p>
                 <p className="small muted">
-                  {typeLabel(account.type)}
-                  {isActive && ' · In use'}
+                  {t(`acct.${account.type}` as MessageKey)}
+                  {isActive && ` · ${t('accts.inUse')}`}
                 </p>
                 <Verification account={account} />
               </div>
               <div className="row">
                 {!isActive && (
                   <button type="button" className="primary small" onClick={() => switchAccount(account.id)}>
-                    Use this account
+                    {t('accts.use')}
                   </button>
                 )}
-                <Link className="btn small" to={`/accounts/${account.id}`} aria-label={`Edit ${account.displayName}`}>
-                  Edit
+                <Link className="btn small" to={`/accounts/${account.id}`} aria-label={t('accts.editLabel', { name: account.displayName })}>
+                  {t('accts.edit')}
                 </Link>
               </div>
             </li>
@@ -53,21 +54,19 @@ export default function Accounts() {
 
       <div className="row" style={{ marginTop: '1rem' }}>
         <Link className="btn primary" to="/accounts/new">
-          + Add account
+          {t('accts.add')}
         </Link>
         <button type="button" onClick={() => void signOut().then(() => navigate('/welcome', { replace: true }))}>
-          Sign out
+          {t('accts.signOut')}
         </button>
       </div>
 
       {backend.mode === 'cloud' && <ChangePassword />}
 
       <section className="card stack" style={{ marginTop: '2rem' }} aria-labelledby="danger-heading">
-        <h2 id="danger-heading">Delete login</h2>
+        <h2 id="danger-heading">{t('accts.deleteTitle')}</h2>
         <p className="small" style={{ margin: 0 }}>
-          Permanently deletes your login, every account under it, and all their history
-          {backend.mode === 'cloud' ? ' from the server' : ' from this browser'}. Sign recordings on this device are not affected — clear
-          those in Settings.
+          {t(backend.mode === 'cloud' ? 'accts.deleteBodyCloud' : 'accts.deleteBodyDevice')}
         </p>
         {error && (
           <p className="notice error" role="alert">
@@ -79,13 +78,13 @@ export default function Accounts() {
             type="button"
             className="danger"
             onClick={() => {
-              if (!confirm('Delete your login, all accounts and all history? This cannot be undone.')) return;
+              if (!confirm(t('accts.deleteConfirm'))) return;
               deleteLogin()
                 .then(() => navigate('/welcome', { replace: true }))
                 .catch((cause: unknown) => setError(friendlyError(cause)));
             }}
           >
-            Delete my login and data
+            {t('accts.deleteBtn')}
           </button>
         </div>
       </section>
@@ -99,6 +98,7 @@ function ChangePassword() {
   const [next, setNext] = useState('');
   const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  const { t } = useT();
   return (
     <form
       className="card stack"
@@ -107,14 +107,14 @@ function ChangePassword() {
       onSubmit={(event) => {
         event.preventDefault();
         if (next.length < 8) {
-          setStatus({ ok: false, text: 'Use a password of at least 8 characters.' });
+          setStatus({ ok: false, text: t('pw.short') });
           return;
         }
         setBusy(true);
         backend
           .changePassword(current, next)
           .then(() => {
-            setStatus({ ok: true, text: 'Password changed.' });
+            setStatus({ ok: true, text: t('pw.done') });
             setCurrent('');
             setNext('');
           })
@@ -122,14 +122,14 @@ function ChangePassword() {
           .finally(() => setBusy(false));
       }}
     >
-      <h2 id="password-heading">Change password</h2>
+      <h2 id="password-heading">{t('pw.title')}</h2>
       <div className="form-grid">
         <label className="field">
-          <span>Current password</span>
+          <span>{t('pw.current')}</span>
           <input type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} required />
         </label>
         <label className="field">
-          <span>New password</span>
+          <span>{t('pw.new')}</span>
           <input type="password" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} minLength={8} required />
         </label>
       </div>
@@ -140,7 +140,7 @@ function ChangePassword() {
       )}
       <div>
         <button type="submit" disabled={busy}>
-          {busy ? 'Saving…' : 'Change password'}
+          {busy ? t('pw.saving') : t('pw.title')}
         </button>
       </div>
     </form>

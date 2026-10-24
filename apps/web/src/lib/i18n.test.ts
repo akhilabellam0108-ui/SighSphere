@@ -28,3 +28,44 @@ describe('interface languages', () => {
     }
   });
 });
+
+describe('account form, privacy and terms translations', () => {
+  it('every account-form label, hint, choice and message shown to people has Hindi and Telugu', async () => {
+    const { FIELDS, validators } = await import('./accountTypes.js');
+    const { FIELD_TEXT } = await import('./i18nFields.js');
+    const shown = new Set<string>();
+    for (const fields of Object.values(FIELDS)) {
+      for (const f of fields) {
+        shown.add(f.label);
+        if (f.hint) shown.add(f.hint);
+        for (const o of f.options ?? []) shown.add(o);
+      }
+    }
+    for (const check of Object.values(validators)) {
+      const message = (check as (v: string) => string | null)('');
+      if (message) shown.add(message);
+    }
+    for (const text of shown) {
+      const entry = FIELD_TEXT[text];
+      expect(entry, text).toBeTruthy();
+      if (/^(NGO|Hearing)$/.test(text)) continue;
+      expect(/[ऀ-ॿ]/.test(entry!.hi), `${text} hi`).toBe(true);
+      expect(/[ఀ-౿]/.test(entry!.te), `${text} te`).toBe(true);
+    }
+  });
+  it('privacy notice and terms have the same sections in all three languages', async () => {
+    const { PRIVACY, TERMS } = await import('./legal.js');
+    for (const doc of [PRIVACY, TERMS]) {
+      for (const lang of ['hi', 'te'] as const) {
+        expect(doc[lang].length).toBe(doc.en.length);
+        doc[lang].forEach((section, i) => {
+          expect(section.body.length, `${lang} ${doc.en[i]!.title}`).toBe(doc.en[i]!.body.length);
+          expect(section.list ?? false).toBe(doc.en[i]!.list ?? false);
+          // in-app links and the {where} slot must survive translation
+          const links = (s: string[]) => s.join(' ').match(/\]\(\/[^)]*\)|\{where\}/g) ?? [];
+          expect(links(section.body)).toEqual(links(doc.en[i]!.body));
+        });
+      }
+    }
+  });
+});

@@ -1,10 +1,20 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ACCOUNT_TYPES, typeLabel, validateAccount, visibleFields, type AccountType, type FieldDef } from '../lib/accountTypes.js';
+import { ACCOUNT_TYPES, validateAccount, visibleFields, type AccountType, type FieldDef } from '../lib/accountTypes.js';
+import { useT, type MessageKey, type UiLang } from '../lib/i18n.js';
+import { trText } from '../lib/i18nFields.js';
 import { friendlyError } from '../lib/backend.js';
 import { useSession } from '../state/session.js';
 
+/** The validation message from accountTypes.ts, in the interface language. */
+function translateError(lang: UiLang, t: (key: MessageKey, vars?: Record<string, string>) => string, field: FieldDef, message: string): string {
+  if (message === `${field.label} is required.`) return t('form.required', { field: trText(lang, field.label) });
+  if (message === `Choose a ${field.label.toLowerCase()}.`) return t('form.chooseA', { field: trText(lang, field.label) });
+  return trText(lang, message);
+}
+
 function Field({ field, value, error, onChange }: { field: FieldDef; value: string; error?: string; onChange(value: string): void }) {
+  const { t, lang } = useT();
   const id = `acct-${field.key}`;
   const describedBy = [field.hint ? `${id}-hint` : '', error ? `${id}-error` : ''].filter(Boolean).join(' ') || undefined;
   const common = {
@@ -18,15 +28,15 @@ function Field({ field, value, error, onChange }: { field: FieldDef; value: stri
   return (
     <div className="field">
       <label htmlFor={id}>
-        {field.label}
-        {!field.required && <span className="muted small"> (optional)</span>}
+        {trText(lang, field.label)}
+        {!field.required && <span className="muted small"> {t('form.optional')}</span>}
       </label>
       {field.kind === 'select' ? (
         <select {...common} onChange={(e) => onChange(e.target.value)}>
-          <option value="">Choose…</option>
+          <option value="">{t('form.choose')}</option>
           {field.options?.map((option) => (
             <option key={option} value={option}>
-              {option}
+              {trText(lang, option)}
             </option>
           ))}
         </select>
@@ -42,12 +52,12 @@ function Field({ field, value, error, onChange }: { field: FieldDef; value: stri
       )}
       {field.hint && (
         <p className="hint" id={`${id}-hint`}>
-          {field.hint}
+          {trText(lang, field.hint)}
         </p>
       )}
       {error && (
         <p className="field-error" id={`${id}-error`}>
-          {error}
+          {translateError(lang, t, field, error)}
         </p>
       )}
     </div>
@@ -68,6 +78,8 @@ export default function AccountForm() {
   const [consentError, setConsentError] = useState(false);
   const [busy, setBusy] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const { t } = useT();
+  const typeName = (value: AccountType) => t(`acct.${value}` as MessageKey);
 
   useEffect(() => {
     if (editing) {
@@ -105,9 +117,9 @@ export default function AccountForm() {
   if (id && !editing) {
     return (
       <>
-        <h1>Account not found</h1>
+        <h1>{t('form.notFound')}</h1>
         <Link className="btn" to="/accounts">
-          Back to accounts
+          {t('form.back')}
         </Link>
       </>
     );
@@ -116,16 +128,16 @@ export default function AccountForm() {
   if (!type) {
     return (
       <>
-        <h1>Add an account</h1>
-        <p className="lede">One login can hold several accounts — for you, your hospital, or your organisation.</p>
+        <h1>{t('form.addTitle')}</h1>
+        <p className="lede">{t('form.addLede')}</p>
         <div className="type-cards">
           {ACCOUNT_TYPES.map((option) => (
             <button key={option.type} type="button" className="type-card" onClick={() => setType(option.type)}>
               <span className="type-icon" aria-hidden="true">
                 {option.icon}
               </span>
-              <span className="type-label">{option.label}</span>
-              <span className="type-desc">{option.description}</span>
+              <span className="type-label">{typeName(option.type)}</span>
+              <span className="type-desc">{t(`acct.${option.type}.desc` as MessageKey)}</span>
             </button>
           ))}
         </div>
@@ -135,11 +147,9 @@ export default function AccountForm() {
 
   return (
     <>
-      <h1>{editing ? `Edit ${editing.displayName}` : `New ${typeLabel(type)} account`}</h1>
+      <h1>{editing ? t('form.editTitle', { name: editing.displayName }) : t('form.newTitle', { type: typeName(type) })}</h1>
       <p className="lede">
-        {type === 'individual'
-          ? 'Tell us a little about you so SignSphere can set sensible defaults.'
-          : `These details identify your ${type === 'hospital' ? 'hospital' : 'organisation'}. Accounts start as “unverified” until SignSphere checks the registration.`}
+        {t(type === 'individual' ? 'form.ledeIndividual' : type === 'hospital' ? 'form.ledeHospital' : 'form.ledeOrg')}
       </p>
 
       <form className="card account-form" onSubmit={(event) => void submit(event)} noValidate>
@@ -164,12 +174,20 @@ export default function AccountForm() {
             aria-invalid={consentError && !consent ? true : undefined}
           />
           <span>
-            I confirm these details are accurate and I agree to how SignSphere stores them, described in the{' '}
-            <Link to="/privacy">privacy notice</Link>.
-            {type === 'individual' && ' My hearing information is kept private to this account.'}
+            {(() => {
+              const [before, after] = t('form.consent').split('{link}');
+              return (
+                <>
+                  {before}
+                  <Link to="/privacy">{t('form.privacyLink')}</Link>
+                  {after}
+                </>
+              );
+            })()}
+            {type === 'individual' && ` ${t('form.consentHearing')}`}
           </span>
         </label>
-        {consentError && !consent && <p className="field-error">Please confirm to continue.</p>}
+        {consentError && !consent && <p className="field-error">{t('form.consentNeeded')}</p>}
 
         {serverError && (
           <p className="notice error" role="alert">
@@ -179,25 +197,25 @@ export default function AccountForm() {
 
         <div className="row" style={{ marginTop: '1rem' }}>
           <button type="submit" className="primary" disabled={busy}>
-            {busy ? 'Saving…' : editing ? 'Save changes' : 'Create account'}
+            {busy ? t('pw.saving') : editing ? t('form.save') : t('form.create')}
           </button>
           <Link className="btn" to={editing || accounts.length > 0 ? '/accounts' : '/welcome'}>
-            Cancel
+            {t('form.cancel')}
           </Link>
           {editing && (
             <button
               type="button"
               className="danger"
               onClick={() => {
-                if (!confirm(`Delete “${editing.displayName}” and its history? This cannot be undone.`)) return;
+                if (!confirm(t('form.deleteConfirm', { name: editing.displayName }))) return;
                 void deleteAccount(editing.id).then(() => navigate('/accounts', { replace: true }));
               }}
             >
-              Delete account
+              {t('form.delete')}
             </button>
           )}
         </div>
-        {backend.mode === 'device' && <p className="hint">This-device mode: saved in this browser only.</p>}
+        {backend.mode === 'device' && <p className="hint">{t('form.deviceMode')}</p>}
       </form>
     </>
   );

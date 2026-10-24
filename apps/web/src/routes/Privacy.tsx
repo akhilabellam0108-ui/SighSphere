@@ -1,67 +1,53 @@
 import { Link } from 'react-router-dom';
 import { useSession } from '../state/session.js';
+import { useT } from '../lib/i18n.js';
+import { PRIVACY, PRIVACY_FOOTER, PRIVACY_WHERE } from '../lib/legal.js';
+import { richText } from '../components/RichText.js';
 
 const SUPPORT = import.meta.env['VITE_SUPPORT_EMAIL'] as string | undefined;
 
 /**
- * Plain-language privacy notice. Written to match what the code actually does — keep it in
- * sync when data handling changes. Have it reviewed by a lawyer before launch (DPDP Act 2023).
+ * Plain-language privacy notice, in the interface language (lib/legal.ts). Written to match
+ * what the code actually does — keep it in sync when data handling changes. Have it reviewed
+ * by a lawyer before launch (DPDP Act 2023).
  */
 export default function Privacy() {
   const { backend } = useSession();
+  const { t, lang } = useT();
+  const where = PRIVACY_WHERE[lang][backend.mode === 'cloud' ? 'cloud' : 'device'];
+  const sections = PRIVACY[lang];
   return (
     <>
-      <h1>Privacy notice</h1>
-      <p className="lede">What SignSphere stores, where, and your choices. Plain language, no surprises.</p>
+      <h1>{t('legal.privacyTitle')}</h1>
+      <p className="lede">{t('legal.privacyLede')}</p>
+      {lang !== 'en' && <p className="hint">{t('legal.englishGoverns')}</p>}
 
-      <section className="card stack">
-        <h2>Your camera</h2>
-        <p style={{ margin: 0 }}>
-          Camera video is processed on your device to track hand and body positions. <strong>Video is never uploaded or stored.</strong>{' '}
-          When you record a sign, only the hand and body positions are saved, on this device.
-        </p>
-      </section>
-
-      <section className="card stack" style={{ marginTop: '1rem' }}>
-        <h2>Your microphone</h2>
-        <p style={{ margin: 0 }}>
-          Voice features use your browser’s speech recognition. Most browsers send the audio to the browser maker (for example
-          Google for Chrome) to turn it into text. If you do not want that, type instead — every voice feature has a typing option.
-        </p>
-      </section>
-
-      <section className="card stack" style={{ marginTop: '1rem' }}>
-        <h2>Your account and history</h2>
-        <ul style={{ margin: 0, paddingLeft: '1.2rem' }}>
-          <li>Login: your email and a securely hashed password (we never see the password itself).</li>
-          <li>Accounts: the details you enter on the account form, including hearing status for Individual accounts.</li>
-          <li>History: the text, speech transcripts and recognised signs from your translations, stored per account.</li>
-          <li>
-            Where: {backend.mode === 'cloud' ? 'on SignSphere’s database (Supabase), protected so that only your login can read your data.' : 'currently only in this browser (this-device mode).'}
-          </li>
-          <li>
-            Error reports: if the app breaks, it sends the SignSphere team the error message, the screen, the app version and the
-            type of device — never your words, recordings, email or login.
-          </li>
-          <li>Terms: the version of the Terms of Use you agreed to, and when, is kept with your login.</li>
-          <li>We do not sell your data or use it for advertising.</li>
-        </ul>
-      </section>
-
-      <section className="card stack" style={{ marginTop: '1rem' }}>
-        <h2>Your rights</h2>
-        <p style={{ margin: 0 }}>
-          You can see and correct your details (Accounts → Edit), delete any history item or all of it (History), and delete your
-          login with everything in it (Accounts → Delete my login and data). Sign recordings on a device can be deleted in Settings.
-        </p>
-        <p style={{ margin: 0 }}>
-          Contact: {SUPPORT ? <a href={`mailto:${SUPPORT}`}>{SUPPORT}</a> : <em>support contact not configured yet (set VITE_SUPPORT_EMAIL)</em>}
-        </p>
-      </section>
+      {sections.map((section, index) => (
+        <section key={section.title} className="card stack" style={index ? { marginTop: '1rem' } : undefined}>
+          <h2>{section.title}</h2>
+          {section.list ? (
+            <ul style={{ margin: 0, paddingLeft: '1.2rem' }}>
+              {section.body.map((item) => (
+                <li key={item}>{richText(item.replace('{where}', where))}</li>
+              ))}
+            </ul>
+          ) : (
+            section.body.map((paragraph) => (
+              <p key={paragraph} style={{ margin: 0 }}>
+                {richText(paragraph)}
+              </p>
+            ))
+          )}
+          {index === sections.length - 1 && (
+            <p style={{ margin: 0 }}>
+              {t('legal.contact')} {SUPPORT ? <a href={`mailto:${SUPPORT}`}>{SUPPORT}</a> : <em>{t('legal.noSupport')}</em>}
+            </p>
+          )}
+        </section>
+      ))}
 
       <p className="hint">
-        SignSphere is a communication aid, not a replacement for a qualified ISL interpreter. Sign data from the INCLUDE dataset is used
-        under CC BY 4.0 (AI4Bharat). <Link to="/welcome">Back</Link>
+        {PRIVACY_FOOTER[lang]} <Link to="/welcome">{t('legal.back')}</Link>
       </p>
     </>
   );

@@ -1,5 +1,6 @@
 import { useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useT } from '../lib/i18n.js';
 
 /** True when the app itself has a previous screen to return to (not another website). */
 function hasAppHistory(): boolean {
@@ -21,12 +22,13 @@ export function useGoBack(fallback = '/') {
 
 export default function BackButton({ fallback = '/', onBack }: { fallback?: string; onBack?: () => void }) {
   const goBack = useGoBack(fallback);
+  const { t } = useT();
   return (
-    <button type="button" className="back-btn" onClick={onBack ?? goBack} aria-label="Go back">
+    <button type="button" className="back-btn" onClick={onBack ?? goBack} aria-label={t('nav.back')}>
       <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
         <path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
-      <span className="back-btn-label">Back</span>
+      <span className="back-btn-label">{t('nav.back')}</span>
     </button>
   );
 }
